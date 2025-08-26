@@ -1,0 +1,10 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.git": true
+  },
+  "docker.commands.attach": "docker exec -it ${containerId} /bin/sh",
+  "containers.commands.attach": "docker exec -it ${containerId} /bin/sh"
+}

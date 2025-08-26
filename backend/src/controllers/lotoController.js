@@ -1,0 +1,439 @@
+const LOTO = require("../models/LOTO");
+const User = require("../models/User");
+const HandoverNotification = require("../models/HandoverNotification");
+
+// @desc    Create new LOTO
+// @route   POST /api/loto
+// @access  Private
+exports.createLOTO = async (req, res) => {
+  try {
+    const { shift, isolatedPart, reason, ptwNumber, expectedDuration } =
+      req.body;
+
+    const loto = await LOTO.create({
+      shift,
+      isolator: req.user.id,
+      isolatorName: `${req.user.firstName} ${req.user.lastName}`,
+      isolatedPart,
+      reason,
+      ptwNumber,
+      expectedDuration,
+      status: "pending",
+    });
+
+    res.status(201).json({
+      success: true,
+      data: loto,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get all LOTOs
+// @route   GET /api/loto
+// @access  Private
+exports.getLOTOs = async (req, res) => {
+  try {
+    let query = {};
+
+    // Technicians only see their own LOTOs
+    if (req.user.role === "technician") {
+      query.$or = [{ isolator: req.user.id }, { handoverTo: req.user.id }];
+    }
+
+    const lotos = await LOTO.find(query)
+      .populate("isolator", "firstName lastName username")
+      .populate("verifiedBy", "firstName lastName username")
+      .populate("handoverTo", "firstName lastName username")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: lotos.length,
+      data: lotos,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get single LOTO
+// @route   GET /api/loto/:id
+// @access  Private
+exports.getLOTO = async (req, res) => {
+  try {
+    const loto = await LOTO.findById(req.params.id)
+      .populate("isolator", "firstName lastName username")
+      .populate("verifiedBy", "firstName lastName username")
+      .populate("handoverTo", "firstName lastName username");
+
+    if (!loto) {
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    // Check if user has permission to view this LOTO
+    if (
+      req.user.role === "technician" &&
+      loto.isolator._id.toString() !== req.user.id &&
+      loto.handoverTo?._id.toString() !== req.user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view this LOTO",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: loto,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Update LOTO status (for verification)
+// @route   PUT /api/loto/:id/verify
+// @access  Private (supervisors/admins)
+exports.verifyLOTO = async (req, res) => {
+  try {
+    const loto = await LOTO.findById(req.params.id);
+
+    if (!loto) {
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    // Only supervisors and admins can verify
+    if (req.user.role !== "supervisor" && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to verify LOTO",
+      });
+    }
+
+    // Update LOTO
+    loto.status = "active";
+    loto.verifiedBy = req.user.id;
+    loto.verifiedAt = Date.now();
+
+    await loto.save();
+
+    // Populate the updated LOTO
+    const updatedLOTO = await LOTO.findById(loto._id)
+      .populate("isolator", "firstName lastName username")
+      .populate("verifiedBy", "firstName lastName username")
+      .populate("handoverTo", "firstName lastName username");
+
+    res.status(200).json({
+      success: true,
+      data: updatedLOTO,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Update LOTO (for technicians)
+// @route   PUT /api/loto/:id
+// @access  Private
+exports.updateLOTO = async (req, res) => {
+  try {
+    const loto = await LOTO.findById(req.params.id);
+
+    if (!loto) {
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    // Only the isolator or handover recipient can update
+    if (
+      loto.isolator.toString() !== req.user.id &&
+      loto.handoverTo?.toString() !== req.user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this LOTO",
+      });
+    }
+
+    // Only allow updates to certain fields
+    const { expectedDuration, reason, ptwNumber } = req.body;
+
+    if (expectedDuration) loto.expectedDuration = expectedDuration;
+    if (reason) loto.reason = reason;
+    if (ptwNumber) loto.ptwNumber = ptwNumber;
+
+    await loto.save();
+
+    // Populate the updated LOTO
+    const updatedLOTO = await LOTO.findById(loto._id)
+      .populate("isolator", "firstName lastName username")
+      .populate("verifiedBy", "firstName lastName username")
+      .populate("handoverTo", "firstName lastName username");
+
+    res.status(200).json({
+      success: true,
+      data: updatedLOTO,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Complete LOTO
+// @route   PUT /api/loto/:id/complete
+// @access  Private
+exports.completeLOTO = async (req, res) => {
+  try {
+    console.log("Complete LOTO request received:", req.params.id, req.body);
+
+    const loto = await LOTO.findById(req.params.id);
+
+    if (!loto) {
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    console.log("Found LOTO:", loto._id);
+    console.log("User ID:", req.user.id);
+    console.log("LOTO Isolator:", loto.isolator.toString());
+
+    // Only the isolator or handover recipient can complete
+    if (
+      loto.isolator.toString() !== req.user.id &&
+      loto.handoverTo?.toString() !== req.user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to complete this LOTO",
+      });
+    }
+
+    const { actualFinishTime, actualFinishDate, completionNotes } = req.body;
+
+    console.log("Completion ", {
+      actualFinishTime,
+      actualFinishDate,
+      completionNotes,
+    });
+
+    // Update LOTO
+    loto.status = "completed";
+
+    // Handle date/time properly
+    if (actualFinishTime) {
+      loto.actualFinishTime = new Date(actualFinishTime);
+    }
+    if (actualFinishDate) {
+      loto.actualFinishDate = new Date(actualFinishDate);
+    }
+    if (completionNotes) {
+      loto.completionNotes = completionNotes;
+    }
+
+    // If no dates provided, use current date
+    if (!loto.actualFinishTime) {
+      loto.actualFinishTime = new Date();
+    }
+    if (!loto.actualFinishDate) {
+      loto.actualFinishDate = new Date();
+    }
+
+    await loto.save();
+
+    console.log("LOTO completed successfully");
+
+    // Populate the updated LOTO
+    const updatedLOTO = await LOTO.findById(loto._id)
+      .populate("isolator", "firstName lastName username")
+      .populate("verifiedBy", "firstName lastName username")
+      .populate("handoverTo", "firstName lastName username");
+
+    res.status(200).json({
+      success: true,
+      data: updatedLOTO,
+    });
+  } catch (error) {
+    console.error("Complete LOTO error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Handover LOTO
+// @route   PUT /api/loto/:id/handover
+// @access  Private
+exports.handoverLOTO = async (req, res) => {
+  try {
+    console.log("Handover request received:", req.params.id, req.body);
+
+    const loto = await LOTO.findById(req.params.id);
+
+    if (!loto) {
+      console.log("LOTO not found:", req.params.id);
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    console.log("Found LOTO:", loto._id);
+    console.log("User ID:", req.user.id);
+    console.log("LOTO Isolator:", loto.isolator.toString());
+
+    // Only the isolator can initiate handover
+    if (loto.isolator.toString() !== req.user.id) {
+      console.log("Unauthorized handover attempt");
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to handover this LOTO",
+      });
+    }
+
+    const { handoverTo, handoverNotes } = req.body;
+    console.log("Handover data:", { handoverTo, handoverNotes });
+
+    // Validate handover recipient
+    const recipient = await User.findById(handoverTo);
+    if (!recipient) {
+      console.log("Recipient not found:", handoverTo);
+      return res.status(404).json({
+        success: false,
+        message: "Recipient user not found",
+      });
+    }
+
+    console.log("Recipient found:", recipient.username);
+
+    // Update LOTO - set to handover status but don't change ownership yet
+    loto.status = "pending_handover";
+    loto.handoverTo = handoverTo;
+    if (handoverNotes) loto.handoverNotes = handoverNotes;
+
+    await loto.save();
+    console.log("LOTO updated for handover");
+
+    // Try to create handover notification (if HandoverNotification model exists)
+    try {
+      const HandoverNotification = require("../models/HandoverNotification");
+      const notification = await HandoverNotification.create({
+        lotoId: loto._id,
+        fromUser: req.user.id,
+        toUser: handoverTo,
+        lotoDetails: {
+          isolatedPart: loto.isolatedPart,
+          reason: loto.reason,
+          shift: loto.shift,
+        },
+        handoverNotes: handoverNotes,
+      });
+      console.log("Handover notification created:", notification._id);
+    } catch (notificationError) {
+      console.log(
+        "Could not create handover notification (model may not exist yet):",
+        notificationError.message
+      );
+      // Continue without notification if model doesn't exist yet
+    }
+
+    // Populate the updated LOTO
+    const updatedLOTO = await LOTO.findById(loto._id)
+      .populate("isolator", "firstName lastName username")
+      .populate("verifiedBy", "firstName lastName username")
+      .populate("handoverTo", "firstName lastName username");
+
+    res.status(200).json({
+      success: true,
+      updatedLOTO,
+    });
+  } catch (error) {
+    console.error("Handover error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Accept Handover
+// @route   PUT /api/loto/:id/accept-handover
+// @access  Private
+exports.acceptHandover = async (req, res) => {
+  try {
+    const loto = await LOTO.findById(req.params.id);
+
+    if (!loto) {
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    // Only the handover recipient can accept
+    if (loto.handoverTo?.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to accept this handover",
+      });
+    }
+
+    // Update LOTO
+    loto.status = "active";
+    loto.isolator = req.user.id;
+    loto.isolatorName = `${req.user.firstName} ${req.user.lastName}`;
+
+    await loto.save();
+
+    // Populate the updated LOTO
+    const updatedLOTO = await LOTO.findById(loto._id)
+      .populate("isolator", "firstName lastName username")
+      .populate("verifiedBy", "firstName lastName username")
+      .populate("handoverTo", "firstName lastName username");
+
+    res.status(200).json({
+      success: true,
+      data: updatedLOTO,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
