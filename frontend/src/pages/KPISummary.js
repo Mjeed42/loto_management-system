@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Button from "../components/Button";
+import "../styles/cloudflare-dashboard.css"; // Import the CSS file
 import Icon from "../components/Icon";
 
 const KPISummary = () => {
@@ -19,10 +19,12 @@ const KPISummary = () => {
   });
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("30"); // days
+  const [technicianData, setTechnicianData] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchKPIData();
+    fetchTechnicianData();
   }, [timeRange]);
 
   const fetchKPIData = async () => {
@@ -52,223 +54,593 @@ const KPISummary = () => {
       setKpiData(mockData);
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching KPI data:", err);
+      console.error("Error fetching KPI ", err);
       setLoading(false);
     }
   };
 
-  const KPIWidget = ({ title, value, unit, icon, color, trend }) => (
-    <div className="card h-100 shadow-sm">
-      <div className="card-body">
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 className="text-muted mb-1">{title}</h6>
-            <h2 className="mb-0">
+  const fetchTechnicianData = async () => {
+    try {
+      // Mock technician data
+      const mockTechData = [
+        {
+          name: "John Smith",
+          completed: 24,
+          active: 2,
+          compliance: 98,
+          efficiency: 92,
+        },
+        {
+          name: "Jane Doe",
+          completed: 18,
+          active: 1,
+          compliance: 100,
+          efficiency: 88,
+        },
+        {
+          name: "Mike Johnson",
+          completed: 31,
+          active: 3,
+          compliance: 95,
+          efficiency: 95,
+        },
+        {
+          name: "Sarah Wilson",
+          completed: 15,
+          active: 1,
+          compliance: 97,
+          efficiency: 85,
+        },
+        {
+          name: "David Brown",
+          completed: 23,
+          active: 1,
+          compliance: 99,
+          efficiency: 90,
+        },
+      ];
+      setTechnicianData(mockTechData);
+    } catch (err) {
+      console.error("Error fetching technician ", err);
+    }
+  };
+
+  const StatCard = ({
+    title,
+    value,
+    unit,
+    change,
+    changeType,
+    icon,
+    color,
+  }) => (
+    <div className="cf-stat-card">
+      <div className="cf-stat-content">
+        <div className="cf-stat-info">
+          <h3 className="cf-stat-title">{title}</h3>
+          <div className="cf-flex cf-items-baseline">
+            <p className="cf-stat-value">
               {value}
-              {unit && <small className="text-muted ms-1">{unit}</small>}
-            </h2>
-          </div>
-          <div className={`rounded-circle bg-${color} bg-opacity-10 p-3`}>
-            <Icon name={icon} className={`text-${color}`} />
+              {unit && <span className="cf-stat-unit">{unit}</span>}
+            </p>
+            {change && (
+              <span
+                className={`cf-stat-change ${
+                  changeType === "positive" ? "positive" : "negative"
+                }`}
+              >
+                {changeType === "positive" ? "↗" : "↘"} {change}%
+              </span>
+            )}
           </div>
         </div>
-        {trend && (
-          <div className="mt-2">
-            <span className={`badge ${trend > 0 ? "bg-success" : "bg-danger"}`}>
-              {trend > 0 ? "↗" : "↘"} {Math.abs(trend)}%
-            </span>
-            <small className="text-muted ms-2">vs last period</small>
-          </div>
-        )}
+        <div className={`cf-stat-icon ${color}`}>
+          <Icon name={icon} />
+        </div>
       </div>
     </div>
   );
 
+  const CircularProgress = ({
+    value,
+    size = 120,
+    strokeWidth = 8,
+    color = "blue",
+  }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const offset = circumference - (value / 100) * circumference;
+
+    return (
+      <div
+        className="cf-circular-progress"
+        style={{ width: size, height: size }}
+      >
+        <svg width={size} height={size}>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#e5e7eb"
+            strokeWidth={strokeWidth}
+            fill="none"
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={
+              color === "blue"
+                ? "#3b82f6"
+                : color === "green"
+                ? "#10b981"
+                : color === "yellow"
+                ? "#f59e0b"
+                : "#ef4444"
+            }
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          />
+        </svg>
+        <div className="cf-circular-progress-text">{value}%</div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="cf-dashboard">
+        <div className="cf-loading-container">
+          <div className="cf-spinner"></div>
+          <p className="cf-loading-text">Loading dashboard...</p>
         </div>
-        <p className="mt-2">Loading KPI data...</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-          <Icon name="chart" /> KPI Dashboard
-        </h1>
-        <div className="d-flex gap-2">
-          <select
-            className="form-select"
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-            style={{ width: "120px" }}
-          >
-            <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90">Last 90 days</option>
-            <option value="365">Last year</option>
-          </select>
-          <Button variant="outline-secondary" onClick={fetchKPIData}>
-            <Icon name="refresh" /> Refresh
-          </Button>
+    <div className="cf-dashboard">
+      {/* Header */}
+      <div className="cf-header">
+        <div className="cf-header-content">
+          <div className="cf-header-inner">
+            <div>
+              <h1 className="cf-header-title">KPI Dashboard</h1>
+              <p className="cf-header-subtitle">
+                Operational & Safety Performance Metrics
+              </p>
+            </div>
+            <div className="cf-header-actions">
+              <select
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value)}
+                className="cf-select"
+              >
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="365">Last year</option>
+              </select>
+              <button onClick={fetchKPIData} className="cf-button secondary">
+                <Icon name="refresh" className="cf-button-icon" />
+                Refresh
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Main KPIs */}
-      <div className="row g-4 mb-4">
-        <div className="col-md-3">
-          <KPIWidget
+      <div className="cf-main">
+        {/* Key Metrics Grid */}
+        <div className="cf-grid cf-grid-gap-large cf-grid cols-4">
+          <StatCard
             title="Total LOTOs"
             value={kpiData.totalLotos}
             icon="list"
-            color="primary"
-            trend={5}
+            color="blue"
+            change={5}
+            changeType="positive"
           />
-        </div>
-        <div className="col-md-3">
-          <KPIWidget
+          <StatCard
             title="Active LOTOs"
             value={kpiData.activeLotos}
             icon="active"
-            color="warning"
-            trend={-2}
+            color="yellow"
+            change={-2}
+            changeType="negative"
           />
-        </div>
-        <div className="col-md-3">
-          <KPIWidget
+          <StatCard
             title="Completed LOTOs"
             value={kpiData.completedLotos}
             icon="check"
-            color="success"
-            trend={8}
+            color="green"
+            change={8}
+            changeType="positive"
           />
-        </div>
-        <div className="col-md-3">
-          <KPIWidget
+          <StatCard
             title="LOTO Compliance"
             value={kpiData.lotoComplianceRate}
             unit="%"
             icon="shield"
-            color="info"
-            trend={2}
+            color="purple"
+            change={2}
+            changeType="positive"
           />
         </div>
-      </div>
 
-      {/* Secondary KPIs */}
-      <div className="row g-4 mb-4">
-        <div className="col-md-3">
-          <KPIWidget
-            title="Avg Completion Time"
-            value={kpiData.avgCompletionTime}
-            unit="hrs"
-            icon="clock"
-            color="secondary"
-            trend={-15}
-          />
-        </div>
-        <div className="col-md-3">
-          <KPIWidget
-            title="On-Time Rate"
-            value={kpiData.onTimeCompletionRate}
-            unit="%"
-            icon="calendar"
-            color="success"
-            trend={3}
-          />
-        </div>
-        <div className="col-md-3">
-          <KPIWidget
-            title="Handovers"
-            value={kpiData.handoverCount}
-            icon="handover"
-            color="info"
-            trend={12}
-          />
-        </div>
-        <div className="col-md-3">
-          <KPIWidget
-            title="Safety Incidents"
-            value={kpiData.safetyIncidents}
-            icon="warning"
-            color="danger"
-            trend={-50}
-          />
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="row g-4">
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="mb-0">
-                <Icon name="trending-up" /> LOTO Activity Trend
-              </h5>
+        {/* Performance Overview */}
+        <div className="cf-grid cf-grid-gap-large cf-grid cols-3 cf-mb-8">
+          <div className="cf-card cf-col-span-2">
+            <div className="cf-card-header">
+              <h2 className="cf-card-title">Performance Overview</h2>
+              <div className="cf-flex cf-space-x-2">
+                <button className="cf-button secondary cf-text-sm">
+                  Efficiency
+                </button>
+                <button className="cf-button secondary cf-text-sm">
+                  Timeliness
+                </button>
+                <button className="cf-button secondary cf-text-sm">
+                  Compliance
+                </button>
+              </div>
             </div>
-            <div className="card-body">
-              <div className="text-center py-5">
-                <Icon
-                  name="chart-bar"
-                  className="text-muted"
-                  style={{ fontSize: "3rem" }}
-                />
-                <p className="mt-2 text-muted">
-                  Chart visualization would go here
-                </p>
+
+            <div className="cf-grid cf-grid cols-2 cf-grid-gap-large">
+              <div className="cf-text-center">
+                <h3 className="cf-stat-title cf-mb-4">Avg. Completion Time</h3>
+                <div className="cf-flex cf-items-center cf-justify-center">
+                  <Icon
+                    name="clock"
+                    className="cf-h-8 cf-w-8 cf-text-gray-400 cf-mr-3"
+                  />
+                  <span className="cf-stat-value">
+                    {kpiData.avgCompletionTime} hrs
+                  </span>
+                </div>
+                <div className="cf-mt-3">
+                  <span className="cf-table-badge success">
+                    ↓ 15% improvement
+                  </span>
+                </div>
+              </div>
+
+              <div className="cf-text-center">
+                <h3 className="cf-stat-title cf-mb-4">On-Time Completion</h3>
+                <div className="cf-flex cf-justify-center">
+                  <CircularProgress
+                    value={kpiData.onTimeCompletionRate}
+                    color="green"
+                  />
+                </div>
+                <div className="cf-mt-3">
+                  <span className="cf-text-sm cf-text-gray-500">
+                    Target: 95%
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="mb-0">
-                <Icon name="users" /> Technician Performance
-              </h5>
-            </div>
-            <div className="card-body">
-              <div className="text-center py-5">
-                <Icon
-                  name="user"
-                  className="text-muted"
-                  style={{ fontSize: "3rem" }}
-                />
-                <p className="mt-2 text-muted">
-                  Performance metrics by technician
-                </p>
+
+          <div className="cf-card">
+            <h2 className="cf-card-title cf-mb-6">Safety Metrics</h2>
+
+            <div className="cf-flex cf-items-center cf-mb-6">
+              <div className="cf-stat-icon red">
+                <Icon name="warning" />
               </div>
+              <div className="cf-ml-4">
+                <h3 className="cf-stat-value">{kpiData.safetyIncidents}</h3>
+                <p className="cf-stat-title">Safety Incidents</p>
+              </div>
+            </div>
+
+            <div className="cf-mb-6">
+              <div className="cf-flex cf-justify-between cf-text-sm cf-text-gray-500 cf-mb-1">
+                <span>Compliance Rate</span>
+                <span>{kpiData.lotoComplianceRate}%</span>
+              </div>
+              <div className="cf-progress-container">
+                <div className="cf-progress-track">
+                  <div
+                    className="cf-progress-fill green"
+                    style={{ width: `${kpiData.lotoComplianceRate}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="cf-stat-title cf-mb-3">Recent Achievements</h3>
+              <ul className="cf-space-y-2">
+                <li className="cf-flex cf-items-center">
+                  <Icon
+                    name="check"
+                    className="cf-h-5 cf-w-5 cf-text-green-500 cf-mr-2"
+                  />
+                  <span className="cf-text-sm cf-text-gray-600">
+                    30-day incident-free streak
+                  </span>
+                </li>
+                <li className="cf-flex cf-items-center">
+                  <Icon
+                    name="check"
+                    className="cf-h-5 cf-w-5 cf-text-green-500 cf-mr-2"
+                  />
+                  <span className="cf-text-sm cf-text-gray-600">
+                    100% verification compliance
+                  </span>
+                </li>
+                <li className="cf-flex cf-items-center">
+                  <Icon
+                    name="check"
+                    className="cf-h-5 cf-w-5 cf-text-green-500 cf-mr-2"
+                  />
+                  <span className="cf-text-sm cf-text-gray-600">
+                    Zero handover disputes
+                  </span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Detailed Reports */}
-      <div className="card mt-4">
-        <div className="card-header">
-          <h5 className="mb-0">
-            <Icon name="file" /> Detailed Reports
-          </h5>
+        {/* Technician Performance */}
+        <div className="cf-card cf-mb-8">
+          <div className="cf-card-header">
+            <h2 className="cf-card-title">Technician Performance</h2>
+            <button className="cf-button secondary cf-button small">
+              <Icon name="download" className="cf-button-icon" />
+              Export Report
+            </button>
+          </div>
+          <div className="cf-table-container">
+            <table className="cf-table">
+              <thead>
+                <tr>
+                  <th>Technician</th>
+                  <th>Completed LOTOs</th>
+                  <th>Active LOTOs</th>
+                  <th>Compliance Rate</th>
+                  <th>Efficiency Score</th>
+                  <th>Performance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {technicianData.map((tech, index) => (
+                  <tr key={index}>
+                    <td>
+                      <div className="cf-table-avatar">
+                        <div className="cf-table-avatar-img">
+                          <Icon name="user" />
+                        </div>
+                        <div className="cf-table-avatar-info">
+                          <div className="cf-table-avatar-name">
+                            {tech.name}
+                          </div>
+                          <div className="cf-table-avatar-role">Technician</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{tech.completed}</td>
+                    <td>{tech.active}</td>
+                    <td>
+                      <div className="cf-table-progress">
+                        <span className="cf-table-progress-value">
+                          {tech.compliance}%
+                        </span>
+                        <div className="cf-table-progress-bar">
+                          <div className="cf-progress-container">
+                            <div className="cf-progress-track">
+                              <div
+                                className="cf-progress-fill green"
+                                style={{ width: `${tech.compliance}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="cf-table-progress">
+                        <span className="cf-table-progress-value">
+                          {tech.efficiency}%
+                        </span>
+                        <div className="cf-table-progress-bar">
+                          <div className="cf-progress-container">
+                            <div className="cf-progress-track">
+                              <div
+                                className={`cf-progress-fill ${
+                                  tech.efficiency > 90
+                                    ? "green"
+                                    : tech.efficiency > 75
+                                    ? "yellow"
+                                    : "red"
+                                }`}
+                                style={{ width: `${tech.efficiency}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span
+                        className={`cf-table-badge ${
+                          tech.efficiency > 90
+                            ? "success"
+                            : tech.efficiency > 75
+                            ? "warning"
+                            : "danger"
+                        }`}
+                      >
+                        {tech.efficiency > 90
+                          ? "Excellent"
+                          : tech.efficiency > 75
+                          ? "Good"
+                          : "Needs Improvement"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div className="card-body">
-          <div className="d-flex flex-wrap gap-2">
-            <Button variant="outline-primary">
-              <Icon name="download" /> LOTO Completion Report
-            </Button>
-            <Button variant="outline-success">
-              <Icon name="download" /> Compliance Report
-            </Button>
-            <Button variant="outline-warning">
-              <Icon name="download" /> Incident Report
-            </Button>
-            <Button variant="outline-info">
-              <Icon name="download" /> Handover Analysis
-            </Button>
+
+        {/* Reports and Targets */}
+        <div className="cf-grid cf-grid-gap-large cf-grid cols-2">
+          <div className="cf-card">
+            <h2 className="cf-card-title cf-mb-6">Detailed Reports</h2>
+            <div className="cf-list">
+              <div className="cf-list-item">
+                <div className="cf-list-item-content">
+                  <div className="cf-list-item-icon">
+                    <Icon name="document" />
+                  </div>
+                  <span className="cf-list-item-text">
+                    LOTO Completion Report
+                  </span>
+                </div>
+                <span className="cf-list-item-badge blue">PDF</span>
+              </div>
+              <div className="cf-list-item">
+                <div className="cf-list-item-content">
+                  <div className="cf-list-item-icon">
+                    <Icon name="document" />
+                  </div>
+                  <span className="cf-list-item-text">Compliance Report</span>
+                </div>
+                <span className="cf-list-item-badge green">Excel</span>
+              </div>
+              <div className="cf-list-item">
+                <div className="cf-list-item-content">
+                  <div className="cf-list-item-icon">
+                    <Icon name="document" />
+                  </div>
+                  <span className="cf-list-item-text">Incident Report</span>
+                </div>
+                <span className="cf-list-item-badge yellow">PDF</span>
+              </div>
+              <div className="cf-list-item">
+                <div className="cf-list-item-content">
+                  <div className="cf-list-item-icon">
+                    <Icon name="document" />
+                  </div>
+                  <span className="cf-list-item-text">Handover Analysis</span>
+                </div>
+                <span className="cf-list-item-badge purple">Excel</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="cf-card">
+            <h2 className="cf-card-title cf-mb-6">Performance Targets</h2>
+            <div className="cf-space-y-6">
+              <div>
+                <div className="cf-flex cf-justify-between cf-mb-1">
+                  <span className="cf-text-sm cf-font-medium cf-text-gray-700">
+                    LOTO Compliance
+                  </span>
+                  <span
+                    className="cf-text-sm cf-font-bold"
+                    style={{ color: "#3b82f6" }}
+                  >
+                    {kpiData.lotoComplianceRate}%
+                  </span>
+                </div>
+                <div className="cf-progress-container">
+                  <div className="cf-progress-track">
+                    <div
+                      className="cf-progress-fill blue"
+                      style={{ width: `${kpiData.lotoComplianceRate}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="cf-flex cf-justify-between cf-mt-1">
+                  <span className="cf-text-xs cf-text-gray-500">Current</span>
+                  <span className="cf-text-xs cf-text-gray-500">
+                    Target: 98%
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <div className="cf-flex cf-justify-between cf-mb-1">
+                  <span className="cf-text-sm cf-font-medium cf-text-gray-700">
+                    On-Time Completion
+                  </span>
+                  <span
+                    className="cf-text-sm cf-font-bold"
+                    style={{ color: "#10b981" }}
+                  >
+                    {kpiData.onTimeCompletionRate}%
+                  </span>
+                </div>
+                <div className="cf-progress-container">
+                  <div className="cf-progress-track">
+                    <div
+                      className="cf-progress-fill green"
+                      style={{ width: `${kpiData.onTimeCompletionRate}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="cf-flex cf-justify-between cf-mt-1">
+                  <span className="cf-text-xs cf-text-gray-500">Current</span>
+                  <span className="cf-text-xs cf-text-gray-500">
+                    Target: 95%
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <div className="cf-flex cf-justify-between cf-mb-1">
+                  <span className="cf-text-sm cf-font-medium cf-text-gray-700">
+                    Avg. Completion Time
+                  </span>
+                  <span
+                    className="cf-text-sm cf-font-bold"
+                    style={{ color: "#8b5cf6" }}
+                  >
+                    {kpiData.avgCompletionTime} hrs
+                  </span>
+                </div>
+                <div className="cf-progress-container">
+                  <div className="cf-progress-track">
+                    <div
+                      className="cf-progress-fill purple"
+                      style={{ width: "70%" }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="cf-flex cf-justify-between cf-mt-1">
+                  <span className="cf-text-xs cf-text-gray-500">Current</span>
+                  <span className="cf-text-xs cf-text-gray-500">
+                    Target: Under 2.5 hrs
+                  </span>
+                </div>
+              </div>
+
+              <div className="cf-callout info">
+                <div className="cf-callout-content">
+                  <div className="cf-callout-icon">
+                    <Icon name="lightbulb" />
+                  </div>
+                  <div className="cf-callout-text">
+                    <h3>Improvement Opportunity</h3>
+                    <p>
+                      Focus on reducing average completion time by streamlining
+                      handover processes. Current handover time is{" "}
+                      {kpiData.avgHandoverTime} hours.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
