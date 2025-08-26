@@ -42,7 +42,9 @@ const CreateLOTO = () => {
         config
       );
 
-      alert("LOTO created successfully!");
+      alert(
+        `LOTO created successfully!\nSerial Number: ${res.data.data.serialNumber}`
+      );
       navigate("/loto-list");
     } catch (err) {
       setError(err.response?.data?.message || "Error creating LOTO");

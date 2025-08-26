@@ -21,6 +21,10 @@ app.use("/api/loto", require("./src/routes/loto"));
 app.use("/api/users", require("./src/routes/users"));
 // Add after the users routes
 app.use("/api/notifications", require("./src/routes/notifications"));
+// Add after the other routes
+app.use("/api/admin", require("./src/routes/admin"));
+// Add after other routes
+app.use("/api/kpi", require("./src/routes/kpi"));
 
 // Database Connection - FIXED VERSION
 const MONGO_URI = `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;

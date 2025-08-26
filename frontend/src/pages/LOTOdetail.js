@@ -149,10 +149,14 @@ const LOTOdetail = () => {
             gap: "15px",
           }}
         >
+          // In the basic information section, add:
           <div>
             <h3 style={{ margin: "0 0 10px 0", color: "#6c757d" }}>
               Basic Information
             </h3>
+            <p>
+              <strong>Serial Number:</strong> {loto.serialNumber}
+            </p>
             <p>
               <strong>Date:</strong> {new Date(loto.date).toLocaleDateString()}
             </p>
@@ -163,7 +167,6 @@ const LOTOdetail = () => {
               <strong>Status:</strong> {getStatusBadge(loto.status)}
             </p>
           </div>
-
           <div>
             <h3 style={{ margin: "0 0 10px 0", color: "#6c757d" }}>
               Equipment Information
@@ -178,7 +181,6 @@ const LOTOdetail = () => {
               <strong>PTW Number:</strong> {loto.ptwNumber}
             </p>
           </div>
-
           <div>
             <h3 style={{ margin: "0 0 10px 0", color: "#6c757d" }}>Timing</h3>
             <p>
@@ -191,7 +193,6 @@ const LOTOdetail = () => {
               </p>
             )}
           </div>
-
           <div>
             <h3 style={{ margin: "0 0 10px 0", color: "#6c757d" }}>
               Personnel

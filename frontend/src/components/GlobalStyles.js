@@ -364,7 +364,6 @@ const GlobalStyles = () => (
     }
 
     .card:hover {
-      transform: translateY(-4px);
       box-shadow: var(--shadow-xl);
       border-color: rgba(99, 102, 241, 0.2);
     }
@@ -698,7 +697,7 @@ const GlobalStyles = () => (
     }
 
     .dropdown-menu {
-      position: absolute;
+      position: inherit;
       top: 100%;
       left: 0;
       z-index: 1000;
@@ -1404,18 +1403,57 @@ const GlobalStyles = () => (
     }
 
     /* Hover effects */
-    .hover-lift {
-      transition: var(--transition);
-    }
+ .hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+  .progress {
+  border-radius: 50rem;
+}
 
-    .hover-lift:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
-    }
+.progress-bar {
+  border-radius: 50rem;
+}
 
-    .hover-glow {
-      transition: var(--transition);
-    }
+.table-hover tbody tr:hover {
+  background-color: rgba(99, 102, 241, 0.05);
+  transform: scale(1.01);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-group .btn.active {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.badge.bg-success {
+  background-color: #10b981 !important;
+}
+
+.badge.bg-warning {
+  background-color: #f59e0b !important;
+  color: #000;
+}
+
+.badge.bg-danger {
+  background-color: #ef4444 !important;
+}
+
+.badge.bg-info {
+  background-color: #06b6d4 !important;
+}
+
+.badge.bg-primary {
+  background-color: #6366f1 !important;
+}
+
+.hover-glow {
+  transition: var(--transition);
+}
 
     .hover-glow:hover {
       box-shadow: var(--shadow-glow);

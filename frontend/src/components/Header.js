@@ -60,6 +60,7 @@ const Header = ({ currentUser }) => {
           className="navbar-brand cursor-pointer hover-scale transition"
           onClick={() => navigate("/dashboard")}
         >
+          <Icon name="lock" className="me-2" />
           <span className="fw-bold">LOTO Manager</span>
         </div>
 
@@ -141,6 +142,40 @@ const Header = ({ currentUser }) => {
                 <Icon name="list" className="me-2" />
                 My LOTOs
               </button>
+
+              {/* Admin Dashboard Link */}
+              {currentUser.role === "admin" && (
+                <>
+                  <div className="dropdown-divider"></div>
+                  <button
+                    className="dropdown-item d-flex align-items-center"
+                    onClick={() => {
+                      navigate("/admin");
+                      setUserDropdownOpen(false);
+                    }}
+                  >
+                    <Icon name="settings" className="me-2" />
+                    Admin Dashboard
+                  </button>
+                </>
+              )}
+              {currentUser &&
+                (currentUser.role === "manager" ||
+                  currentUser.role === "admin") && (
+                  <>
+                    <button
+                      className="dropdown-item d-flex align-items-center"
+                      onClick={() => {
+                        navigate("/kpi");
+                        setUserDropdownOpen(false);
+                      }}
+                    >
+                      <Icon name="chart" className="me-2" />
+                      KPI Dashboard
+                    </button>
+                    <div className="dropdown-divider"></div>
+                  </>
+                )}
 
               <div className="dropdown-divider"></div>
 

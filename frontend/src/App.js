@@ -16,6 +16,8 @@ import UpdateLOTO from "./pages/UpdateLOTO";
 import HandoverLOTO from "./pages/HandoverLOTO";
 import CompleteLOTO from "./pages/CompleteLOTO";
 import Notifications from "./pages/Notifications";
+import AdminDashboard from "./pages/AdminDashboard";
+import KPISummary from "./pages/KPISummary";
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -55,6 +57,8 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/create-loto" element={<CreateLOTO />} />
             <Route path="/loto-list" element={<LOTOList />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/kpi" element={<KPISummary />} />
             <Route path="/loto/:id" element={<LOTOdetail />} />
             <Route path="/loto/:id/update" element={<UpdateLOTO />} />
             <Route path="/loto/:id/handover" element={<HandoverLOTO />} />

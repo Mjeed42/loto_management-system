@@ -177,6 +177,7 @@ const LOTOList = () => {
               <table className="table table-hover mb-0">
                 <thead>
                   <tr>
+                    <th>SN</th>
                     <th>Date</th>
                     <th>Shift</th>
                     <th>Isolator</th>
@@ -187,9 +188,13 @@ const LOTOList = () => {
                     <th>Actions</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {lotos.map((loto) => (
                     <tr key={loto._id}>
+                      <td>
+                        <strong>{loto.serialNumber}</strong>
+                      </td>
                       <td>{new Date(loto.date).toLocaleDateString()}</td>
                       <td>{loto.shift}</td>
                       <td>

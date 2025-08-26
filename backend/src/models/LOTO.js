@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const lotoSchema = new mongoose.Schema(
   {
+    serialNumber: {
+      type: String,
+      unique: true,
+      required: true,
+    },
     date: {
       type: Date,
       default: Date.now,
@@ -73,5 +78,8 @@ const lotoSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Create index for serialNumber
+lotoSchema.index({ serialNumber: 1 });
 
 module.exports = mongoose.model("LOTO", lotoSchema);

@@ -2,6 +2,31 @@ const LOTO = require("../models/LOTO");
 const User = require("../models/User");
 const HandoverNotification = require("../models/HandoverNotification");
 
+// Helper function to generate unique serial number
+const generateSerialNumber = async () => {
+  // Format: LOTO-YYYYMMDD-XXXX (where XXXX is a 4-digit sequential number)
+  const datePrefix = `LOTO-${new Date()
+    .toISOString()
+    .slice(0, 10)
+    .replace(/-/g, "")}`;
+
+  // Find the highest existing serial number for today
+  const todayRegex = new RegExp(`^${datePrefix}-\\d{4}$`);
+  const latestLOTO = await LOTO.findOne({
+    serialNumber: todayRegex,
+  }).sort({ serialNumber: -1 });
+
+  let nextNumber = 1;
+  if (latestLOTO) {
+    const lastNumber = parseInt(latestLOTO.serialNumber.slice(-4));
+    nextNumber = lastNumber + 1;
+  }
+
+  // Format as 4-digit number with leading zeros
+  const formattedNumber = nextNumber.toString().padStart(4, "0");
+  return `${datePrefix}-${formattedNumber}`;
+};
+
 // @desc    Create new LOTO
 // @route   POST /api/loto
 // @access  Private
@@ -10,7 +35,11 @@ exports.createLOTO = async (req, res) => {
     const { shift, isolatedPart, reason, ptwNumber, expectedDuration } =
       req.body;
 
+    // Generate unique serial number
+    const serialNumber = await generateSerialNumber();
+
     const loto = await LOTO.create({
+      serialNumber,
       shift,
       isolator: req.user.id,
       isolatorName: `${req.user.firstName} ${req.user.lastName}`,
@@ -26,6 +55,7 @@ exports.createLOTO = async (req, res) => {
       data: loto,
     });
   } catch (error) {
+    console.error("Create LOTO error:", error);
     res.status(500).json({
       success: false,
       message: "Server Error",
