@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const Login = () => {
+const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -28,10 +28,12 @@ const Login = () => {
         password,
       });
 
-      // Store token in localStorage
       localStorage.setItem("token", res.data.token);
 
-      // Redirect to dashboard
+      if (onLogin) {
+        onLogin();
+      }
+
       navigate("/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
@@ -41,98 +43,80 @@ const Login = () => {
   };
 
   return (
-    <div
-      className="login-page"
-      style={{ maxWidth: "400px", margin: "100px auto", padding: "20px" }}
-    >
-      <h1 style={{ textAlign: "center", marginBottom: "30px" }}>
-        LOTO Management System
-      </h1>
-      <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Login</h2>
+    <div className="row justify-content-center">
+      <div className="col-md-6 col-lg-4">
+        <div className="card shadow-lg">
+          <div className="card-header text-center">
+            <h2>🔒 LOTO Management System</h2>
+            <p className="text-muted mb-0">Secure Lockout/Tagout Management</p>
+          </div>
+          <div className="card-body">
+            {error && <div className="alert alert-danger">{error}</div>}
 
-      {error && (
-        <div
-          style={{
-            backgroundColor: "#f8d7da",
-            color: "#721c24",
-            padding: "10px",
-            marginBottom: "15px",
-            borderRadius: "4px",
-          }}
-        >
-          {error}
+            <form onSubmit={onSubmit}>
+              <div className="form-group mb-3">
+                <label className="form-label">Username or Email</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={username}
+                  onChange={onChange}
+                  className="form-control"
+                  placeholder="Enter username or email"
+                  required
+                />
+              </div>
+
+              <div className="form-group mb-4">
+                <label className="form-label">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={password}
+                  onChange={onChange}
+                  className="form-control"
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
+
+              <div className="d-grid">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-primary btn-lg"
+                >
+                  {loading ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Logging in...
+                    </>
+                  ) : (
+                    "Login"
+                  )}
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-4 text-center">
+              <h6 className="text-muted">Default Test Users</h6>
+              <div className="card bg-light">
+                <div className="card-body">
+                  <p className="mb-1">
+                    <strong>Admin:</strong> admin / admin123
+                  </p>
+                  <p className="mb-0">
+                    <strong>Technician:</strong> tech / tech123
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
-
-      <form onSubmit={onSubmit}>
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "5px" }}>
-            Username or Email:
-          </label>
-          <input
-            type="text"
-            name="username"
-            value={username}
-            onChange={onChange}
-            placeholder="Enter username or email"
-            style={{
-              width: "100%",
-              padding: "10px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              boxSizing: "border-box",
-            }}
-            required
-          />
-        </div>
-
-        <div style={{ marginBottom: "20px" }}>
-          <label style={{ display: "block", marginBottom: "5px" }}>
-            Password:
-          </label>
-          <input
-            type="password"
-            name="password"
-            value={password}
-            onChange={onChange}
-            placeholder="Enter password"
-            style={{
-              width: "100%",
-              padding: "10px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              boxSizing: "border-box",
-            }}
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "12px",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: loading ? "not-allowed" : "pointer",
-            fontSize: "16px",
-          }}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-
-      <div style={{ marginTop: "20px", textAlign: "center" }}>
-        <p>Default Test Users:</p>
-        <p>
-          <strong>Admin:</strong> admin / admin123
-        </p>
-        <p>
-          <strong>Technician:</strong> tech / tech123
-        </p>
       </div>
     </div>
   );

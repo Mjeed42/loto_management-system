@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Button from "../components/Button";
+import Icon from "../components/Icon";
 
 const LOTOList = () => {
   const [lotos, setLotos] = useState([]);
@@ -63,7 +65,6 @@ const LOTOList = () => {
         config
       );
 
-      // Update the LOTO in the list
       setLotos(
         lotos.map((loto) => (loto._id === lotoId ? res.data.data : loto))
       );
@@ -74,7 +75,6 @@ const LOTOList = () => {
     }
   };
 
-  // In the action buttons section, update the onClick handlers:
   const handleUpdate = async (lotoId) => {
     navigate(`/loto/${lotoId}/update`);
   };
@@ -88,287 +88,171 @@ const LOTOList = () => {
   };
 
   const getStatusBadge = (status) => {
-    const statusStyles = {
-      pending: { backgroundColor: "#ffc107", color: "#000" },
-      active: { backgroundColor: "#28a745", color: "#fff" },
-      completed: { backgroundColor: "#6c757d", color: "#fff" },
-      handover: { backgroundColor: "#17a2b8", color: "#fff" },
+    const statusConfig = {
+      pending: { text: "Pending", variant: "warning" },
+      active: { text: "Active", variant: "success" },
+      completed: { text: "Completed", variant: "secondary" },
+      pending_handover: { text: "Pending Handover", variant: "info" },
+      handover: { text: "Handover", variant: "info" },
+    };
+
+    const config = statusConfig[status] || {
+      text: status,
+      variant: "secondary",
     };
 
     return (
-      <span
-        style={{
-          padding: "4px 8px",
-          borderRadius: "4px",
-          fontSize: "12px",
-          fontWeight: "bold",
-          ...statusStyles[status],
-        }}
-      >
-        {status.toUpperCase()}
+      <span className={`badge bg-${config.variant} badge-pill`}>
+        {config.text}
       </span>
     );
   };
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: "50px" }}>
-        <h2>Loading LOTOs...</h2>
+      <div className="text-center py-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-2">Loading LOTOs...</p>
       </div>
     );
   }
 
-  // Check if current user is admin or supervisor
   const canVerify =
     currentUser &&
     (currentUser.role === "admin" || currentUser.role === "supervisor");
   const isTechnician = currentUser && currentUser.role === "technician";
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "20px auto", padding: "20px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h1>LOTO List</h1>
-        <button
-          onClick={fetchLOTOs}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          Refresh
-        </button>
+    <div>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+          <Icon name="list" /> LOTO List
+        </h1>
+        <div className="d-flex gap-2">
+          <Button variant="outline-secondary" onClick={fetchLOTOs}>
+            <Icon name="refresh" /> Refresh
+          </Button>
+          <Button variant="primary" onClick={() => navigate("/create-loto")}>
+            <Icon name="add" /> Create LOTO
+          </Button>
+          <Button
+            variant="outline-primary"
+            onClick={() => navigate("/dashboard")}
+          >
+            <Icon name="dashboard" /> Dashboard
+          </Button>
+        </div>
       </div>
 
       {error && (
-        <div
-          style={{
-            backgroundColor: "#f8d7da",
-            color: "#721c24",
-            padding: "10px",
-            marginBottom: "15px",
-            borderRadius: "4px",
-          }}
-        >
-          {error}
+        <div className="alert alert-danger">
+          <Icon name="warning" /> {error}
         </div>
       )}
 
       {lotos.length === 0 ? (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "50px",
-            backgroundColor: "#f8f9fa",
-            borderRadius: "5px",
-          }}
-        >
-          <h3>No LOTOs found</h3>
-          <p>
-            Click "Create New LOTO" to create your first lockout/tagout request.
+        <div className="text-center py-5 bg-light rounded">
+          <h3 className="mb-3">No LOTOs found</h3>
+          <p className="mb-4">
+            Create your first lockout/tagout request to get started.
           </p>
+          <div className="d-flex gap-2 justify-content-center">
+            <Button variant="primary" onClick={() => navigate("/create-loto")}>
+              <Icon name="add" /> Create New LOTO
+            </Button>
+            <Button
+              variant="outline-primary"
+              onClick={() => navigate("/dashboard")}
+            >
+              <Icon name="dashboard" /> Go to Dashboard
+            </Button>
+          </div>
         </div>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              backgroundColor: "#fff",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            <thead>
-              <tr style={{ backgroundColor: "#f8f9fa" }}>
-                <th
-                  style={{
-                    padding: "12px",
-                    textAlign: "left",
-                    borderBottom: "2px solid #dee2e6",
-                  }}
-                >
-                  Date
-                </th>
-                <th
-                  style={{
-                    padding: "12px",
-                    textAlign: "left",
-                    borderBottom: "2px solid #dee2e6",
-                  }}
-                >
-                  Shift
-                </th>
-                <th
-                  style={{
-                    padding: "12px",
-                    textAlign: "left",
-                    borderBottom: "2px solid #dee2e6",
-                  }}
-                >
-                  Isolator
-                </th>
-                <th
-                  style={{
-                    padding: "12px",
-                    textAlign: "left",
-                    borderBottom: "2px solid #dee2e6",
-                  }}
-                >
-                  Part
-                </th>
-                <th
-                  style={{
-                    padding: "12px",
-                    textAlign: "left",
-                    borderBottom: "2px solid #dee2e6",
-                  }}
-                >
-                  Reason
-                </th>
-                <th
-                  style={{
-                    padding: "12px",
-                    textAlign: "left",
-                    borderBottom: "2px solid #dee2e6",
-                  }}
-                >
-                  Status
-                </th>
-                <th
-                  style={{
-                    padding: "12px",
-                    textAlign: "left",
-                    borderBottom: "2px solid #dee2e6",
-                  }}
-                >
-                  Duration
-                </th>
-                <th
-                  style={{
-                    padding: "12px",
-                    textAlign: "left",
-                    borderBottom: "2px solid #dee2e6",
-                  }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {lotos.map((loto) => (
-                <tr
-                  key={loto._id}
-                  style={{ borderBottom: "1px solid #dee2e6" }}
-                >
-                  <td style={{ padding: "12px" }}>
-                    {new Date(loto.date).toLocaleDateString()}
-                  </td>
-                  <td style={{ padding: "12px" }}>{loto.shift}</td>
-                  <td style={{ padding: "12px" }}>
-                    {loto.isolator?.firstName} {loto.isolator?.lastName}
-                  </td>
-                  <td style={{ padding: "12px" }}>{loto.isolatedPart}</td>
-                  <td style={{ padding: "12px" }}>{loto.reason}</td>
-                  <td style={{ padding: "12px" }}>
-                    {getStatusBadge(loto.status)}
-                  </td>
-                  <td style={{ padding: "12px" }}>
-                    {loto.expectedDuration} hrs
-                  </td>
-                  <td style={{ padding: "12px" }}>
-                    {canVerify && loto.status === "pending" && (
-                      <button
-                        onClick={() => handleVerify(loto._id)}
-                        style={{
-                          padding: "6px 12px",
-                          backgroundColor: "#28a745",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          marginRight: "5px",
-                        }}
-                      >
-                        Verify
-                      </button>
-                    )}
+        <div className="card">
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Shift</th>
+                    <th>Isolator</th>
+                    <th>Part</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lotos.map((loto) => (
+                    <tr key={loto._id}>
+                      <td>{new Date(loto.date).toLocaleDateString()}</td>
+                      <td>{loto.shift}</td>
+                      <td>
+                        {loto.isolator?.firstName} {loto.isolator?.lastName}
+                      </td>
+                      <td>{loto.isolatedPart}</td>
+                      <td>{loto.reason}</td>
+                      <td>{getStatusBadge(loto.status)}</td>
+                      <td>{loto.expectedDuration} hrs</td>
+                      <td>
+                        <div className="d-flex gap-1 flex-wrap">
+                          {canVerify && loto.status === "pending" && (
+                            <Button
+                              variant="success"
+                              size="sm"
+                              onClick={() => handleVerify(loto._id)}
+                            >
+                              <Icon name="check" /> Verify
+                            </Button>
+                          )}
 
-                    {isTechnician &&
-                      (loto.status === "active" ||
-                        loto.status === "handover") && (
-                        <div>
-                          <button
-                            onClick={() => handleUpdate(loto._id)}
-                            style={{
-                              padding: "6px 12px",
-                              backgroundColor: "#007bff",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                              marginRight: "5px",
-                              marginBottom: "5px",
-                            }}
-                          >
-                            Update
-                          </button>
-                          <button
-                            onClick={() => handleHandover(loto._id)}
-                            style={{
-                              padding: "6px 12px",
-                              backgroundColor: "#17a2b8",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                              marginRight: "5px",
-                              marginBottom: "5px",
-                            }}
-                          >
-                            Handover
-                          </button>
-                          <button
-                            onClick={() => handleComplete(loto._id)}
-                            style={{
-                              padding: "6px 12px",
-                              backgroundColor: "#28a745",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                            }}
-                          >
-                            Complete
-                          </button>
+                          {isTechnician &&
+                            (loto.status === "active" ||
+                              loto.status === "handover") && (
+                              <>
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => handleUpdate(loto._id)}
+                                >
+                                  <Icon name="edit" /> Update
+                                </Button>
+                                <Button
+                                  variant="info"
+                                  size="sm"
+                                  onClick={() => handleHandover(loto._id)}
+                                >
+                                  <Icon name="handover" /> Handover
+                                </Button>
+                                <Button
+                                  variant="success"
+                                  size="sm"
+                                  onClick={() => handleComplete(loto._id)}
+                                >
+                                  <Icon name="check" /> Complete
+                                </Button>
+                              </>
+                            )}
+
+                          {(loto.status === "active" ||
+                            loto.status === "completed") &&
+                            !canVerify &&
+                            !isTechnician && (
+                              <span className="text-muted">-</span>
+                            )}
                         </div>
-                      )}
-
-                    {loto.status === "active" &&
-                      !canVerify &&
-                      !isTechnician && (
-                        <span style={{ fontSize: "12px", color: "#6c757d" }}>
-                          Active
-                        </span>
-                      )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>
