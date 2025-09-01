@@ -18,7 +18,7 @@ async function setupUsersV2() {
   try {
     // Connect to MongoDB
     await mongoose.connect(
-      "mongodb://admin:securepassword123@loto_mongodb:27017/loto_management?authSource=admin"
+      "mongodb+srv://loto_app_user:vCvuHhm1y7RyC2Xl@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority"
     );
     console.log("Connected to MongoDB");
 

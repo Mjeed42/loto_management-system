@@ -5,7 +5,7 @@ require("dotenv").config();
 // Connect to database
 mongoose
   .connect(
-    `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`
+    `mongodb+srv://loto_app_user:vCvuHhm1y7RyC2Xl@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority`
   )
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.log("MongoDB Connection Error:", err));

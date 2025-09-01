@@ -8,8 +8,7 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_URL=${MONGO_URL}
     volumes:
       - mongodb_data:/data/db
     ports:
