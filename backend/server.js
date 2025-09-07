@@ -35,9 +35,9 @@ console.log(
 
 // Direct connection string (for testing)
 const MONGO_URI =
-  "mongodb+srv://loto_app_user:vCvuHhm1y7RyC2Xl@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
+  "mongodb+srv://loto_app_user:6hsMKn4SwqFKpPtV@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
 process.env.MONGODB_URI ||
-  "mongodb+srv://loto_app_user:vCvuHhm1y7RyC2Xl@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
+  "mongodb+srv://loto_app_user:6hsMKn4SwqFKpPtV@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
 
 console.log("Using connection string:", MONGO_URI.replace(/:[^:@]+@/, ":***@")); // Hide password in logs
 
