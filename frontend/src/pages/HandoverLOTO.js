@@ -66,10 +66,12 @@ const HandoverLOTO = () => {
       setLoading(false);
     }
   };
+  
 
-  const onChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+
+  function onChange(e) {
+  setFormData({ ...formData, [e.target.name]: e.target.value });
+}
 
   const onUserSelect = (userId) => {
     setFormData({ ...formData, handoverTo: userId });

@@ -492,51 +492,6 @@ const KPISummary = () => {
           </div>
         </div>
 
-        {/* Reports and Targets */}
-        <div className="cf-grid cf-grid-gap-large cf-grid cols-2">
-          <div className="cf-card">
-            <h2 className="cf-card-title cf-mb-6">Detailed Reports</h2>
-            <div className="cf-list">
-              <div className="cf-list-item">
-                <div className="cf-list-item-content">
-                  <div className="cf-list-item-icon">
-                    <Icon name="document" />
-                  </div>
-                  <span className="cf-list-item-text">
-                    LOTO Completion Report
-                  </span>
-                </div>
-                <span className="cf-list-item-badge blue">PDF</span>
-              </div>
-              <div className="cf-list-item">
-                <div className="cf-list-item-content">
-                  <div className="cf-list-item-icon">
-                    <Icon name="document" />
-                  </div>
-                  <span className="cf-list-item-text">Compliance Report</span>
-                </div>
-                <span className="cf-list-item-badge green">Excel</span>
-              </div>
-              <div className="cf-list-item">
-                <div className="cf-list-item-content">
-                  <div className="cf-list-item-icon">
-                    <Icon name="document" />
-                  </div>
-                  <span className="cf-list-item-text">Incident Report</span>
-                </div>
-                <span className="cf-list-item-badge yellow">PDF</span>
-              </div>
-              <div className="cf-list-item">
-                <div className="cf-list-item-content">
-                  <div className="cf-list-item-icon">
-                    <Icon name="document" />
-                  </div>
-                  <span className="cf-list-item-text">Handover Analysis</span>
-                </div>
-                <span className="cf-list-item-badge purple">Excel</span>
-              </div>
-            </div>
-          </div>
 
           <div className="cf-card">
             <h2 className="cf-card-title cf-mb-6">Performance Targets</h2>
@@ -644,7 +599,7 @@ const KPISummary = () => {
           </div>
         </div>
       </div>
-    </div>
+  
   );
 };
 
