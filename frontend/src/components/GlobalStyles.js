@@ -1496,7 +1496,241 @@ const GlobalStyles = () => (
     }
     .transition-bounce {
       transition: var(--transition-bounce);
+
     }
+        container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: "#f8fafc", // Corresponds to var(--gray-50)
+  },
+  headerCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 8,
+    color: "#3b82f6", // Using a direct color as gradients are complex in RN
+  },
+  headerIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: "#64748b", // Corresponds to var(--secondary)
+  },
+  headerButtons: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  buttonSpacing: {
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  searchFilterContainer: {
+    flexDirection: "row",
+    marginBottom: 16,
+  },
+  searchInputContainer: {
+    flex: 2,
+    position: "relative",
+    marginRight: 8,
+  },
+  searchIcon: {
+    position: "absolute",
+    left: 16,
+    top: 12,
+    fontSize: 18,
+    zIndex: 1,
+  },
+  searchInput: {
+    height: 48,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: "#e2e8f0", // Corresponds to var(--gray-200)
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    paddingLeft: 48,
+    paddingRight: 16,
+    fontSize: 16,
+  },
+  pickerContainer: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#e2e8f0",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    overflow: "hidden",
+  },
+  picker: {
+    height: 48,
+    width: "100%",
+  },
+  statsCardsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  statsCard: {
+    width: "48%", // Adjust as needed for responsiveness
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statsCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  statsIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  statsNumber: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#0f172a", // Corresponds to var(--secondary-900)
+  },
+  statsLabel: {
+    fontSize: 14,
+    color: "#64748b", // Corresponds to var(--secondary)
+  },
+  errorAlert: {
+    backgroundColor: "#fee2e2", // Corresponds to var(--danger-100)
+    borderLeftWidth: 4,
+    borderLeftColor: "#ef4444", // Corresponds to var(--danger-500)
+    borderRadius: 8,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  errorIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  errorText: {
+    color: "#dc2626", // Corresponds to var(--danger-600)
+    fontSize: 16,
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 50,
+  },
+  emptyStateIcon: {
+    fontSize: 60,
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 8,
+    color: "#0f172a",
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: "#64748b",
+    textAlign: "center",
+    marginBottom: 24,
+    paddingHorizontal: 20,
+  },
+  tableContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    marginBottom: 16,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#f1f5f9", // Corresponds to var(--gray-100)
+    paddingVertical: 12,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  tableHeaderCell: {
+    flex: 1,
+    fontWeight: "bold",
+    paddingHorizontal: 8,
+    color: "#0f172a",
+  },
+  tableRow: {
+    flexDirection: "row",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0", // Corresponds to var(--gray-200)
+    alignItems: "center",
+  },
+  tableCell: {
+    flex: 1,
+    paddingHorizontal: 8,
+    color: "#334155", // Corresponds to var(--secondary-700)
+  },
+  textCenter: {
+    textAlign: "center",
+  },
+  tableActions: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  statusPill: {
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 2,
+    alignSelf: "flex-start",
+  },
+  statusPillText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 50,
+  },
+  loadingText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#64748b",
+    marginTop: 16,
+  },
+  loadingSubText: {
+    fontSize: 16,
+    color: "#94a3b8",
+    marginTop: 8,
+  },
+});
   `}</style>
 );
 

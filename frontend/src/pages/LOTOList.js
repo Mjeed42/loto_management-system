@@ -27,7 +27,10 @@ const LOTOList = () => {
         },
       };
 
-      const res = await axios.get("http://localhost:5000/api/auth/me", config);
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        config
+      );
       setCurrentUser(res.data.user);
     } catch (err) {
       console.log("Error fetching current user");
@@ -43,7 +46,10 @@ const LOTOList = () => {
         },
       };
 
-      const res = await axios.get("http://localhost:5000/api/loto", config);
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/loto",
+        config
+      );
       setLotos(res.data.data);
       setLoading(false);
     } catch (err) {
@@ -62,7 +68,7 @@ const LOTOList = () => {
       };
 
       const res = await axios.put(
-        `http://localhost:5000/api/loto/${lotoId}/verify`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/verify`,
         {},
         config
       );
@@ -163,7 +169,9 @@ const LOTOList = () => {
   // Filter LOTOs based on search and status
   const filteredLotos = lotos.filter((loto) => {
     const matchesSearch =
-      (loto.serialNumber ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (loto.serialNumber ?? "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       loto.isolatedPart.toLowerCase().includes(searchTerm.toLowerCase()) ||
       loto.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (loto.isolator?.firstName + " " + loto.isolator?.lastName)

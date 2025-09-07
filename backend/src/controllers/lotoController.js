@@ -151,9 +151,23 @@ exports.verifyLOTO = async (req, res) => {
         message: "LOTO not found",
       });
     }
+    // --- NEW CHECK: Prevent self-verification ---
+    // Check if the user trying to verify is the same as the isolator
+    if (loto.isolator.toString() === req.user.id && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You cannot verify a LOTO you created. Please ask another authorized person to verify it.",
+      });
+    }
+    // --- END NEW CHECK ---
 
-    // Only supervisors and admins can verify
-    if (req.user.role !== "supervisor" && req.user.role !== "admin") {
+    // Allow managers, supervisors, and admins to verify
+    if (
+      req.user.role !== "manager" &&
+      req.user.role !== "supervisor" &&
+      req.user.role !== "admin"
+    ) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to verify LOTO",
@@ -425,9 +439,12 @@ exports.handoverLOTO = async (req, res) => {
 // @access  Private
 exports.acceptHandover = async (req, res) => {
   try {
+    console.log("Accept handover request received:", req.params.id);
+
     const loto = await LOTO.findById(req.params.id);
 
     if (!loto) {
+      console.log("LOTO not found:", req.params.id);
       return res.status(404).json({
         success: false,
         message: "LOTO not found",
@@ -436,18 +453,28 @@ exports.acceptHandover = async (req, res) => {
 
     // Only the handover recipient can accept
     if (loto.handoverTo?.toString() !== req.user.id) {
+      console.log("Unauthorized handover acceptance attempt");
       return res.status(403).json({
         success: false,
         message: "Not authorized to accept this handover",
       });
     }
 
-    // Update LOTO
-    loto.status = "active";
+    // Update LOTO - Reset to pending status for re-verification
+    loto.status = "pending"; // Changed from 'active' to 'pending'
     loto.isolator = req.user.id;
     loto.isolatorName = `${req.user.firstName} ${req.user.lastName}`;
+    loto.verifiedBy = null; // Clear previous verification
+    loto.verifiedAt = null; // Clear previous verification timestamp
+    loto.handoverTo = null; // Clear handover recipient
+    loto.handoverNotes = null; // Clear handover notes
+    loto.updatedAt = Date.now();
 
     await loto.save();
+
+    console.log(
+      "LOTO handover accepted and reset to pending for re-verification"
+    );
 
     // Populate the updated LOTO
     const updatedLOTO = await LOTO.findById(loto._id)
@@ -457,9 +484,10 @@ exports.acceptHandover = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: updatedLOTO,
+      updatedLOTO,
     });
   } catch (error) {
+    console.error("Accept handover error:", error);
     res.status(500).json({
       success: false,
       message: "Server Error",

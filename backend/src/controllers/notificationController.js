@@ -22,10 +22,7 @@ exports.getHandoverNotifications = async (req, res) => {
       success: true,
       count: notifications.length,
       notifications, // This is the key data
-      data: {
-        // Also provide in data object for consistency
-        notifications: notifications,
-      },
+      data: { notifications: notifications }, // Added for consistency
     });
   } catch (error) {
     console.error("Get notifications error:", error);
@@ -67,7 +64,7 @@ exports.acceptHandover = async (req, res) => {
     // Update LOTO to transfer ownership
     const loto = await LOTO.findById(notification.lotoId);
     if (loto) {
-      loto.status = "active";
+      loto.status = "pending";
       loto.isolator = req.user.id;
       loto.isolatorName = `${req.user.firstName} ${req.user.lastName}`;
       loto.handoverTo = null; // Clear handoverTo field

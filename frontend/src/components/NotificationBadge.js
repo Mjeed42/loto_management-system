@@ -23,7 +23,7 @@ const NotificationBadge = ({ onNotificationClick }) => {
       };
 
       const res = await axios.get(
-        "http://localhost:5000/api/notifications/handover",
+        "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover",
         config
       );
       setNotificationCount(res.data.count);

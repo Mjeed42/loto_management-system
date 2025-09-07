@@ -23,10 +23,13 @@ const Login = ({ onLogin }) => {
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        username,
-        password,
-      });
+      const res = await axios.post(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/login",
+        {
+          username,
+          password,
+        }
+      );
 
       localStorage.setItem("token", res.data.token);
 

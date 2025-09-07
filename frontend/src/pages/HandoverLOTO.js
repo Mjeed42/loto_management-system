@@ -46,7 +46,7 @@ const HandoverLOTO = () => {
       };
 
       const res = await axios.get(
-        "http://localhost:5000/api/users/technicians",
+        "https://loto-backend-643788243736.europe-west1.run.app/api/users/technicians",
         config
       );
 
@@ -66,12 +66,10 @@ const HandoverLOTO = () => {
       setLoading(false);
     }
   };
-  
-
 
   function onChange(e) {
-  setFormData({ ...formData, [e.target.name]: e.target.value });
-}
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  }
 
   const onUserSelect = (userId) => {
     setFormData({ ...formData, handoverTo: userId });
@@ -103,7 +101,7 @@ const HandoverLOTO = () => {
       };
 
       await axios.put(
-        `http://localhost:5000/api/loto/${id}/handover`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/handover`,
         handoverData,
         config
       );

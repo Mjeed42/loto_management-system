@@ -39,7 +39,10 @@ function App() {
         },
       };
 
-      const res = await axios.get("http://localhost:5000/api/auth/me", config);
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        config
+      );
       setCurrentUser(res.data.user);
     } catch (err) {
       console.log("Error fetching current user");

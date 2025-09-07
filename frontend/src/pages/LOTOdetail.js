@@ -26,7 +26,10 @@ const LOTOdetail = () => {
         },
       };
 
-      const res = await axios.get("http://localhost:5000/api/auth/me", config);
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        config
+      );
       setCurrentUser(res.data.user);
     } catch (err) {
       console.log("Error fetching current user");
@@ -43,7 +46,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.get(
-        `http://localhost:5000/api/loto/${id}`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
         config
       );
       setLoto(res.data.data);
@@ -71,7 +74,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.put(
-        `http://localhost:5000/api/loto/${id}/accept-handover`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/accept-handover`,
         {},
         config
       );
@@ -101,7 +104,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.put(
-        `http://localhost:5000/api/loto/${id}/reject-handover`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/reject-handover`,
         {},
         config
       );
@@ -128,7 +131,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.put(
-        `http://localhost:5000/api/loto/${id}/verify`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/verify`,
         {},
         config
       );

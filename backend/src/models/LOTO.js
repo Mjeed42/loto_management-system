@@ -37,10 +37,6 @@ const lotoSchema = new mongoose.Schema(
       type: String,
       default: "N/A",
     },
-    actualStartTime: {
-      type: Date,
-      default: Date.now,
-    },
     expectedDuration: {
       type: Number, // in hours
       required: true,
@@ -54,7 +50,7 @@ const lotoSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "active", "completed", "pending_handover", "handover"],
+      enum: ["pending", "active", "completed", "pending_handover"],
       default: "pending",
     },
     actualFinishTime: {
@@ -73,13 +69,24 @@ const lotoSchema = new mongoose.Schema(
     completionNotes: {
       type: String,
     },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Create index for serialNumber
+// Add index for better query performance
 lotoSchema.index({ serialNumber: 1 });
+lotoSchema.index({ status: 1 });
+lotoSchema.index({ isolator: 1 });
+lotoSchema.index({ handoverTo: 1 });
 
-module.exports = mongoose.model("LOTO", lotoSchema);
+module.exports = mongoose.models.LOTO || mongoose.model("LOTO", lotoSchema);

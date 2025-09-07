@@ -37,7 +37,7 @@ const AdminDashboard = () => {
       };
 
       const res = await axios.get(
-        "http://localhost:5000/api/admin/users",
+        "https://loto-backend-643788243736.europe-west1.run.app/api/admin/users",
         config
       );
       console.log("Users API response:", res.data);
@@ -78,7 +78,7 @@ const AdminDashboard = () => {
       };
 
       await axios.post(
-        "http://localhost:5000/api/admin/users",
+        "https://loto-backend-643788243736.europe-west1.run.app/api/admin/users",
         formData,
         config
       );
@@ -121,7 +121,7 @@ const AdminDashboard = () => {
 
       console.log("Sending reset password request for user:", userId);
       const response = await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/reset-password`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/admin/users/${userId}/reset-password`,
         { newPassword },
         config
       );
@@ -150,7 +150,7 @@ const AdminDashboard = () => {
 
       console.log("Sending toggle status request for user:", userId);
       const response = await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/toggle-status`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/admin/users/${userId}/toggle-status`,
         {},
         config
       );
@@ -183,7 +183,7 @@ const AdminDashboard = () => {
 
       console.log("Sending delete request for user:", userId);
       const response = await axios.delete(
-        `http://localhost:5000/api/admin/users/${userId}`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/admin/users/${userId}`,
         config
       );
 

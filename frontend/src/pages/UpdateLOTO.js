@@ -30,7 +30,7 @@ const UpdateLOTO = () => {
       };
 
       const res = await axios.get(
-        `http://localhost:5000/api/loto/${id}`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
         config
       );
 
@@ -65,7 +65,11 @@ const UpdateLOTO = () => {
         },
       };
 
-      await axios.put(`http://localhost:5000/api/loto/${id}`, formData, config);
+      await axios.put(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
+        formData,
+        config
+      );
 
       alert("LOTO updated successfully!");
       navigate("/loto-list");

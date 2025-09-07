@@ -23,7 +23,7 @@ const Notifications = () => {
 
       console.log("Fetching notifications...");
       const res = await axios.get(
-        "http://localhost:5000/api/notifications/handover",
+        "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover",
         config
       );
       console.log("Notifications response:", res.data);
@@ -61,7 +61,7 @@ const Notifications = () => {
       };
 
       await axios.put(
-        `http://localhost:5000/api/notifications/handover/${notificationId}/accept`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover/${notificationId}/accept`,
         {},
         config
       );
@@ -85,7 +85,7 @@ const Notifications = () => {
       };
 
       await axios.put(
-        `http://localhost:5000/api/notifications/handover/${notificationId}/reject`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover/${notificationId}/reject`,
         {},
         config
       );

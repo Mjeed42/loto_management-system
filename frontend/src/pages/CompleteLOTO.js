@@ -39,7 +39,7 @@ const CompleteLOTO = () => {
       };
 
       await axios.put(
-        `http://localhost:5000/api/loto/${id}/complete`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/complete`,
         completeData,
         config
       );

@@ -37,7 +37,7 @@ const CreateLOTO = () => {
       };
 
       const res = await axios.post(
-        "http://localhost:5000/api/loto",
+        "https://loto-backend-643788243736.europe-west1.run.app/api/loto",
         formData,
         config
       );
