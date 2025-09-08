@@ -207,7 +207,7 @@ const AdminDashboard = () => {
   const getRoleBadge = (role) => {
     const roleConfig = {
       admin: { text: "Admin", variant: "danger" },
-      manager: { text: "Manager", variant: "primary" },
+      supervisor: { text: "supervisor", variant: "primary" },
       technician: { text: "Technician", variant: "success" },
     };
 
@@ -321,7 +321,7 @@ const AdminDashboard = () => {
                       className="form-control"
                     >
                       <option value="technician">Technician</option>
-                      <option value="manager">Manager</option>
+                      <option value="supervisor">Supervisor</option>
                     </select>
                   </div>
                 </div>

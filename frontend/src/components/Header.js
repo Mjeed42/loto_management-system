@@ -46,7 +46,7 @@ const Header = ({ currentUser }) => {
             onClick={() => navigate("/")}
           >
             <Icon name="lock" className="me-2" />
-            <span className="fw-bold">LOTO Manager</span>
+            <span className="fw-bold">LOTO</span>
           </div>
         </div>
       </header>
@@ -61,7 +61,7 @@ const Header = ({ currentUser }) => {
           onClick={() => navigate("/dashboard")}
         >
           <Icon name="lock" className="me-2" />
-          <span className="fw-bold">LOTO Manager</span>
+          <span className="fw-bold">LOTO</span>
         </div>
 
         <div className="d-flex align-items-center gap-3">
@@ -160,7 +160,7 @@ const Header = ({ currentUser }) => {
                 </>
               )}
               {currentUser &&
-                (currentUser.role === "manager" ||
+                (currentUser.role === "supervisor" ||
                   currentUser.role === "admin") && (
                   <>
                     <button

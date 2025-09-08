@@ -1,17 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
 const CompleteLOTO = () => {
+  const { id } = useParams(); // get LOTO ID from route
+  const navigate = useNavigate();
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const [currentUser, setCurrentUser] = useState(null);
   const [formData, setFormData] = useState({
+    actualFinishDate: today,
     actualFinishTime: "",
-    actualFinishDate: "",
     completionNotes: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const { id } = useParams();
-  const navigate = useNavigate();
+
+  // Fetch current user info
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const res = await axios.get(
+          "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+          config
+        );
+        setCurrentUser(res.data.user);
+      } catch (err) {
+        console.log("Error fetching current user", err);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -32,9 +55,8 @@ const CompleteLOTO = () => {
       };
 
       const completeData = {
+        actualFinishDate: formData.actualFinishDate || today,
         actualFinishTime: formData.actualFinishTime || new Date().toISOString(),
-        actualFinishDate:
-          formData.actualFinishDate || new Date().toISOString().split("T")[0],
         completionNotes: formData.completionNotes,
       };
 
@@ -53,7 +75,8 @@ const CompleteLOTO = () => {
     }
   };
 
-  const { actualFinishTime, actualFinishDate, completionNotes } = formData;
+  // Determine min date: admins can choose any date, regular users cannot pick past dates
+  const minDate = currentUser?.role === "admin" ? null : today;
 
   return (
     <div style={{ maxWidth: "600px", margin: "20px auto", padding: "20px" }}>
@@ -61,7 +84,6 @@ const CompleteLOTO = () => {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
           marginBottom: "20px",
         }}
       >
@@ -97,14 +119,13 @@ const CompleteLOTO = () => {
 
       <form onSubmit={onSubmit}>
         <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "5px" }}>
-            Actual Finish Date:
-          </label>
+          <label>Actual Finish Date:</label>
           <input
             type="date"
             name="actualFinishDate"
-            value={actualFinishDate}
+            value={formData.actualFinishDate}
             onChange={onChange}
+            min={minDate} // prevent past dates for regular users
             style={{
               width: "100%",
               padding: "10px",
@@ -117,13 +138,11 @@ const CompleteLOTO = () => {
         </div>
 
         <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "5px" }}>
-            Actual Finish Time:
-          </label>
+          <label>Actual Finish Time:</label>
           <input
             type="time"
             name="actualFinishTime"
-            value={actualFinishTime}
+            value={formData.actualFinishTime}
             onChange={onChange}
             style={{
               width: "100%",
@@ -137,12 +156,10 @@ const CompleteLOTO = () => {
         </div>
 
         <div style={{ marginBottom: "20px" }}>
-          <label style={{ display: "block", marginBottom: "5px" }}>
-            Completion Notes:
-          </label>
+          <label>Completion Notes:</label>
           <textarea
             name="completionNotes"
-            value={completionNotes}
+            value={formData.completionNotes}
             onChange={onChange}
             placeholder="Enter completion notes (work completed, any issues, recommendations, etc.)"
             rows="4"

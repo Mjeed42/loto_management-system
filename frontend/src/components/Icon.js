@@ -139,6 +139,7 @@ const SVGIcons = {
     <svg
       viewBox="0 0 24 24"
       fill="none"
+      color="currentColor"
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
@@ -473,7 +474,7 @@ const Icon = ({
         ? "32px"
         : "20px",
     color: color,
-    display: "inline-block",
+    display: "inline-flex",
     verticalAlign: "middle",
   };
 

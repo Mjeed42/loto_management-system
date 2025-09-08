@@ -42,7 +42,7 @@ const NotificationBadge = ({ onNotificationClick }) => {
       style={{
         position: "relative",
         cursor: "pointer",
-        display: "inline-block",
+        display: "inline-flex",
       }}
     >
       <span

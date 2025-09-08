@@ -162,9 +162,9 @@ exports.verifyLOTO = async (req, res) => {
     }
     // --- END NEW CHECK ---
 
-    // Allow managers, supervisors, and admins to verify
+    // Allow supervisors, supervisors, and admins to verify
     if (
-      req.user.role !== "manager" &&
+      req.user.role !== "supervisor" &&
       req.user.role !== "supervisor" &&
       req.user.role !== "admin"
     ) {
@@ -275,8 +275,9 @@ exports.completeLOTO = async (req, res) => {
 
     // Only the isolator or handover recipient can complete
     if (
-      loto.isolator.toString() !== req.user.id &&
-      loto.handoverTo?.toString() !== req.user.id
+      (loto.isolator.toString() !== req.user.id &&
+        loto.handoverTo?.toString() !== req.user.id) ||
+      req.user.role !== "admin"
     ) {
       return res.status(403).json({
         success: false,

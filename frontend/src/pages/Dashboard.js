@@ -192,7 +192,7 @@ const Dashboard = () => {
               className="card h-100 border-0 shadow-md hover-lift cursor-pointer transition"
               onClick={action.action}
               style={{
-                background: "rgba(255, 255, 255, 0.95)",
+                background: "rgba(232, 255, 178, 0.06)",
                 backdropFilter: "blur(20px)",
                 transform: "translateY(0)",
                 transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -237,71 +237,6 @@ const Dashboard = () => {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Recent Activity & System Status */}
-      <div className="row">
-        {/* Recent Activity */}
-        <div className="col-lg-8 mb-4">
-          <div className="card border-0 shadow-md">
-            <div className="card-header bg-glass border-0 py-4">
-              <h5 className="mb-0 fw-bold d-flex align-items-center text-gray-800">
-                <span className="me-3">📈</span>
-                Recent Activity
-              </h5>
-            </div>
-            <div className="card-body p-0">
-              <div className="timeline">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="timeline-item">
-                    <div className="d-flex align-items-start">
-                      <div
-                        className={`rounded-circle p-2 me-3 d-flex align-items-center justify-content-center`}
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          background: `linear-gradient(135deg, var(--${activity.variant}-400) 0%, var(--${activity.variant}-600) 100%)`,
-                          color: "white",
-                          fontSize: "1rem",
-                          boxShadow: "var(--shadow-sm)",
-                        }}
-                      >
-                        {activity.icon}
-                      </div>
-                      <div className="flex-grow-1">
-                        <div className="timeline-time text-muted">
-                          {activity.time}
-                        </div>
-                        <div className="timeline-content">
-                          <div className="fw-semibold text-gray-800 mb-1">
-                            {activity.action}
-                          </div>
-                          <div className="text-muted mb-1">
-                            by{" "}
-                            <span className="fw-medium">{activity.user}</span>
-                          </div>
-                          <small className="text-muted">
-                            {activity.details}
-                          </small>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="p-4 text-center border-top">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate("/notifications")}
-                  className="hover-scale"
-                >
-                  📋 View All Activity
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

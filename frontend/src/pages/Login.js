@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -10,6 +10,49 @@ const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Try to fetch current user to verify token validity
+      fetchCurrentUser();
+    }
+  }, []);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        config
+      );
+
+      // If successful, redirect to appropriate dashboard
+      if (onLogin) {
+        onLogin();
+      }
+
+      // Redirect based on role
+      switch (res.data.user.role) {
+        case "admin":
+          navigate("/admin");
+          break;
+        default:
+          navigate("/dashboard");
+          break;
+      }
+    } catch (err) {
+      // If token is invalid, remove it and stay on login page
+      localStorage.removeItem("token");
+    }
+  };
 
   const { username, password } = formData;
 
@@ -37,7 +80,21 @@ const Login = ({ onLogin }) => {
         onLogin();
       }
 
-      navigate("/dashboard");
+      // Redirect based on role
+      switch (res.data.user.role) {
+        case "admin":
+          navigate("/KPI");
+          break;
+        case "supervisor":
+          navigate("/loto-list");
+          break;
+        case "technician":
+          navigate("/dashboard");
+          break;
+        default:
+          navigate("/dashboard");
+          break;
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -104,20 +161,6 @@ const Login = ({ onLogin }) => {
                 </button>
               </div>
             </form>
-
-            <div className="mt-4 text-center">
-              <h6 className="text-muted">Default Test Users</h6>
-              <div className="card bg-light">
-                <div className="card-body">
-                  <p className="mb-1">
-                    <strong>Admin:</strong> admin / admin123
-                  </p>
-                  <p className="mb-0">
-                    <strong>Technician:</strong> tech / tech123
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

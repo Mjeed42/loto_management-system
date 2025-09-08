@@ -191,5 +191,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`\n🚀 Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+  console.log(
+    `📊 Health check: https://loto-backend-643788243736.europe-west1.run.app/api/health`
+  );
 });

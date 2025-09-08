@@ -289,7 +289,7 @@ const LOTOList = () => {
         </div>
         <div className="col-md-4">
           <select
-            className="form-select"
+            className="search-input form-control"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             style={{

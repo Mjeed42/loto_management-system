@@ -211,7 +211,7 @@ const LOTOdetail = () => {
     currentUser && loto.isolator && loto.isolator._id === currentUser.id;
   const canVerify =
     currentUser &&
-    (currentUser.role === "manager" || currentUser.role === "admin");
+    (currentUser.role === "supervisor" || currentUser.role === "admin");
   const isTechnician = currentUser && currentUser.role === "technician";
   const isSupervisor = currentUser && currentUser.role === "supervisor";
   return (
@@ -432,7 +432,8 @@ const LOTOdetail = () => {
                 </p>
                 {loto.status === "pending" && (
                   <p className="mb-0 text-muted">
-                    <Icon name="info" /> Awaiting verification by manager/admin
+                    <Icon name="info" /> Awaiting verification by
+                    supervisor/admin
                   </p>
                 )}
                 {loto.status === "pending_handover" && (
