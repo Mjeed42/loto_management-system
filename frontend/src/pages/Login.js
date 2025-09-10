@@ -83,7 +83,7 @@ const Login = ({ onLogin }) => {
       // Redirect based on role
       switch (res.data.user.role) {
         case "admin":
-          navigate("/KPI");
+          navigate("/loto-list");
           break;
         case "supervisor":
           navigate("/loto-list");

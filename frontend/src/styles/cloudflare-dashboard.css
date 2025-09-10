@@ -554,7 +554,7 @@
   line-height: 1.5;
   color: #212529;
   background-color: #fff;
-  background-image: url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 16 16\'%3e%3cpath fill=\'none\' stroke=\'%23343a40\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'m2 5 6 6 6-6\'%3e%3c/path%3e%3c/svg%3e" );
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'%3e%3c/path%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 16px 12px;
@@ -722,8 +722,8 @@
   border: 0.25em solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
-  -webkit-animation: .75s linear infinite spinner-border;
-  animation: .75s linear infinite spinner-border;
+  -webkit-animation: 0.75s linear infinite spinner-border;
+  animation: 0.75s linear infinite spinner-border;
 }
 
 .cf-text-primary {
@@ -762,7 +762,8 @@
   padding: 0.375rem 0.75rem;
   font-size: 1rem;
   border-radius: 0.25rem;
-  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 .cf-btn-sm {
@@ -885,7 +886,8 @@
   min-width: 300px; /* Ensure cards don't get too small */
 }
 
-.cf-table th, .cf-table td {
+.cf-table th,
+.cf-table td {
   white-space: nowrap; /* Prevent text wrapping in table cells */
 }
 
@@ -941,20 +943,6 @@
   z-index: 1; /* Ensure active button border is visible */
 }
 
-/* Specific adjustments for the KPIWidget icons and text */
-.cf-card .cf-card-body .cf-flex .cf-rounded-circle {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.cf-card .cf-card-body .cf-flex .cf-rounded-circle .cf-icon {
-  font-size: 1.8rem; /* Larger icons for KPI widgets */
-}
-
 .cf-card .cf-card-body h2 {
   font-size: 2.2rem; /* Larger value text */
   margin-bottom: 0.5rem;
@@ -981,12 +969,19 @@
 }
 
 /* Adjustments for the Safety Metrics section */
-.cf-card .cf-card-body .cf-d-flex.cf-align-items-center.cf-mb-4 .cf-rounded-circle {
+.cf-card
+  .cf-card-body
+  .cf-d-flex.cf-align-items-center.cf-mb-4
+  .cf-rounded-circle {
   width: 60px;
   height: 60px;
 }
 
-.cf-card .cf-card-body .cf-d-flex.cf-align-items-center.cf-mb-4 .cf-rounded-circle .cf-icon {
+.cf-card
+  .cf-card-body
+  .cf-d-flex.cf-align-items-center.cf-mb-4
+  .cf-rounded-circle
+  .cf-icon {
   font-size: 2.5rem;
 }
 
@@ -1069,7 +1064,8 @@
     padding: 1.5rem;
   }
 
-  .cf-table th, .cf-table td {
+  .cf-table th,
+  .cf-table td {
     padding: 0.75rem;
   }
 
@@ -1112,12 +1108,19 @@
     font-size: 1.2rem;
   }
 
-  .cf-card .cf-card-body .cf-d-flex.cf-align-items-center.cf-mb-4 .cf-rounded-circle {
+  .cf-card
+    .cf-card-body
+    .cf-d-flex.cf-align-items-center.cf-mb-4
+    .cf-rounded-circle {
     width: 48px;
     height: 48px;
   }
 
-  .cf-card .cf-card-body .cf-d-flex.cf-align-items-center.cf-mb-4 .cf-rounded-circle .cf-icon {
+  .cf-card
+    .cf-card-body
+    .cf-d-flex.cf-align-items-center.cf-mb-4
+    .cf-rounded-circle
+    .cf-icon {
     font-size: 2rem;
   }
 
@@ -1161,7 +1164,8 @@
     align-items: stretch;
   }
 
-  .cf-header-actions .cf-btn, .cf-header-actions .cf-form-select {
+  .cf-header-actions .cf-btn,
+  .cf-header-actions .cf-form-select {
     width: 100%;
   }
 
@@ -1187,7 +1191,8 @@
     padding: 1rem;
   }
 
-  .cf-table th, .cf-table td {
+  .cf-table th,
+  .cf-table td {
     padding: 0.5rem;
   }
 
@@ -1212,12 +1217,19 @@
     font-size: 1rem;
   }
 
-  .cf-card .cf-card-body .cf-d-flex.cf-align-items-center.cf-mb-4 .cf-rounded-circle {
+  .cf-card
+    .cf-card-body
+    .cf-d-flex.cf-align-items-center.cf-mb-4
+    .cf-rounded-circle {
     width: 40px;
     height: 40px;
   }
 
-  .cf-card .cf-card-body .cf-d-flex.cf-align-items-center.cf-mb-4 .cf-rounded-circle .cf-icon {
+  .cf-card
+    .cf-card-body
+    .cf-d-flex.cf-align-items-center.cf-mb-4
+    .cf-rounded-circle
+    .cf-icon {
     font-size: 1.8rem;
   }
 
@@ -1666,141 +1678,4 @@
   font-size: var(--cf-font-size-sm);
   border-top: 1px solid var(--cf-border);
   margin-top: 2rem;
-}
-
-/* Specific styles for the KPI Summary page */
-.cf-kpi-summary-page {
-  background-color: #f8f9fa; /* Light background for the page */
-}
-
-.cf-kpi-summary-header {
-  background-color: var(--cf-white);
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid var(--cf-border);
-  box-shadow: var(--cf-shadow-sm);
-}
-
-.cf-kpi-summary-header h1 {
-  font-size: 2rem;
-  font-weight: var(--cf-font-weight-bold);
-  color: var(--cf-text-primary);
-}
-
-.cf-kpi-summary-header p {
-  font-size: 1rem;
-  color: var(--cf-text-secondary);
-}
-
-.cf-kpi-summary-controls {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.cf-kpi-summary-grid {
-  padding: 2rem;
-}
-
-.cf-kpi-summary-card {
-  background-color: var(--cf-white);
-  border-radius: var(--cf-radius-lg);
-  box-shadow: var(--cf-shadow-sm);
-  padding: 1.5rem;
-  transition: all 0.3s ease;
-}
-
-.cf-kpi-summary-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.cf-kpi-summary-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--cf-border);
-}
-
-.cf-kpi-summary-card-title {
-  font-size: 1.25rem;
-  font-weight: var(--cf-font-weight-semibold);
-  color: var(--cf-text-primary);
-}
-
-.cf-kpi-summary-chart-container {
-  height: 300px;
-  width: 100%;
-}
-
-.cf-kpi-summary-table-container {
-  overflow-x: auto;
-}
-
-.cf-kpi-summary-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.cf-kpi-summary-table th,
-.cf-kpi-summary-table td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid var(--cf-border);
-}
-
-.cf-kpi-summary-table th {
-  background-color: #f9fafb;
-  font-size: 0.875rem;
-  font-weight: var(--cf-font-weight-semibold);
-  color: var(--cf-text-secondary);
-  text-transform: uppercase;
-}
-
-.cf-kpi-summary-table tbody tr:hover {
-  background-color: #f5f6f8;
-}
-
-.cf-kpi-summary-alert {
-  padding: 1rem;
-  border-radius: var(--cf-radius-md);
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.cf-kpi-summary-alert.info {
-  background-color: rgba(6, 182, 212, 0.1);
-  color: var(--cf-info-dark);
-  border: 1px solid var(--cf-info);
-}
-
-.cf-kpi-summary-alert.warning {
-  background-color: rgba(245, 158, 11, 0.1);
-  color: var(--cf-warning);
-  border: 1px solid var(--cf-warning);
-}
-
-.cf-kpi-summary-alert.danger {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: var(--cf-danger);
-  border: 1px solid var(--cf-danger);
-}
-
-.cf-kpi-summary-alert-icon {
-  flex-shrink: 0;
-  font-size: 1.5rem;
-}
-
-.cf-kpi-summary-alert-content h4 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1rem;
-  font-weight: var(--cf-font-weight-semibold);
-}
-
-.cf-kpi-summary-alert-content p {
-  margin: 0;
-  font-size: 0.875rem;
 }

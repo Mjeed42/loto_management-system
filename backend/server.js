@@ -21,7 +21,6 @@ app.use("/api/loto", require("./src/routes/loto"));
 app.use("/api/users", require("./src/routes/users"));
 app.use("/api/notifications", require("./src/routes/notifications"));
 app.use("/api/admin", require("./src/routes/admin"));
-app.use("/api/kpi", require("./src/routes/kpi"));
 app.use("/api/auth", require("./src/routes/auth"));
 
 // Database Connection - MongoDB Atlas with DEBUG

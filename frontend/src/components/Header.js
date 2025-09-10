@@ -13,8 +13,19 @@ const Header = ({ currentUser }) => {
   const userRef = useRef(null);
 
   const handleLogout = () => {
+    // Clear tokens and storage
     localStorage.removeItem("token");
-    navigate("/");
+    sessionStorage.clear();
+
+    // Clear all cookies
+    document.cookie.split(";").forEach((cookie) => {
+      const eqPos = cookie.indexOf("=");
+      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+    });
+
+    // Hard refresh to reset app state
+    window.location.href = "/";
   };
 
   // Close dropdowns when clicking outside
@@ -163,16 +174,7 @@ const Header = ({ currentUser }) => {
                 (currentUser.role === "supervisor" ||
                   currentUser.role === "admin") && (
                   <>
-                    <button
-                      className="dropdown-item d-flex align-items-center"
-                      onClick={() => {
-                        navigate("/kpi");
-                        setUserDropdownOpen(false);
-                      }}
-                    >
-                      <Icon name="chart" className="me-2" />
-                      KPI Dashboard
-                    </button>
+                    
                     <div className="dropdown-divider"></div>
                   </>
                 )}

@@ -16,224 +16,87 @@ const Dashboard = () => {
     {
       title: "Create New LOTO",
       description: "Start a new lockout/tagout procedure",
-      icon: "add",
+      icon: "➕",
       variant: "primary",
       action: () => navigate("/create-loto"),
-      gradient: "var(--gradient-primary)",
-      color: "#0ea5e9",
+      gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      color: "#6366f1",
     },
     {
       title: "View Active LOTOs",
       description: "Manage your current lockout/tagout procedures",
-      icon: "list",
+      icon: "📋",
       variant: "success",
       action: () => navigate("/loto-list"),
-      gradient:
-        "linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%)",
-      color: "#22c55e",
+      gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+      color: "#10b981",
     },
     {
       title: "Notifications",
       description: "View pending handover requests",
-      icon: "notification",
+      icon: "🔔",
       variant: "info",
       action: () => navigate("/notifications"),
-      gradient:
-        "linear-gradient(135deg, var(--info-500) 0%, var(--info-600) 100%)",
-      color: "#0ea5e9",
-    },
-  ];
-
-  const systemStats = [
-    {
-      label: "System Status",
-      value: "Operational",
-      icon: "✅",
-      variant: "success",
-      description: "All systems running normally",
-      count: "100%",
-    },
-    {
-      label: "Active LOTOs",
-      value: "8",
-      icon: "⚡",
-      variant: "warning",
-      description: "Currently in progress",
-      count: "8",
-    },
-    {
-      label: "Completed Today",
-      value: "12",
-      icon: "✅",
-      variant: "success",
-      description: "Successfully completed",
-      count: "12",
-    },
-    {
-      label: "Pending Approval",
-      value: "3",
-      icon: "⏳",
-      variant: "info",
-      description: "Awaiting verification",
-      count: "3",
-    },
-  ];
-
-  const recentActivity = [
-    {
-      action: "LOTO Created",
-      user: "John Doe",
-      time: "10 minutes ago",
-      icon: "➕",
-      variant: "primary",
-      details: "Equipment: Pump A-101",
-    },
-    {
-      action: "LOTO Completed",
-      user: "Jane Smith",
-      time: "1 hour ago",
-      icon: "✅",
-      variant: "success",
-      details: "Duration: 2.5 hours",
-    },
-    {
-      action: "Handover Request",
-      user: "Mike Johnson",
-      time: "2 hours ago",
-      icon: "🔄",
-      variant: "warning",
-      details: "Pending acceptance",
-    },
-    {
-      action: "LOTO Verified",
-      user: "Sarah Wilson",
-      time: "3 hours ago",
-      icon: "🔒",
-      variant: "info",
-      details: "Equipment: Motor B-205",
+      gradient: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+      color: "#06b6d4",
     },
   ];
 
   return (
-    <div className="animate-fade-in">
+    <div className="dashboard-container">
       {/* Welcome Header */}
-      <div className="row mb-5">
-        <div className="col-12">
-          <div
-            className="card bg-glass border-0 shadow-lg hover-lift"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%)",
-              backdropFilter: "blur(20px)",
-            }}
-          >
-            <div className="card-body py-5">
-              <div className="d-flex justify-content-between align-items-center flex-wrap">
-                <div>
-                  <h1
-                    className="fw-bold mb-3 d-flex align-items-center"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      fontSize: "2.5rem",
-                    }}
-                  >
-                    <span className="me-3" style={{ fontSize: "3rem" }}>
-                      🔒
-                    </span>
-                    LOTO Management Dashboard
-                  </h1>
-                  <p className="lead text-muted mb-0">
-                    Welcome back! Manage your lockout/tagout procedures with
-                    confidence.
-                  </p>
-                </div>
-                <div className="text-end">
-                  <div className="card bg-glass border-0 shadow-sm hover-lift">
-                    <div className="card-body py-3 px-4">
-                      <div className="d-flex align-items-center">
-                        <span className="me-3" style={{ fontSize: "1.5rem" }}>
-                          🕐
-                        </span>
-                        <div>
-                          <div
-                            className="fw-bold"
-                            style={{ fontSize: "1.2rem", color: "#1e293b" }}
-                          >
-                            {currentTime.toLocaleTimeString()}
-                          </div>
-                          <small className="text-muted fw-medium">
-                            {currentTime.toLocaleDateString("en-US", {
-                              weekday: "long",
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </small>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+      <div className="dashboard-header">
+        <div className="header-content">
+          <div className="header-logo">
+            <span className="lock-icon">🔒</span>
+            <h1>LOTO Management Dashboard</h1>
+          </div>
+          <div className="header-time">
+            <div className="clock-icon">⏰</div>
+            <div>
+              <div className="current-time">
+                {currentTime.toLocaleTimeString()}
+              </div>
+              <div className="current-date">
+                {currentTime.toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
               </div>
             </div>
           </div>
         </div>
+        <div className="welcome-message">
+          Welcome back! Manage your lockout/tagout procedures with confidence.
+        </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="row mb-5">
-        <div className="col-12"></div>
+      {/* Quick Actions Grid */}
+      <div className="dashboard-cards">
         {quickActions.map((action, index) => (
-          <div key={index} className="col-lg-4 col-md-6 mb-4">
+          <div
+            key={index}
+            className="dashboard-card"
+            onClick={action.action}
+          >
             <div
-              className="card h-100 border-0 shadow-md hover-lift cursor-pointer transition"
-              onClick={action.action}
-              style={{
-                background: "rgba(232, 255, 178, 0.06)",
-                backdropFilter: "blur(20px)",
-                transform: "translateY(0)",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = "translateY(-8px)";
-                e.target.style.boxShadow = "0 20px 40px rgba(0, 0, 0, 0.1)";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = "translateY(0)";
-                e.target.style.boxShadow = "var(--shadow-md)";
-              }}
+              className="card-icon"
+              style={{ background: action.gradient }}
             >
-              <div className="card-body text-center p-5">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4 shadow-lg"
-                  style={{
-                    width: "80px",
-                    height: "80px",
-                    background: action.gradient,
-                    fontSize: "2rem",
-                  }}
-                >
-                  {action.icon === "add" && "➕"}
-                  {action.icon === "list" && "📋"}
-                  {action.icon === "notification" && "🔔"}
-                </div>
-                <h5 className="card-title fw-bold mb-3 text-gray-800">
-                  {action.title}
-                </h5>
-                <p className="card-text text-muted mb-4">
-                  {action.description}
-                </p>
-                <Button
-                  variant={action.variant}
-                  className="hover-scale transition"
-                  style={{ minWidth: "120px" }}
-                >
-                  Get Started →
-                </Button>
-              </div>
+              <span>{action.icon}</span>
+            </div>
+            <div className="card-content">
+              <h3>{action.title}</h3>
+              <p>{action.description}</p>
+              <Button
+                variant={action.variant}
+                className="btn-get-started"
+                style={{ minWidth: "120px" }}
+              >
+                Get Started →
+              </Button>
             </div>
           </div>
         ))}
