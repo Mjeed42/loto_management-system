@@ -26,7 +26,6 @@ const LOTOList = () => {
           Authorization: `Bearer ${token}`,
         },
       };
-
       const res = await axios.get(
         "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
         config
@@ -45,15 +44,42 @@ const LOTOList = () => {
           Authorization: `Bearer ${token}`,
         },
       };
-
       const res = await axios.get(
         "https://loto-backend-643788243736.europe-west1.run.app/api/loto",
         config
       );
-      setLotos(res.data.data);
+
+      // Handle different possible response structures
+      let lotosData = [];
+      if (res.data && res.data.data) {
+        lotosData = Array.isArray(res.data.data) ? res.data.data : [];
+      } else if (Array.isArray(res.data)) {
+        lotosData = res.data;
+      } else {
+        lotosData = [];
+      }
+
+      // Validate each LOTO object
+      const validatedLotos = lotosData
+        .filter((loto) => loto && typeof loto === "object" && loto._id)
+        .map((loto) => ({
+          _id: loto._id,
+          serialNumber: loto.serialNumber || "N/A",
+          date: loto.date || new Date(),
+          shift: loto.shift || "N/A",
+          isolator: loto.isolator || null,
+          isolatedPart: loto.isolatedPart || "N/A",
+          reason: loto.reason || "N/A",
+          status: loto.status || "pending",
+          expectedDuration: loto.expectedDuration || 0,
+        }));
+
+      setLotos(validatedLotos);
       setLoading(false);
     } catch (err) {
+      console.error("Error fetching LOTOs:", err);
       setError(err.response?.data?.message || "Error fetching LOTOs");
+      setLotos([]);
       setLoading(false);
     }
   };
@@ -66,18 +92,19 @@ const LOTOList = () => {
           Authorization: `Bearer ${token}`,
         },
       };
-
       const res = await axios.put(
         `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/verify`,
         {},
         config
       );
 
+      // Update the specific LOTO in state
       setLotos(
-        lotos.map((loto) => (loto._id === lotoId ? res.data.data : loto))
+        lotos.map((loto) =>
+          loto._id === lotoId ? { ...loto, ...res.data.data } : loto
+        )
       );
 
-      // Show friendly notification instead of alert
       if (window.LOTOUtils) {
         window.LOTOUtils.showNotification(
           "LOTO verified successfully! ✅",
@@ -139,14 +166,12 @@ const LOTOList = () => {
         color: "#0ea5e9",
       },
     };
-
     const config = statusConfig[status] || {
-      text: status,
+      text: status || "Unknown",
       variant: "secondary",
       icon: "❓",
       color: "#6b7280",
     };
-
     return (
       <span
         className={`status-pill ${status} d-inline-flex align-items-center`}
@@ -168,13 +193,20 @@ const LOTOList = () => {
 
   // Filter LOTOs based on search and status
   const filteredLotos = lotos.filter((loto) => {
+    if (!loto) return false;
+
     const matchesSearch =
       (loto.serialNumber ?? "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      loto.isolatedPart.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      loto.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (loto.isolator?.firstName + " " + loto.isolator?.lastName)
+      (loto.isolatedPart ?? "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (loto.reason ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (loto.isolator?.firstName
+        ? `${loto.isolator.firstName} ${loto.isolator.lastName}`
+        : ""
+      )
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
@@ -445,12 +477,14 @@ const LOTOList = () => {
                   style={{ cursor: "pointer" }}
                 >
                   <th scope="row">{index + 1}</th>
-                  <td>{loto.serialNumber}</td>
-                  <td>{loto.isolatedPart}</td>
-                  <td>{loto.reason}</td>
+                  <td>{loto.serialNumber || "N/A"}</td>
+                  <td>{loto.isolatedPart || "N/A"}</td>
+                  <td>{loto.reason || "N/A"}</td>
                   <td>
                     {loto.isolator
-                      ? `${loto.isolator.firstName} ${loto.isolator.lastName}`
+                      ? `${loto.isolator.firstName || ""} ${
+                          loto.isolator.lastName || ""
+                        }`
                       : "N/A"}
                   </td>
                   <td>{getStatusBadge(loto.status)}</td>

@@ -415,3 +415,35 @@ exports.getTechnicians = async (req, res) => {
     });
   }
 };
+// @desc    Get all supervisors and admins
+// @route   GET /api/users/supervisors
+// @access  Private
+exports.getSupervisors = async (req, res) => {
+  try {
+    // Only authenticated users can access this
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized to access this resource",
+      });
+    }
+
+    // Fetch all active supervisors and admins
+    const supervisors = await User.find({
+      role: { $in: ["supervisor", "admin"] },
+      isActive: true,
+    }).select("firstName lastName username role");
+
+    res.status(200).json({
+      success: true,
+      count: supervisors.length,
+      supervisors,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};

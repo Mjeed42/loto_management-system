@@ -25,6 +25,14 @@ const lotoSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    supervisor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    supervisorName: {
+      type: String,
+    },
     isolatedPart: {
       type: String,
       required: true,
@@ -83,10 +91,11 @@ const lotoSchema = new mongoose.Schema(
   }
 );
 
-// Add index for better query performance
+// Add indexes for better query performance
 lotoSchema.index({ serialNumber: 1 });
 lotoSchema.index({ status: 1 });
 lotoSchema.index({ isolator: 1 });
+lotoSchema.index({ supervisorName: 1 });
 lotoSchema.index({ handoverTo: 1 });
 
 module.exports = mongoose.models.LOTO || mongoose.model("LOTO", lotoSchema);

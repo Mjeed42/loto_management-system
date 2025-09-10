@@ -32,27 +32,60 @@ const generateSerialNumber = async () => {
 // @access  Private
 exports.createLOTO = async (req, res) => {
   try {
-    const { shift, isolatedPart, reason, ptwNumber, expectedDuration } =
-      req.body;
+    const {
+      shift,
+      isolatedPart,
+      reason,
+      ptwNumber,
+      expectedDuration,
+      supervisor,
+    } = req.body;
 
     // Generate unique serial number
     const serialNumber = await generateSerialNumber();
 
-    const loto = await LOTO.create({
+    // Prepare LOTO data
+    const lotoData = {
       serialNumber,
       shift,
       isolator: req.user.id,
       isolatorName: `${req.user.firstName} ${req.user.lastName}`,
       isolatedPart,
       reason,
-      ptwNumber,
-      expectedDuration,
+      ptwNumber: ptwNumber || "N/A",
+      expectedDuration: parseFloat(expectedDuration),
       status: "pending",
-    });
+    };
+
+    // Add supervisor if provided
+    if (supervisor) {
+      // Validate that the supervisor exists and has the correct role
+      const supervisorUser = await User.findById(supervisor);
+      if (
+        supervisorUser &&
+        (supervisorUser.role === "supervisor" ||
+          supervisorUser.role === "admin")
+      ) {
+        lotoData.supervisor = supervisor;
+        lotoData.supervisorName = `${supervisorUser.firstName} ${supervisorUser.lastName}`;
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid supervisor - must be a supervisor or admin",
+        });
+      }
+    }
+    const loto = await LOTO.create(lotoData);
+
+    const populatedLOTO = await LOTO.findById(loto._id)
+      .populate("isolator", "firstName lastName username")
+      .populate("supervisor", "firstName lastName username")
+      .populate("verifiedBy", "firstName lastName username")
+      .populate("handoverTo", "firstName lastName username");
 
     res.status(201).json({
       success: true,
-      data: loto,
+      populatedLOTO,
     });
   } catch (error) {
     console.error("Create LOTO error:", error);
@@ -141,6 +174,9 @@ exports.getLOTO = async (req, res) => {
 // @desc    Update LOTO status (for verification)
 // @route   PUT /api/loto/:id/verify
 // @access  Private (supervisors/admins)
+// @desc    Update LOTO status (for verification)
+// @route   PUT /api/loto/:id/verify
+// @access  Private (supervisors/admins)
 exports.verifyLOTO = async (req, res) => {
   try {
     const loto = await LOTO.findById(req.params.id);
@@ -151,27 +187,28 @@ exports.verifyLOTO = async (req, res) => {
         message: "LOTO not found",
       });
     }
-    // --- NEW CHECK: Prevent self-verification ---
-    // Check if the user trying to verify is the same as the isolator
-    if (loto.isolator.toString() === req.user.id && req.user.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message:
-          "You cannot verify a LOTO you created. Please ask another authorized person to verify it.",
-      });
-    }
-    // --- END NEW CHECK ---
 
-    // Allow supervisors, supervisors, and admins to verify
-    if (
-      req.user.role !== "supervisor" &&
-      req.user.role !== "supervisor" &&
-      req.user.role !== "admin"
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to verify LOTO",
-      });
+    // Check if this LOTO has a specific supervisor assigned
+    if (loto.supervisor) {
+      // Only the assigned supervisor or admin can verify
+      if (
+        loto.supervisor.toString() !== req.user.id &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Not authorized to verify this LOTO - assigned to different supervisor",
+        });
+      }
+    } else {
+      // If no supervisor assigned, only supervisors and admins can verify
+      if (req.user.role !== "supervisor" && req.user.role !== "admin") {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to verify LOTO",
+        });
+      }
     }
 
     // Update LOTO
@@ -184,12 +221,13 @@ exports.verifyLOTO = async (req, res) => {
     // Populate the updated LOTO
     const updatedLOTO = await LOTO.findById(loto._id)
       .populate("isolator", "firstName lastName username")
+      .populate("supervisor", "firstName lastName username")
       .populate("verifiedBy", "firstName lastName username")
       .populate("handoverTo", "firstName lastName username");
 
     res.status(200).json({
       success: true,
-      data: updatedLOTO,
+      updatedLOTO,
     });
   } catch (error) {
     res.status(500).json({
@@ -275,8 +313,8 @@ exports.completeLOTO = async (req, res) => {
 
     // Only the isolator or handover recipient can complete
     if (
-      (loto.isolator.toString() !== req.user.id &&
-        loto.handoverTo?.toString() !== req.user.id) ||
+      loto.isolator.toString() !== req.user.id &&
+      loto.handoverTo?.toString() !== req.user.id &&
       req.user.role !== "admin"
     ) {
       return res.status(403).json({

@@ -1,9 +1,10 @@
 const express = require("express");
-const { getTechnicians } = require("../controllers/userController");
+const { getTechnicians,getSupervisors  } = require("../controllers/userController");
 const { protect } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.route("/technicians").get(protect, getTechnicians);
+router.get("/technicians", protect, getTechnicians); // NEW ROUTE
+router.get("/supervisors", protect, getSupervisors); // NEW ROUTE
 
 module.exports = router;

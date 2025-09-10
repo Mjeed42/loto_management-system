@@ -250,35 +250,46 @@ const LOTOdetail = () => {
             </div>
             <div className="card-body">
               <div className="row">
-                <div className="col-md-6">
-                  <p>
-                    <strong>Serial Number:</strong> {loto.serialNumber}
-                  </p>
-                  <p>
-                    <strong>Date:</strong>{" "}
-                    {new Date(loto.date).toLocaleDateString()}
-                  </p>
-                  <p>
-                    <strong>Shift:</strong> {loto.shift}
-                  </p>
-                  <p>
-                    <strong>Isolator:</strong> {loto.isolatorName}
-                  </p>
-                </div>
-                <div className="col-md-6">
-                  <p>
-                    <strong>Isolated Part:</strong> {loto.isolatedPart}
-                  </p>
-                  <p>
-                    <strong>Reason:</strong> {loto.reason}
-                  </p>
-                  <p>
-                    <strong>PTW Number:</strong> {loto.ptwNumber}
-                  </p>
-                  <p>
-                    <strong>Expected Duration:</strong> {loto.expectedDuration}{" "}
-                    hours
-                  </p>
+                <div className="row mb-3">
+                  <div className="col-md-6">
+                    <p className="mb-1">
+                      <strong>Serial Number:</strong> {loto.serialNumber}
+                    </p>
+                    <p className="mb-1">
+                      <strong>Date:</strong>{" "}
+                      {new Date(loto.date).toLocaleDateString()}
+                    </p>
+                    <p className="mb-1">
+                      <strong>Shift:</strong> {loto.shift}
+                    </p>
+                    <p className="mb-1">
+                      <strong>Isolator:</strong> {loto.isolatorName}
+                    </p>
+                  </div>
+                  <div className="col-md-6">
+                    {/* NEW AUTHORIZED HANDLER DISPLAY */}
+                    <p className="mb-1">
+                      <strong>Authorized Handler:</strong>
+                      {loto.supervisorHandlerName ? (
+                        <span className="cf-text-success cf-ml-2">
+                          {loto.supervisorHandlerName}
+                        </span>
+                      ) : (
+                        <span className="cf-text-muted cf-ml-2">
+                          None - Only isolator can handle
+                        </span>
+                      )}
+                    </p>
+                    <p className="mb-1">
+                      <strong>Isolated Part:</strong> {loto.isolatedPart}
+                    </p>
+                    <p className="mb-1">
+                      <strong>Reason:</strong> {loto.reason}
+                    </p>
+                    <p className="mb-1">
+                      <strong>PTW Number:</strong> {loto.ptwNumber}
+                    </p>
+                  </div>
                 </div>
               </div>
 
