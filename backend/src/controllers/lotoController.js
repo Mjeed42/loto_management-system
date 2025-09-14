@@ -34,6 +34,7 @@ exports.createLOTO = async (req, res) => {
   try {
     const {
       shift,
+      line,
       isolatedPart,
       reason,
       ptwNumber,
@@ -48,6 +49,8 @@ exports.createLOTO = async (req, res) => {
     const lotoData = {
       serialNumber,
       shift,
+      line,
+      date: new Date(),
       isolator: req.user.id,
       isolatorName: `${req.user.firstName} ${req.user.lastName}`,
       isolatedPart,
@@ -441,6 +444,8 @@ exports.handoverLOTO = async (req, res) => {
           isolatedPart: loto.isolatedPart,
           reason: loto.reason,
           shift: loto.shift,
+          line: loto.line,
+
         },
         handoverNotes: handoverNotes,
       });

@@ -20,6 +20,7 @@ const handoverNotificationSchema = new mongoose.Schema({
     isolatedPart: String,
     reason: String,
     shift: String,
+    line: String,
   },
   handoverNotes: String,
   status: {

@@ -265,14 +265,17 @@ const LOTOdetail = () => {
                     <p className="mb-1">
                       <strong>Isolator:</strong> {loto.isolatorName}
                     </p>
+                    <p className="mb-1">
+                      <strong>line:</strong> {loto.line}
+                    </p>
                   </div>
                   <div className="col-md-6">
-                    {/* NEW AUTHORIZED HANDLER DISPLAY */}
+                    {/* NEW AUTHORIZED SUPERVISOR HANDLER DISPLAY */}
                     <p className="mb-1">
-                      <strong>Authorized Handler:</strong>
-                      {loto.supervisorHandlerName ? (
+                      <strong>Authorized Supervisor Handler:</strong>
+                      {loto.supervisorName ? (
                         <span className="cf-text-success cf-ml-2">
-                          {loto.supervisorHandlerName}
+                          {loto.supervisorName}
                         </span>
                       ) : (
                         <span className="cf-text-muted cf-ml-2">

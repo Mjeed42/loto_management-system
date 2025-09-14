@@ -7,6 +7,7 @@ import Icon from "../components/Icon";
 const CreateLOTO = () => {
   const [formData, setFormData] = useState({
     shift: "A",
+    line: "A",
     isolatedPart: "",
     reason: "",
     ptwNumber: "N/A",
@@ -24,6 +25,7 @@ const CreateLOTO = () => {
 
   const {
     shift,
+    line,
     isolatedPart,
     reason,
     ptwNumber,
@@ -130,6 +132,7 @@ const CreateLOTO = () => {
       // Reset form after successful submission
       setFormData({
         shift: "A",
+        line: "A",
         isolatedPart: "",
         reason: "",
         ptwNumber: "N/A",
@@ -171,7 +174,8 @@ const CreateLOTO = () => {
                     Create New LOTO
                   </h1>
                   <p className="lead text-muted mb-0">
-                    Start a new lockout/tagout procedure for equipment maintenance
+                    Start a new lockout/tagout procedure for equipment
+                    maintenance
                   </p>
                 </div>
                 <div className="d-flex gap-2 flex-wrap">
@@ -246,8 +250,6 @@ const CreateLOTO = () => {
                         <option value="A">A</option>
                         <option value="B">B</option>
                         <option value="C">C</option>
-                        <option value="D">D</option>
-                        <option value="E">E</option>
                       </select>
                     </div>
                   </div>
@@ -280,7 +282,9 @@ const CreateLOTO = () => {
                   {/* Isolated Part */}
                   <div className="col-12 mb-4">
                     <div className="form-group">
-                      <label className="form-label fw-medium">Isolated Part</label>
+                      <label className="form-label fw-medium">
+                        Isolated Part
+                      </label>
                       <input
                         type="text"
                         name="isolatedPart"
@@ -296,6 +300,30 @@ const CreateLOTO = () => {
                         }}
                         required
                       />
+                    </div>
+                  </div>
+                  {/* line and Duration */}
+                  <div className="col-md-6 mb-4">
+                    <div className="form-group">
+                      <label className="form-label fw-medium">line</label>
+                      <select
+                        name="line"
+                        value={line}
+                        onChange={onChange}
+                        className="form-control"
+                        style={{
+                          borderRadius: "0.75rem",
+                          border: "2px solid #e2e8f0",
+                          background: "rgba(255, 255, 255, 0.9)",
+                          backdropFilter: "blur(10px)",
+                        }}
+                      >
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                      </select>
                     </div>
                   </div>
 
@@ -382,9 +410,9 @@ const CreateLOTO = () => {
                         </select>
                       )}
                       <div className="form-text mt-2">
-                        Select a specific supervisor or admin who will verify this
-                        LOTO request. If none selected, any supervisor or admin can
-                        verify.
+                        Select a specific supervisor or admin who will verify
+                        this LOTO request. If none selected, any supervisor or
+                        admin can verify.
                       </div>
                     </div>
                   </div>

@@ -14,6 +14,11 @@ const lotoSchema = new mongoose.Schema(
     shift: {
       type: String,
       required: true,
+      enum: ["A", "B", "C"],
+    },
+    line: {
+      type: String,
+      required: true,
       enum: ["A", "B", "C", "D", "E"],
     },
     isolator: {

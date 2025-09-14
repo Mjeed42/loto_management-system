@@ -13,7 +13,7 @@ exports.getHandoverNotifications = async (req, res) => {
       status: "pending",
     })
       .populate("fromUser", "firstName lastName username")
-      .populate("lotoId", "isolatedPart reason shift date")
+      .populate("lotoId", "isolatedPart reason shift line date")
       .sort({ createdAt: -1 });
 
     console.log("Found notifications:", notifications.length);

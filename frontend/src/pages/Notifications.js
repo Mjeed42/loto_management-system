@@ -192,6 +192,9 @@ const Notifications = () => {
                 <p>
                   <strong>Shift:</strong> {notification.lotoDetails?.shift}
                 </p>
+                <p>
+                  <strong>line:</strong> {notification.lotoDetails?.line}
+                </p>
                 {notification.handoverNotes && (
                   <p>
                     <strong>Notes:</strong> {notification.handoverNotes}

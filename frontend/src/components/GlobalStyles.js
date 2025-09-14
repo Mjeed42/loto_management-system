@@ -516,13 +516,15 @@ const GlobalStyles = () => (
       border-bottom: 1px solid var(--gray-200);
     }
     .table thead th {
-      vertical-align: bottom;
-      border-bottom: 2px solid var(--gray-300);
-      background: linear-gradient(
-        135deg,
-        var(--gray-50) 0%,
-        var(--gray-100) 100%
-      );
+  vertical-align: bottom;
+  border-bottom: 2px solid #0069ff;
+  background: linear-gradient( #004cff 0%, #0061ff 100% );
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.1rem;
+}
       font-weight: 600;
       color: #f00;
       text-transform: uppercase;

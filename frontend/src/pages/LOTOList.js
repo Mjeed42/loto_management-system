@@ -67,6 +67,7 @@ const LOTOList = () => {
           serialNumber: loto.serialNumber || "N/A",
           date: loto.date || new Date(),
           shift: loto.shift || "N/A",
+          line: loto.line || "N/A",
           isolator: loto.isolator || null,
           isolatedPart: loto.isolatedPart || "N/A",
           reason: loto.reason || "N/A",
@@ -301,7 +302,6 @@ const LOTOList = () => {
         <div className="col-md-8">
           <div className="search-container">
             <div className="position-relative">
-              <span className="search-icon position-absolute">🔍</span>
               <input
                 type="text"
                 className="search-input form-control"
@@ -453,7 +453,7 @@ const LOTOList = () => {
           )}
         </div>
       ) : (
-        <div className="table-responsive loto-table">
+        <div>
           <table className="table table-hover align-middle">
             <thead className="table-light">
               <tr>

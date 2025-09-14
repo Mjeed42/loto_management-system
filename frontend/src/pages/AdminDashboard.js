@@ -384,7 +384,7 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      <div className="card">
+      <div>
         <div className="card-header">
           <h5 className="mb-0">User Management</h5>
         </div>

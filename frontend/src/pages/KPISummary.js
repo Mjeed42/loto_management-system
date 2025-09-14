@@ -52,7 +52,7 @@ const KPISummary = () => {
 
       console.log("Fetching KPI data for", timeRange, "days");
       const res = await axios.get(
-        `http://localhost:5001/api/kpi/real-time?timeRange=${timeRange}`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/kpi/real-time?timeRange=${timeRange}`,
         config
       );
 
@@ -90,7 +90,7 @@ const KPISummary = () => {
 
       console.log("Fetching technician data for", timeRange, "days");
       const res = await axios.get(
-        `http://localhost:5001/api/kpi/technician-performance?timeRange=${timeRange}`,
+        `https://loto-backend-643788243736.europe-west1.run.app/api/kpi/technician-performance?timeRange=${timeRange}`,
         config
       );
 
