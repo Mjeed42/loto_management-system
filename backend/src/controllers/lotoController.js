@@ -34,7 +34,10 @@ exports.createLOTO = async (req, res) => {
   try {
     const {
       shift,
+      location,
       line,
+      machine,
+      customLocation,
       isolatedPart,
       reason,
       ptwNumber,
@@ -45,12 +48,10 @@ exports.createLOTO = async (req, res) => {
     // Generate unique serial number
     const serialNumber = await generateSerialNumber();
 
-    // Prepare LOTO data
+    // Prepare LOTO data with simplified location structure
     const lotoData = {
       serialNumber,
       shift,
-      line,
-      date: new Date(),
       isolator: req.user.id,
       isolatorName: `${req.user.firstName} ${req.user.lastName}`,
       isolatedPart,
@@ -58,6 +59,10 @@ exports.createLOTO = async (req, res) => {
       ptwNumber: ptwNumber || "N/A",
       expectedDuration: parseFloat(expectedDuration),
       status: "pending",
+      location: location || "Processing", // Default location
+      line: line || "",
+      machine: machine || "",
+      customLocation: customLocation || "",
     };
 
     // Add supervisor if provided
@@ -78,13 +83,15 @@ exports.createLOTO = async (req, res) => {
         });
       }
     }
+
     const loto = await LOTO.create(lotoData);
 
+    // Populate the created LOTO
     const populatedLOTO = await LOTO.findById(loto._id)
       .populate("isolator", "firstName lastName username")
-      .populate("supervisor", "firstName lastName username")
       .populate("verifiedBy", "firstName lastName username")
-      .populate("handoverTo", "firstName lastName username");
+      .populate("handoverTo", "firstName lastName username")
+      .populate("supervisor", "firstName lastName username");
 
     res.status(201).json({
       success: true,
@@ -177,9 +184,6 @@ exports.getLOTO = async (req, res) => {
 // @desc    Update LOTO status (for verification)
 // @route   PUT /api/loto/:id/verify
 // @access  Private (supervisors/admins)
-// @desc    Update LOTO status (for verification)
-// @route   PUT /api/loto/:id/verify
-// @access  Private (supervisors/admins)
 exports.verifyLOTO = async (req, res) => {
   try {
     const loto = await LOTO.findById(req.params.id);
@@ -241,7 +245,7 @@ exports.verifyLOTO = async (req, res) => {
   }
 };
 
-// @desc    Update LOTO (for technicians)
+// @desc    Update LOTO
 // @route   PUT /api/loto/:id
 // @access  Private
 exports.updateLOTO = async (req, res) => {
@@ -258,7 +262,8 @@ exports.updateLOTO = async (req, res) => {
     // Only the isolator or handover recipient can update
     if (
       loto.isolator.toString() !== req.user.id &&
-      loto.handoverTo?.toString() !== req.user.id
+      loto.handoverTo?.toString() !== req.user.id &&
+      req.user.role !== "admin"
     ) {
       return res.status(403).json({
         success: false,
@@ -267,23 +272,66 @@ exports.updateLOTO = async (req, res) => {
     }
 
     // Only allow updates to certain fields
-    const { expectedDuration, reason, ptwNumber } = req.body;
+    const {
+      expectedDuration,
+      reason,
+      ptwNumber,
+      supervisor, // NEW FIELD - Allow supervisor updates
+      isolatedPart, // NEW FIELD - Allow isolated part updates
+    } = req.body;
 
-    if (expectedDuration) loto.expectedDuration = expectedDuration;
+    // Update fields if provided
+    if (expectedDuration !== undefined)
+      loto.expectedDuration = parseFloat(expectedDuration);
     if (reason) loto.reason = reason;
-    if (ptwNumber) loto.ptwNumber = ptwNumber;
+    if (ptwNumber !== undefined) loto.ptwNumber = ptwNumber;
+    if (isolatedPart) loto.isolatedPart = isolatedPart; // NEW FIELD
 
+    // NEW: Handle supervisor assignment updates
+    if (supervisor !== undefined) {
+      if (supervisor === "") {
+        // Clear supervisor assignment
+        loto.supervisor = null;
+        loto.supervisorName = null;
+      } else {
+        // Validate supervisor exists and has correct role
+        const supervisorUser = await User.findById(supervisor);
+        if (!supervisorUser) {
+          return res.status(404).json({
+            success: false,
+            message: "Supervisor user not found",
+          });
+        }
+
+        if (
+          supervisorUser.role !== "supervisor" &&
+          supervisorUser.role !== "admin"
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "User must be a supervisor or admin to be assigned as supervisor",
+          });
+        }
+
+        loto.supervisor = supervisor;
+        loto.supervisorName = `${supervisorUser.firstName} ${supervisorUser.lastName}`;
+      }
+    }
+
+    loto.updatedAt = Date.now();
     await loto.save();
 
     // Populate the updated LOTO
     const updatedLOTO = await LOTO.findById(loto._id)
       .populate("isolator", "firstName lastName username")
       .populate("verifiedBy", "firstName lastName username")
-      .populate("handoverTo", "firstName lastName username");
+      .populate("handoverTo", "firstName lastName username")
+      .populate("supervisor", "firstName lastName username"); // NEW POPULATION
 
     res.status(200).json({
       success: true,
-      data: updatedLOTO,
+      updatedLOTO,
     });
   } catch (error) {
     res.status(500).json({
@@ -293,7 +341,6 @@ exports.updateLOTO = async (req, res) => {
     });
   }
 };
-
 // @desc    Complete LOTO
 // @route   PUT /api/loto/:id/complete
 // @access  Private
@@ -445,7 +492,6 @@ exports.handoverLOTO = async (req, res) => {
           reason: loto.reason,
           shift: loto.shift,
           line: loto.line,
-
         },
         handoverNotes: handoverNotes,
       });

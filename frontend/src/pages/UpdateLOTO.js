@@ -9,15 +9,21 @@ const UpdateLOTO = () => {
     expectedDuration: "",
     reason: "",
     ptwNumber: "N/A",
+    isolatedPart: "", // NEW FIELD
+    supervisor: "", // NEW FIELD - Supervisor assignment
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [loto, setLoto] = useState(null);
+  const [supervisors, setSupervisors] = useState([]); // NEW STATE FOR SUPERVISORS
+  const [fetchingSupervisors, setFetchingSupervisors] = useState(true); // NEW LOADING STATE
   const { id } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchLOTO();
+    fetchSupervisors(); // NEW: Fetch supervisors
   }, [id]);
 
   const fetchLOTO = async () => {
@@ -34,16 +40,59 @@ const UpdateLOTO = () => {
         config
       );
 
+      setLoto(res.data.data);
+
+      // Prefill form with current LOTO data
       setFormData({
         expectedDuration: res.data.data.expectedDuration,
         reason: res.data.data.reason,
         ptwNumber: res.data.data.ptwNumber,
+        isolatedPart: res.data.data.isolatedPart,
+        supervisor: res.data.data.supervisor?._id || "", // NEW: Prefill supervisor
       });
 
       setLoading(false);
     } catch (err) {
       setError(err.response?.data?.message || "Error fetching LOTO");
       setLoading(false);
+    }
+  };
+
+  // NEW: Fetch all supervisors and supervisors
+  const fetchSupervisors = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/users/supervisors",
+        config
+      );
+
+      // Handle different possible response formats
+      let supervisorsData = [];
+      if (res.data.supervisors) {
+        supervisorsData = res.data.supervisors;
+      } else if (res.data.data && res.data.data.supervisors) {
+        supervisorsData = res.data.data.supervisors;
+      } else if (Array.isArray(res.data.data)) {
+        supervisorsData = res.data.data;
+      }
+
+      // Ensure it's always an array
+      supervisorsData = Array.isArray(supervisorsData) ? supervisorsData : [];
+
+      setSupervisors(supervisorsData);
+      setFetchingSupervisors(false);
+    } catch (err) {
+      console.log("Error fetching supervisors:", err);
+      setError(err.response?.data?.message || "Error fetching supervisors");
+      setSupervisors([]);
+      setFetchingSupervisors(false);
     }
   };
 
@@ -65,14 +114,14 @@ const UpdateLOTO = () => {
         },
       };
 
-      await axios.put(
+      const res = await axios.put(
         `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
         formData,
         config
       );
 
       alert("LOTO updated successfully!");
-      navigate("/loto-list");
+      navigate(`/loto/${id}`);
     } catch (err) {
       setError(err.response?.data?.message || "Error updating LOTO");
     } finally {
@@ -91,85 +140,163 @@ const UpdateLOTO = () => {
     );
   }
 
-  const { expectedDuration, reason, ptwNumber } = formData;
+  if (error) {
+    return (
+      <div className="alert alert-danger">
+        <Icon name="warning" className="me-2" /> {error}
+      </div>
+    );
+  }
+
+  if (!loto) {
+    return (
+      <div className="text-center py-5">
+        <h2>LOTO not found</h2>
+      </div>
+    );
+  }
+
+  const { expectedDuration, reason, ptwNumber, isolatedPart, supervisor } =
+    formData;
 
   return (
-    <div className="row justify-content-center">
-      <div className="col-md-8">
-        <div className="card">
-          <div className="card-header d-flex justify-content-between align-items-center">
-            <h2 className="mb-0">
-              <Icon name="edit" /> Update LOTO
-            </h2>
-            <div className="d-flex gap-2">
+    <div className="cf-dashboard">
+      <main className="cf-main">
+        <div className="cf-card">
+          <div className="cf-card-header cf-flex cf-justify-between cf-items-center">
+            <h1 className="cf-card-title cf-flex cf-items-center">
+              <Icon name="edit" className="cf-mr-2" /> Update LOTO
+            </h1>
+            <div className="cf-flex cf-gap-2">
               <Button
                 variant="outline-secondary"
-                onClick={() => navigate("/loto-list")}
+                onClick={() => navigate(`/loto/${id}`)}
               >
-                <Icon name="back" /> Back to List
+                <Icon name="back" className="cf-mr-2" /> Back to Detail
               </Button>
               <Button
                 variant="outline-primary"
                 onClick={() => navigate("/dashboard")}
               >
-                <Icon name="dashboard" /> Dashboard
+                <Icon name="dashboard" className="cf-mr-2" /> Dashboard
               </Button>
             </div>
           </div>
-          <div className="card-body">
+
+          <div className="cf-card-body">
             {error && (
-              <div className="alert alert-danger">
-                <Icon name="warning" /> {error}
+              <div className="cf-alert cf-alert-danger cf-mb-4">
+                <Icon name="warning" className="cf-mr-2" /> {error}
               </div>
             )}
 
             <form onSubmit={onSubmit}>
-              <div className="form-group mb-3">
-                <label className="form-label">Reason</label>
+              <div className="cf-grid cf-grid-cols-1 md:cf-grid-cols-2 cf-gap-6">
+                <div>
+                  <div className="cf-form-group cf-mb-3">
+                    <label className="cf-form-label">
+                      Expected Duration (hours)
+                    </label>
+                    <input
+                      type="number"
+                      name="expectedDuration"
+                      value={expectedDuration}
+                      onChange={onChange}
+                      placeholder="Enter duration in hours"
+                      step="0.5"
+                      min="0.5"
+                      className="cf-form-control"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="cf-form-group cf-mb-3">
+                    <label className="cf-form-label">PTW Number</label>
+                    <input
+                      type="text"
+                      name="ptwNumber"
+                      value={ptwNumber}
+                      onChange={onChange}
+                      placeholder="Enter PTW number or N/A"
+                      className="cf-form-control"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="cf-form-group cf-mb-3">
+                <label className="cf-form-label">Isolated Part</label>
+                <input
+                  type="text"
+                  name="isolatedPart"
+                  value={isolatedPart}
+                  onChange={onChange}
+                  placeholder="Enter part description"
+                  className="cf-form-control"
+                  required
+                />
+              </div>
+
+              <div className="cf-form-group cf-mb-3">
+                <label className="cf-form-label">Reason</label>
                 <input
                   type="text"
                   name="reason"
                   value={reason}
                   onChange={onChange}
                   placeholder="Enter reason"
-                  className="form-control"
+                  className="cf-form-control"
                   required
                 />
               </div>
 
-              <div className="form-group mb-3">
-                <label className="form-label">PTW Number</label>
-                <input
-                  type="text"
-                  name="ptwNumber"
-                  value={ptwNumber}
-                  onChange={onChange}
-                  placeholder="Enter PTW number or N/A"
-                  className="form-control"
-                />
+              {/* NEW: Supervisor Assignment Section */}
+              <div className="cf-form-group cf-mb-4">
+                <label className="cf-form-label">
+                  Assign Supervisor for Verification (Optional)
+                </label>
+                {fetchingSupervisors ? (
+                  <div className="cf-flex cf-items-center">
+                    <span
+                      className="cf-spinner cf-spinner-sm cf-mr-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    <span>Loading supervisors...</span>
+                  </div>
+                ) : (
+                  <select
+                    name="supervisor"
+                    value={supervisor}
+                    onChange={onChange}
+                    className="cf-form-control"
+                  >
+                    <option value="">
+                      None - Any supervisor/admin can verify
+                    </option>
+                    {supervisors.map((sup) => (
+                      <option key={sup._id} value={sup._id}>
+                        {sup.firstName} {sup.lastName} ({sup.username}) -{" "}
+                        {sup.role === "admin" ? "Admin" : "Supervisor"}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <div className="cf-form-help">
+                  Select a specific supervisor or admin who will verify this
+                  LOTO request. If none selected, any supervisor or admin can
+                  verify.
+                </div>
               </div>
 
-              <div className="form-group mb-4">
-                <label className="form-label">Expected Duration (hours)</label>
-                <input
-                  type="number"
-                  name="expectedDuration"
-                  value={expectedDuration}
-                  onChange={onChange}
-                  placeholder="Enter duration in hours"
-                  step="0.5"
-                  min="0.5"
-                  className="form-control"
-                  required
-                />
-              </div>
-
-              <div className="d-flex gap-2">
+              <div className="cf-flex cf-gap-2">
                 <Button type="submit" variant="primary" disabled={submitting}>
                   {submitting ? (
                     <>
                       <span
-                        className="spinner-border spinner-border-sm me-2"
+                        className="cf-spinner cf-spinner-sm cf-mr-2"
                         role="status"
                         aria-hidden="true"
                       ></span>
@@ -177,29 +304,29 @@ const UpdateLOTO = () => {
                     </>
                   ) : (
                     <>
-                      <Icon name="save" /> Update LOTO
+                      <Icon name="save" className="cf-mr-2" /> Update LOTO
                     </>
                   )}
                 </Button>
 
                 <Button
                   variant="secondary"
-                  onClick={() => navigate("/loto-list")}
+                  onClick={() => navigate(`/loto/${id}`)}
                 >
-                  <Icon name="cancel" /> Cancel
+                  <Icon name="cancel" className="cf-mr-2" /> Cancel
                 </Button>
 
                 <Button
                   variant="outline-primary"
                   onClick={() => navigate("/dashboard")}
                 >
-                  <Icon name="dashboard" /> Dashboard
+                  <Icon name="dashboard" className="cf-mr-2" /> Dashboard
                 </Button>
               </div>
             </form>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

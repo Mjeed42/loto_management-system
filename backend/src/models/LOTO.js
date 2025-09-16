@@ -14,12 +14,32 @@ const lotoSchema = new mongoose.Schema(
     shift: {
       type: String,
       required: true,
-      enum: ["A", "B", "C"],
+      enum: ["A", "B", "C", "D", "E"],
+    },
+    // SIMPLIFIED LOCATION FIELDS
+    location: {
+      type: String,
+      required: true,
+      enum: [
+        "Processing",
+        "Maintenance",
+        "Utilities",
+        "Production",
+        "Storage",
+        "Other",
+      ],
     },
     line: {
       type: String,
-      required: true,
-      enum: ["A", "B", "C", "D", "E"],
+      required: false,
+    },
+    machine: {
+      type: String,
+      required: false,
+    },
+    customLocation: {
+      type: String,
+      required: false,
     },
     isolator: {
       type: mongoose.Schema.Types.ObjectId,
@@ -30,7 +50,6 @@ const lotoSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
     supervisor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -100,7 +119,10 @@ const lotoSchema = new mongoose.Schema(
 lotoSchema.index({ serialNumber: 1 });
 lotoSchema.index({ status: 1 });
 lotoSchema.index({ isolator: 1 });
-lotoSchema.index({ supervisorName: 1 });
+lotoSchema.index({ supervisor: 1 });
 lotoSchema.index({ handoverTo: 1 });
+lotoSchema.index({ location: 1 });
+lotoSchema.index({ line: 1 });
+lotoSchema.index({ machine: 1 });
 
 module.exports = mongoose.models.LOTO || mongoose.model("LOTO", lotoSchema);

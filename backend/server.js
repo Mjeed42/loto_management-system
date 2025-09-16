@@ -22,6 +22,8 @@ app.use("/api/users", require("./src/routes/users"));
 app.use("/api/notifications", require("./src/routes/notifications"));
 app.use("/api/admin", require("./src/routes/admin"));
 app.use("/api/auth", require("./src/routes/auth"));
+// Add after other routes
+app.use("/api/locations", require("./src/routes/locations"));
 
 // Database Connection - MongoDB Atlas with DEBUG
 console.log("=== MONGODB CONNECTION DEBUG ===");
