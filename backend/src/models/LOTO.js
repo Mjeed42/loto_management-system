@@ -22,12 +22,14 @@ const lotoSchema = new mongoose.Schema(
       required: true,
       enum: [
         "Processing",
-        "Maintenance",
-        "Utilities",
-        "Production",
-        "Storage",
+        "WH-FG",
+        "WH-RM",
+        "Project",
         "Other",
-      ],
+        "PKG",
+        "Utility",
+      ], // Add all valid locations
+      trim: true,
     },
     line: {
       type: String,

@@ -2,6 +2,7 @@ const express = require("express");
 const {
   getLocations,
   getLocationsByType,
+  getChildLocations,
   createLocation,
   updateLocation,
   deleteLocation,
@@ -17,6 +18,8 @@ router.use(protect);
 router.route("/").get(getLocations);
 
 router.route("/type/:type").get(getLocationsByType);
+
+router.route("/:id/children").get(getChildLocations);
 
 // Admin only routes
 router.use(authorize("admin"));

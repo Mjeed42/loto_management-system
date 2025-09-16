@@ -5,13 +5,18 @@ const locationSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      trim: true,
+    },
+    code: {
+      type: String,
+      required: true,
       unique: true,
       trim: true,
     },
     type: {
       type: String,
-      enum: ["location", "line", "machine", "other"],
-      default: "location",
+      required: true,
+      enum: ["location", "line", "machine", "utility", "process"],
     },
     parent: {
       type: mongoose.Schema.Types.ObjectId,
@@ -27,6 +32,14 @@ const locationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    description: {
+      type: String,
+      trim: true,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -41,10 +54,12 @@ const locationSchema = new mongoose.Schema(
   }
 );
 
-// Add indexes
+// Add indexes for better query performance
 locationSchema.index({ name: 1 });
-locationSchema.index({ parent: 1 });
+locationSchema.index({ code: 1 });
 locationSchema.index({ type: 1 });
+locationSchema.index({ parent: 1 });
 
+// Prevent OverwriteModelError
 module.exports =
   mongoose.models.Location || mongoose.model("Location", locationSchema);

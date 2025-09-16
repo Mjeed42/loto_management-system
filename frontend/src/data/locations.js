@@ -1,0 +1,123 @@
+// Location hierarchy based on your flowchart
+export const locationHierarchy = {
+  PKG: {
+    name: "PKG",
+    lines: {
+      A: ["DA01", "DA02", "DA03", "DA04", "DA05", "DA06", "DA07", "DA08", "DA09", "DA10", "DA11", "DA12", "DA13", "DA14", "DA15", "DA16", "DA17", "DA18"],
+      B: ["DB01", "DB02", "DB03", "DB04", "DB05", "DB06", "DB07", "DB08", "DB09", "DB10", "DB11", "DB12", "DB13", "DB14", "DB15", "DB16", "DB17", "DB18"],
+      C: ["GUCP07", "DC01", "DC02", "DC03", "DC04", "DC05", "DC06", "DC07", "DC08", "GUCP10"],
+      D: ["DD01", "DD02", "DD03", "DD04"],
+      "Multi-Bag": ["MP01", "MP02", "MP03", "MP04", "MP05"]
+    },
+    parts: {
+      "DA01": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA02": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA03": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA04": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA05": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA06": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA07": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA08": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA09": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA10": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA11": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA12": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA13": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA14": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA15": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA16": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA17": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DA18": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB01": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB02": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB03": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB04": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB05": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB06": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB07": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB08": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB09": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB10": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB11": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB12": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB13": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB14": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB15": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB16": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB17": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DB18": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "GUCP07": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DC01": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DC02": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DC03": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DC04": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DC05": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DC06": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DC07": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DC08": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "GUCP10": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DD01": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DD02": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DD03": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "DD04": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "MP01": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "MP02": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "MP03": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "MP04": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"],
+      "MP05": ["Conveyor", "GUACP", "HMC", "Bagmaker", "Multy Bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"]
+    }
+  },
+  Process: {
+    name: "Process",
+    lines: {
+      PC: ["PC"],
+      TC: ["TC"],
+      FCP: ["FCP"],
+      RBS: ["RBS"],
+      CKF: ["CKF"]
+    },
+    parts: {
+      PC: ["Oven", "Fryer", "Slicer", "Starch Recovery", "Optical Sorter", "Sessioning Loop", "Dump Station", "Other"],
+      TC: ["Oven", "Fryer", "Slicer", "Starch Recovery", "Optical Sorter", "Sessioning Loop", "Dump Station", "Other"],
+      FCP: ["Oven", "Fryer", "Slicer", "Starch Recovery", "Optical Sorter", "Sessioning Loop", "Dump Station", "Other"],
+      RBS: ["Oven", "Fryer", "Slicer", "Starch Recovery", "Optical Sorter", "Sessioning Loop", "Dump Station", "Other"],
+      CKF: ["Oven", "Fryer", "Slicer", "Starch Recovery", "Optical Sorter", "Sessioning Loop", "Dump Station", "Other"]
+    }
+  },
+  Utility: {
+    name: "Utility",
+    parts: ["Chiller", "AC", "Pump", "Gate", "Other"]
+  },
+  "WH-FG": {
+    name: "WH-FG",
+    parts: ["Gate", "Dock Leveler", "Crate Dumper", "Pallet Inverter", "Banker", "Other"]
+  },
+  "WH-RM": {
+    name: "WH-RM",
+    parts: ["Gate", "Dock Leveler", "Crate Dumper", "Pallet Inverter", "Banker", "Other"]
+  },
+  Project: {
+    name: "Project",
+    parts: ["Other"]
+  },
+  Other: {
+    name: "Other",
+    parts: ["Other"]
+  }
+};
+
+// Simplified location options for the first dropdown
+export const locationOptions = [
+  { value: "PKG", label: "PKG" },
+  { value: "Process", label: "Process" },
+  { value: "Utility", label: "Utility" },
+  { value: "WH-FG", label: "WH-FG" },
+  { value: "WH-RM", label: "WH-RM" },
+  { value: "Project", label: "Project" },
+  { value: "Other", label: "Other" }
+];
+
+export default {
+  locationHierarchy,
+  locationOptions
+};
