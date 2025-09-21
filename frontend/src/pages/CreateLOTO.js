@@ -820,8 +820,7 @@ const CreateLOTO = () => {
                           </option>
                           {safeSupervisors.map((sup) => (
                             <option key={sup._id} value={sup._id}>
-                              {sup.firstName} {sup.lastName} ({sup.username}) -{" "}
-                              {sup.role === "admin" ? "Admin" : "Supervisor"}
+                              {sup.firstName} {sup.lastName}
                             </option>
                           ))}
                         </select>

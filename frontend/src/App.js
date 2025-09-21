@@ -52,7 +52,7 @@ function App() {
   return (
     <Router>
       <GlobalStyles />
-      <div className="App">
+      <div className="container">
         <Header currentUser={currentUser} />
         <main className="container py-4">
           <Routes>

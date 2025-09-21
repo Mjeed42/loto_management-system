@@ -11,10 +11,14 @@ const LOTOdetail = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
+  const [locations, setLocations] = useState([null]);
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
   useEffect(() => {
     fetchLOTO();
     fetchCurrentUser();
+    // Fetch locations only once
+    fetchLocations();
   }, [id]);
 
   const fetchCurrentUser = async () => {
@@ -33,6 +37,24 @@ const LOTOdetail = () => {
       setCurrentUser(res.data.user);
     } catch (err) {
       console.log("Error fetching current user");
+    }
+  };
+  const fetchLocations = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/locations",
+        config
+      );
+      setLocations(res.data.locations || []);
+    } catch (err) {
+      console.log("Error fetching locations");
     }
   };
 
@@ -311,7 +333,7 @@ const LOTOdetail = () => {
                     <strong>Isolator:</strong> {loto.isolatorName}
                   </p>
                   <p className="mb-1">
-                    <strong>Line:</strong> {location.line}
+                    <strong>Line:</strong> {locations.line}
                   </p>
                 </div>
                 <div className="col-md-6">
