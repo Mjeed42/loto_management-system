@@ -46,9 +46,12 @@ exports.createLOTO = async (req, res) => {
       supervisor,
     } = req.body;
 
-    // Generate unique serial number
+    // Destructure line and machine from location if available
+    const line = location?.line || "N/A";
+    const machine = location?.machine || "N/A";
     const serialNumber = await generateSerialNumber();
 
+    // Generate unique serial number
     // Prepare LOTO data
     const lotoData = {
       serialNumber,
@@ -57,6 +60,8 @@ exports.createLOTO = async (req, res) => {
       isolatorName: `${req.user.firstName} ${req.user.lastName}`,
       location: location || "Other", // Default to 'Other' if not provided
       isolatedPart,
+      line,
+      machine,
       reason,
       ptwNumber: ptwNumber || "N/A",
       expectedDuration: parseFloat(expectedDuration),
@@ -596,6 +601,7 @@ exports.acceptHandover = async (req, res) => {
     });
   }
 };
+
 // @desc    Delete LOTO
 // @route   DELETE /api/loto/:id
 // @access  Private
@@ -625,8 +631,8 @@ exports.deleteLOTO = async (req, res) => {
 
     console.log("Found LOTO for deletion:", loto._id, loto.serialNumber);
 
-    // Remove from database
-    await loto.remove();
+    // Use deleteOne() instead of remove() (deprecated in newer Mongoose versions)
+    await LOTO.deleteOne({ _id: req.params.id });
 
     console.log("LOTO deleted successfully:", req.params.id);
 

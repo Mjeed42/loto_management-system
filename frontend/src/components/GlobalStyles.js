@@ -146,12 +146,9 @@ const GlobalStyles = () => (
     }
     /* Enhanced container */
     .container {
-      width: 100%;
-      padding-right: var(--space-6);
-      padding-left: var(--space-6);
-      margin-right: auto;
-      margin-left: auto;
-      position: relative;
+      width: 300%;
+      max-width: 1200px;
+      margin: 0 auto;
     }
     /* Modern button system */
     .btn {
@@ -499,6 +496,8 @@ const GlobalStyles = () => (
     /* Enhanced table system */
     .table {
       width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
       margin-bottom: var(--space-6);
       color: color: #000;
       background: rgba(255, 255, 255, 0.95);
@@ -2091,7 +2090,7 @@ const GlobalStyles = () => (
 
     /* Progress Bars */
     .progress-container {
-      width: 100%;
+      width: 300%;
       height: 8px;
       background: #e5e7eb;
       border-radius: 4px;
@@ -2150,6 +2149,7 @@ const GlobalStyles = () => (
       /* ============ DASHBOARD STYLES ============ */
     /* Dashboard Styles */
     .dashboard-container {
+    width: 300%%;
       max-width: 1400px;
       margin: 0 auto;
       padding: 2rem 1rem;
@@ -2175,7 +2175,7 @@ const GlobalStyles = () => (
       margin-bottom: 1rem;
     }
 
-    .header-logo {
+    .header-logo {f
       display: flex;
       align-items: center;
       gap: 0.5rem;

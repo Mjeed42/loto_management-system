@@ -459,9 +459,7 @@ const LOTOdetail = () => {
                 </div>
               )}
               {((loto.status === "pending" && isIsolator && isTechnician) ||
-                (loto.status === "pending" && isIsolator && isSupervisor) ||
-                (loto.status === "pending" &&
-                  currentUser.role === "admin")) && (
+                (loto.status === "pending" && isIsolator && isSupervisor)) && (
                 <div className="mb-4">
                   <h6 className="mb-3">
                     <Icon name="tools" /> Technician Actions
