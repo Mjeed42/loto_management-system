@@ -766,9 +766,7 @@ const GlobalStyles = () => (
       backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    .fw-bold {
-      font-weight: 700;
-    }
+
     .fw-semibold {
       font-weight: 600;
     }
@@ -1603,7 +1601,8 @@ const GlobalStyles = () => (
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
     .fw-bold {
-      font-weight: 700;
+     font-weight: 700;
+     font-size: 50px;
     }
     .fw-semibold {
       font-weight: 600;
@@ -2183,7 +2182,7 @@ const GlobalStyles = () => (
     }
 
     .header-logo h1 {
-      font-size: 2rem;
+      font-size: 30px;
       font-weight: 700;
       color: #1f2937;
       margin: 0;

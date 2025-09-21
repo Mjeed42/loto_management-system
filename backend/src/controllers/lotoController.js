@@ -1,30 +1,34 @@
 const LOTO = require("../models/LOTO");
 const User = require("../models/User");
-const HandoverNotification = require("../models/HandoverNotification");
 
 // Helper function to generate unique serial number
 const generateSerialNumber = async () => {
-  // Format: LOTO-YYYYMMDD-XXXX (where XXXX is a 4-digit sequential number)
-  const datePrefix = `LOTO-${new Date()
-    .toISOString()
-    .slice(0, 10)
-    .replace(/-/g, "")}`;
+  try {
+    // Format: LOTO-YYYYMMDD-XXXX (where XXXX is a 4-digit sequential number)
+    const datePrefix = `LOTO-${new Date()
+      .toISOString()
+      .slice(0, 10)
+      .replace(/-/g, "")}`;
 
-  // Find the highest existing serial number for today
-  const todayRegex = new RegExp(`^${datePrefix}-\\d{4}$`);
-  const latestLOTO = await LOTO.findOne({
-    serialNumber: todayRegex,
-  }).sort({ serialNumber: -1 });
+    // Find the highest existing serial number for today
+    const todayRegex = new RegExp(`^${datePrefix}-\\d{4}$`);
+    const latestLOTO = await LOTO.findOne({
+      serialNumber: todayRegex,
+    }).sort({ serialNumber: -1 });
 
-  let nextNumber = 1;
-  if (latestLOTO) {
-    const lastNumber = parseInt(latestLOTO.serialNumber.slice(-4));
-    nextNumber = lastNumber + 1;
+    let nextNumber = 1;
+    if (latestLOTO) {
+      const lastNumber = parseInt(latestLOTO.serialNumber.slice(-4));
+      nextNumber = lastNumber + 1;
+    }
+
+    // Format as 4-digit number with leading zeros
+    const formattedNumber = nextNumber.toString().padStart(4, "0");
+    return `${datePrefix}-${formattedNumber}`;
+  } catch (error) {
+    console.error("Generate serial number error:", error);
+    throw new Error("Failed to generate serial number");
   }
-
-  // Format as 4-digit number with leading zeros
-  const formattedNumber = nextNumber.toString().padStart(4, "0");
-  return `${datePrefix}-${formattedNumber}`;
 };
 
 // @desc    Create new LOTO
@@ -35,9 +39,6 @@ exports.createLOTO = async (req, res) => {
     const {
       shift,
       location,
-      line,
-      machine,
-      customLocation,
       isolatedPart,
       reason,
       ptwNumber,
@@ -48,38 +49,31 @@ exports.createLOTO = async (req, res) => {
     // Generate unique serial number
     const serialNumber = await generateSerialNumber();
 
-    // Prepare LOTO data with simplified location structure
+    // Prepare LOTO data
     const lotoData = {
       serialNumber,
       shift,
       isolator: req.user.id,
       isolatorName: `${req.user.firstName} ${req.user.lastName}`,
+      location: location || "Other", // Default to 'Other' if not provided
       isolatedPart,
       reason,
       ptwNumber: ptwNumber || "N/A",
       expectedDuration: parseFloat(expectedDuration),
       status: "pending",
-      location: location || "Processing", // Default location
-      line: line || "",
-      machine: machine || "",
-      customLocation: customLocation || "",
     };
 
-    // Add supervisor if provided
+    // Add authorized handler if provided
     if (supervisor) {
-      // Validate that the supervisor exists and has the correct role
+      // Validate that the supervisor exists and is a supervisor
       const supervisorUser = await User.findById(supervisor);
-      if (
-        supervisorUser &&
-        (supervisorUser.role === "supervisor" ||
-          supervisorUser.role === "admin")
-      ) {
+      if (supervisorUser && supervisorUser.role === "supervisor") {
         lotoData.supervisor = supervisor;
         lotoData.supervisorName = `${supervisorUser.firstName} ${supervisorUser.lastName}`;
       } else {
         return res.status(400).json({
           success: false,
-          message: "Invalid supervisor - must be a supervisor or admin",
+          message: "Invalid supervisor - must be a technician",
         });
       }
     }
@@ -89,9 +83,9 @@ exports.createLOTO = async (req, res) => {
     // Populate the created LOTO
     const populatedLOTO = await LOTO.findById(loto._id)
       .populate("isolator", "firstName lastName username")
+      .populate("supervisor", "firstName lastName username") // NEW POPULATION
       .populate("verifiedBy", "firstName lastName username")
-      .populate("handoverTo", "firstName lastName username")
-      .populate("supervisor", "firstName lastName username");
+      .populate("handoverTo", "firstName lastName username");
 
     res.status(201).json({
       success: true,
@@ -595,6 +589,108 @@ exports.acceptHandover = async (req, res) => {
     });
   } catch (error) {
     console.error("Accept handover error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+// @desc    Delete LOTO
+// @route   DELETE /api/loto/:id
+// @access  Private
+exports.deleteLOTO = async (req, res) => {
+  try {
+    console.log("Delete LOTO request received:", req.params.id);
+    console.log("User making request:", req.user.id, req.user.role);
+
+    // Only admin can delete LOTOs
+    if (req.user.role !== "admin") {
+      console.log("UNAUTHORIZED: User is not admin - role:", req.user.role);
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to access this resource",
+      });
+    }
+
+    const loto = await LOTO.findById(req.params.id);
+
+    if (!loto) {
+      console.log("LOTO not found for deletion:", req.params.id);
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    console.log("Found LOTO for deletion:", loto._id, loto.serialNumber);
+
+    // Remove from database
+    await loto.remove();
+
+    console.log("LOTO deleted successfully:", req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "LOTO deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete LOTO error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+// @desc    Reject Handover
+// @route   PUT /api/loto/:id/reject-handover
+// @access  Private
+exports.rejectHandover = async (req, res) => {
+  try {
+    console.log("Reject handover request received:", req.params.id);
+
+    const loto = await LOTO.findById(req.params.id);
+
+    if (!loto) {
+      console.log("LOTO not found:", req.params.id);
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    // Only the handover recipient can reject
+    if (loto.handoverTo?.toString() !== req.user.id) {
+      console.log("Unauthorized handover rejection attempt");
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to reject this handover",
+      });
+    }
+
+    // Update LOTO - Reset to active status for original isolator
+    loto.status = "active";
+    loto.handoverTo = null;
+    loto.handoverNotes = null;
+    loto.updatedAt = Date.now();
+
+    await loto.save();
+
+    console.log("LOTO handover rejected and reset to active status");
+
+    // Populate the updated LOTO
+    const updatedLOTO = await LOTO.findById(loto._id)
+      .populate("isolator", "firstName lastName username")
+      .populate("verifiedBy", "firstName lastName username")
+      .populate("handoverTo", "firstName lastName username");
+
+    res.status(200).json({
+      success: true,
+      updatedLOTO,
+    });
+  } catch (error) {
+    console.error("Reject handover error:", error);
     res.status(500).json({
       success: false,
       message: "Server Error",

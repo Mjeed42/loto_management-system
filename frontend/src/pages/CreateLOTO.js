@@ -7,43 +7,206 @@ import Icon from "../components/Icon";
 const CreateLOTO = () => {
   const [formData, setFormData] = useState({
     shift: "A",
-    location: "", // Top-level location
-    line: "", // Selected line (for Processing/PKG locations)
+    location: "Processing", // Default location
+    line: "", // Selected line
     machine: "", // Selected machine
-    isolatedPart: "", // Final isolated part
+    isolatedPart: "", // Final isolated part description
     reason: "",
     ptwNumber: "N/A",
     expectedDuration: "",
-    supervisor: ""
+    supervisor: "",
   });
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [supervisors, setSupervisors] = useState([]);
   const [fetchingSupervisors, setFetchingSupervisors] = useState(true);
-  const [locationHierarchy, setLocationHierarchy] = useState({
-    "Processing": ["A", "B", "C", "D", "E"],
-    "PKG": ["A", "B", "C", "D", "Multi Bag"],
-    "WH-FG": [],
-    "WH-RM": [],
-    "Project": [],
-    "Utility": [],
-    "Other": []
-  });
-  const [machines, setMachines] = useState({
-    "A": ["DA01", "DA02", "DA03", "DA04", "DA05", "DA06", "DA07", "DA08", "DA09", "DA10", "DA11", "DA12", "DA13", "DA14", "DA15", "DA16", "DA17", "DA18"],
-    "B": ["DB01", "DB02", "DB03", "DB04", "DB05", "DB06", "DB07", "DB08", "DB09", "DB10", "DB11", "DB12", "DB13", "DB14", "DB15", "DB16", "DB17", "DB18"],
-    "C": ["GUCP07", "DC01", "DC02", "DC03", "DC04", "DC05", "DC06", "DC07", "DC08", "GUCP10"],
-    "D": ["DD01", "DD02", "DD03", "DD04"],
-    "E": ["MP01", "MP02", "MP03", "MP04", "MP05"],
-    "Multi Bag": ["MP01", "MP02", "MP03", "MP04", "MP05"]
-  });
-  const [isolatedParts, setIsolatedParts] = useState([
-    "Convoyer", "GUACP", "HMC", "Bagmaker", "Multy bag", "Case Elevator", "Pack Elevator", "Exit Pallitizer", "Other"
-  ]);
-  const [showCustomLocation, setShowCustomLocation] = useState(false);
-  const [customLocation, setCustomLocation] = useState("");
   const navigate = useNavigate();
+
+  // Location hierarchy based on your Excel structure
+  const locationHierarchy = {
+    Processing: ["A", "B", "C", "D", "Multi-Bag"],
+    PKG: ["A", "B", "C", "D", "Multi-Bag"],
+    Process: ["PC", "TC", "FCP", "RBS", "CKF"],
+    Utility: ["Chiller", "AC", "Pump", "Gate", "Other"],
+    "WH-FG": [
+      "Gate",
+      "Dock Leveler",
+      "Crate Dumper",
+      "Pallet Inverter",
+      "Banker",
+      "Other",
+    ],
+    "WH-RM": [
+      "Gate",
+      "Dock Leveler",
+      "Crate Dumper",
+      "Pallet Inverter",
+      "Banker",
+      "Other",
+    ],
+    Project: ["Other"],
+    Other: ["Other"],
+  };
+
+  // Machine hierarchy for Processing/PKG locations
+  const machineHierarchy = {
+    Processing: {
+      A: [
+        "DA01",
+        "DA02",
+        "DA03",
+        "DA04",
+        "DA05",
+        "DA06",
+        "DA07",
+        "DA08",
+        "DA09",
+        "DA10",
+        "DA11",
+        "DA12",
+        "DA13",
+        "DA14",
+        "DA15",
+        "DA16",
+        "DA17",
+        "DA18",
+      ],
+      B: [
+        "DB01",
+        "DB02",
+        "DB03",
+        "DB04",
+        "GUCP01",
+        "DB05",
+        "DB06",
+        "DB07",
+        "DB08",
+        "DB09",
+        "DB10",
+        "DB11",
+        "DB12",
+        "DB13",
+        "DB14",
+        "DB15",
+        "DB16",
+        "DB17",
+        "DB18",
+        "GUCP06",
+      ],
+      C: [
+        "GUCP07",
+        "DC01",
+        "DC02",
+        "DC03",
+        "DC04",
+        "DC05",
+        "DC06",
+        "DC07",
+        "DC08",
+        "GUCP10",
+      ],
+      D: ["DD01", "DD02", "DD03", "DD04"],
+      "Multi-Bag": ["MP01", "MP02", "MP03", "MP04", "MP05"],
+    },
+    PKG: {
+      A: [
+        "DA01",
+        "DA02",
+        "DA03",
+        "DA04",
+        "DA05",
+        "DA06",
+        "DA07",
+        "DA08",
+        "DA09",
+        "DA10",
+        "DA11",
+        "DA12",
+        "DA13",
+        "DA14",
+        "DA15",
+        "DA16",
+        "DA17",
+        "DA18",
+      ],
+      B: [
+        "DB01",
+        "DB02",
+        "DB03",
+        "DB04",
+        "GUCP01",
+        "DB05",
+        "DB06",
+        "DB07",
+        "DB08",
+        "DB09",
+        "DB10",
+        "DB11",
+        "DB12",
+        "DB13",
+        "DB14",
+        "DB15",
+        "DB16",
+        "DB17",
+        "DB18",
+        "GUCP06",
+      ],
+      C: [
+        "GUCP07",
+        "DC01",
+        "DC02",
+        "DC03",
+        "DC04",
+        "DC05",
+        "DC06",
+        "DC07",
+        "DC08",
+        "GUCP10",
+      ],
+      D: ["DD01", "DD02", "DD03", "DD04"],
+      "Multi-Bag": ["MP01", "MP02", "MP03", "MP04", "MP05"],
+    },
+  };
+
+  // Part hierarchy for Process, Utility, WH-FG, WH-RM locations
+  const partHierarchy = {
+    Process: {
+      PC: [
+        "Oven",
+        "Fryer",
+        "Slicer",
+        "Starch Recovery",
+        "Optical Sorter",
+        "Sessioning Loop",
+        "Dump Station",
+        "Other",
+      ],
+      TC: ["Oven", "Starch Recovery", "Dump Station", "Other"],
+      FCP: ["Optical Sorter", "Mill Mixer", "Other"],
+      RBS: ["Extruder", "Sheeter", "Other"],
+      CKF: ["Sessioning Loop", "Other"],
+    },
+    Utility: ["Chiller", "AC", "Pump", "Gate", "Other"],
+    "WH-FG": [
+      "Gate",
+      "Dock Leveler",
+      "Crate Dumper",
+      "Pallet Inverter",
+      "Banker",
+      "Other",
+    ],
+    "WH-RM": [
+      "Gate",
+      "Dock Leveler",
+      "Crate Dumper",
+      "Pallet Inverter",
+      "Banker",
+      "Other",
+    ],
+    Project: ["Other"],
+    Other: ["Other"],
+  };
 
   useEffect(() => {
     fetchSupervisors();
@@ -54,11 +217,14 @@ const CreateLOTO = () => {
       const token = localStorage.getItem("token");
       const config = {
         headers: {
-          "Authorization": `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       };
 
-      const res = await axios.get("https://loto-backend-643788243736.europe-west1.run.app/api/users/supervisors", config);
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/users/supervisors",
+        config
+      );
 
       let supervisorsData = [];
       if (res.data.supervisors) {
@@ -81,7 +247,17 @@ const CreateLOTO = () => {
     }
   };
 
-  const { shift, location, line, machine, isolatedPart, reason, ptwNumber, expectedDuration, supervisor } = formData;
+  const {
+    shift,
+    location,
+    line,
+    machine,
+    isolatedPart,
+    reason,
+    ptwNumber,
+    expectedDuration,
+    supervisor,
+  } = formData;
 
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -94,9 +270,8 @@ const CreateLOTO = () => {
       location: selectedLocation,
       line: "",
       machine: "",
-      isolatedPart: ""
+      isolatedPart: "",
     });
-    setShowCustomLocation(selectedLocation === "Other");
   };
 
   const handleLineChange = (e) => {
@@ -105,7 +280,7 @@ const CreateLOTO = () => {
       ...formData,
       line: selectedLine,
       machine: "",
-      isolatedPart: ""
+      isolatedPart: "",
     });
   };
 
@@ -114,16 +289,7 @@ const CreateLOTO = () => {
     setFormData({
       ...formData,
       machine: selectedMachine,
-      isolatedPart: selectedMachine
-    });
-  };
-
-  const handleCustomLocationChange = (e) => {
-    const customLoc = e.target.value;
-    setCustomLocation(customLoc);
-    setFormData({
-      ...formData,
-      isolatedPart: customLoc
+      isolatedPart: selectedMachine,
     });
   };
 
@@ -137,41 +303,49 @@ const CreateLOTO = () => {
       const config = {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       };
 
       // Prepare data to send - ensure location is valid
       const dataToSend = {
         shift,
         location: formData.location || "Other", // Default to "Other" if not selected
+        line: formData.line || "N/A",
+        machine: formData.machine || "N/A",
         isolatedPart: formData.isolatedPart || "N/A",
         reason,
         ptwNumber: ptwNumber || "N/A",
         expectedDuration: parseFloat(expectedDuration),
-        supervisor
+        supervisor,
       };
 
-      // Add line and machine if they exist
-      if (formData.line) dataToSend.line = formData.line;
-      if (formData.machine) dataToSend.machine = formData.machine;
+      const res = await axios.post(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/loto",
+        dataToSend,
+        config
+      );
 
-      const res = await axios.post("https://loto-backend-643788243736.europe-west1.run.app/api/loto", dataToSend, config);
-
-      alert(`LOTO created successfully!\nSerial Number: ${res.data.data.serialNumber}`);
-      navigate("/loto-list");
+      // Check if the response is successful
+      if (res.status === 201 && res.data.success) {
+        alert(
+          `LOTO created successfully!\nSerial Number: ${res.data.data.serialNumber}`
+        );
+        navigate("/loto-list");
+      } else {
+        // Handle error response
+        setError(res.data.message || "Error creating LOTO");
+      }
     } catch (err) {
+      // Handle network errors
       setError(err.response?.data?.message || "Error creating LOTO");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Ensure arrays are always arrays before mapping
+  // Ensure supervisors is always an array before mapping
   const safeSupervisors = Array.isArray(supervisors) ? supervisors : [];
-  const safeLines = location && locationHierarchy[location] ? locationHierarchy[location] : [];
-  const safeMachines = line && machines[line] ? machines[line] : [];
-  const safeIsolatedParts = Array.isArray(isolatedParts) ? isolatedParts : [];
 
   return (
     <div className="cf-dashboard">
@@ -217,15 +391,15 @@ const CreateLOTO = () => {
                       <option value="A">A</option>
                       <option value="B">B</option>
                       <option value="C">C</option>
-                      <option value="D">D</option>
-                      <option value="E">E</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <div className="cf-form-group cf-mb-3">
-                    <label className="cf-form-label">Expected Duration (hours)</label>
+                    <label className="cf-form-label">
+                      Expected Duration (hours)
+                    </label>
                     <input
                       type="number"
                       name="expectedDuration"
@@ -241,13 +415,13 @@ const CreateLOTO = () => {
                 </div>
               </div>
 
-              {/* Hierarchical Location Selection */}
+              {/* Hierarchical Location Selection - TREE STRUCTURE */}
               <div className="cf-form-group cf-mb-4">
                 <label className="cf-form-label">Location Selection</label>
 
-                {/* Top-level Location */}
+                {/* Step 1: Main Location */}
                 <div className="cf-mb-3">
-                  <label className="cf-form-label">Select Location</label>
+                  <label className="cf-form-label">Select Main Location</label>
                   <select
                     name="location"
                     value={location}
@@ -255,21 +429,26 @@ const CreateLOTO = () => {
                     className="cf-form-control"
                     required
                   >
-                    <option value="">Select a location</option>
+                    <option value="">-- Select Location --</option>
                     <option value="Processing">Processing</option>
                     <option value="PKG">PKG</option>
+                    <option value="Process">Process</option>
+                    <option value="Utility">Utility</option>
                     <option value="WH-FG">WH-FG</option>
                     <option value="WH-RM">WH-RM</option>
                     <option value="Project">Project</option>
-                    <option value="Utility">Utility</option>
-                    <option value="Other">Other (Specify Custom Location)</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
 
-                {/* Line Selection (appears for Processing/PKG locations) */}
-                {location && (location === "Processing" || location === "PKG") && safeLines.length > 0 && (
+                {/* Step 2: Line/Part Selection (appears when location is selected) */}
+                {location && locationHierarchy[location] && (
                   <div className="cf-mb-3">
-                    <label className="cf-form-label">Select Line</label>
+                    <label className="cf-form-label">
+                      {["Processing", "PKG", "Process"].includes(location)
+                        ? "Select Line"
+                        : "Select Part"}
+                    </label>
                     <select
                       name="line"
                       value={line}
@@ -277,58 +456,99 @@ const CreateLOTO = () => {
                       className="cf-form-control"
                       required
                     >
-                      <option value="">Select a line</option>
-                      {safeLines.map((ln) => (
-                        <option key={ln} value={ln}>
-                          {ln}
+                      <option value="">
+                        -- Select{" "}
+                        {["Processing", "PKG", "Process"].includes(location)
+                          ? "Line"
+                          : "Part"}{" "}
+                        --
+                      </option>
+                      {locationHierarchy[location].map((item, index) => (
+                        <option key={index} value={item}>
+                          {item}
                         </option>
                       ))}
                     </select>
                   </div>
                 )}
 
-                {/* Machine Selection (appears when line is selected) */}
-                {line && safeMachines.length > 0 && (
-                  <div className="cf-mb-3">
-                    <label className="cf-form-label">Select Machine</label>
-                    <select
-                      name="machine"
-                      value={machine}
-                      onChange={handleMachineChange}
-                      className="cf-form-control"
-                      required
-                    >
-                      <option value="">Select a machine</option>
-                      {safeMachines.map((mach) => (
-                        <option key={mach} value={mach}>
-                          {mach}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                {/* Step 3: Machine/Part Selection (appears when line is selected for Processing/PKG) */}
+                {location &&
+                  (location === "Processing" || location === "PKG") &&
+                  line &&
+                  machineHierarchy[location]?.[line] && (
+                    <div className="cf-mb-3">
+                      <label className="cf-form-label">Select Machine</label>
+                      <select
+                        name="machine"
+                        value={machine}
+                        onChange={handleMachineChange}
+                        className="cf-form-control"
+                        required
+                      >
+                        <option value="">-- Select Machine --</option>
+                        {machineHierarchy[location][line].map((item, index) => (
+                          <option key={index} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
-                {/* Custom Location Input (appears when "Other" is selected) */}
-                {showCustomLocation && (
-                  <div className="cf-mb-3">
-                    <label className="cf-form-label">Enter Custom Location</label>
-                    <input
-                      type="text"
-                      name="customLocation"
-                      value={customLocation}
-                      onChange={handleCustomLocationChange}
-                      placeholder="Enter custom location description"
-                      className="cf-form-control"
-                      required
-                    />
-                  </div>
-                )}
+                {/* For Process location with specific lines */}
+                {location === "Process" &&
+                  line &&
+                  partHierarchy.Process?.[line] && (
+                    <div className="cf-mb-3">
+                      <label className="cf-form-label">Select Part</label>
+                      <select
+                        name="machine"
+                        value={machine}
+                        onChange={handleMachineChange}
+                        className="cf-form-control"
+                        required
+                      >
+                        <option value="">-- Select Part --</option>
+                        {partHierarchy.Process[line].map((item, index) => (
+                          <option key={index} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                {/* For Utility, WH-FG, WH-RM, Project, Other locations */}
+                {location &&
+                  ["Utility", "WH-FG", "WH-RM", "Project", "Other"].includes(
+                    location
+                  ) &&
+                  !line && (
+                    <div className="cf-mb-3">
+                      <label className="cf-form-label">Select Part</label>
+                      <select
+                        name="machine"
+                        value={machine}
+                        onChange={handleMachineChange}
+                        className="cf-form-control"
+                        required
+                      >
+                        <option value="">-- Select Part --</option>
+                        {partHierarchy[location].map((item, index) => (
+                          <option key={index} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                 {/* Display Selected Location Path */}
                 {(location || line || machine) && (
                   <div className="cf-alert cf-alert-info cf-mt-3">
                     <Icon name="location" className="cf-mr-2" />
-                    Selected Location:
+                    Selected Location Path:
                     <strong>
                       {location}
                       {line && ` > ${line}`}
@@ -376,12 +596,18 @@ const CreateLOTO = () => {
                 />
               </div>
 
-              {/* Supervisor Dropdown */}
+              {/* Supervisor Dropdown - FIXED ARRAY ITERATION */}
               <div className="cf-form-group cf-mb-4">
-                <label className="cf-form-label">Assign Supervisor for Verification (Optional)</label>
+                <label className="cf-form-label">
+                  Assign Supervisor for Verification (Optional)
+                </label>
                 {fetchingSupervisors ? (
                   <div className="cf-flex cf-items-center">
-                    <span className="cf-spinner cf-spinner-sm cf-mr-2" role="status" aria-hidden="true"></span>
+                    <span
+                      className="cf-spinner cf-spinner-sm cf-mr-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
                     <span>Loading supervisors...</span>
                   </div>
                 ) : (
@@ -391,25 +617,26 @@ const CreateLOTO = () => {
                     onChange={onChange}
                     className="cf-form-control"
                   >
-                    <option value="">None - Any supervisor/admin can verify</option>
+                    <option value="">
+                      None - Any supervisor/admin can verify
+                    </option>
+                    {/* FIXED: Ensure safeSupervisors is always an array before mapping */}
                     {safeSupervisors.map((sup) => (
                       <option key={sup._id} value={sup._id}>
-                        {sup.firstName} {sup.lastName} ({sup.username}) - {sup.role === 'admin' ? 'Admin' : 'Supervisor'}
+                        {sup.firstName} {sup.lastName} ({sup.username}) -{" "}
+                        {sup.role === "admin" ? "Admin" : "Supervisor"}
                       </option>
                     ))}
                   </select>
                 )}
                 <div className="cf-form-help">
-                  Select a specific supervisor or admin who will verify this LOTO request
+                  Select a specific supervisor or admin who will verify this
+                  LOTO request
                 </div>
               </div>
 
               <div className="cf-flex cf-gap-2">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={submitting}
-                >
+                <Button type="submit" variant="primary" disabled={submitting}>
                   {submitting ? (
                     <>
                       <span

@@ -1,137 +1,87 @@
-const mongoose = require("mongoose");
-const Location = require("../src/models/Location");
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const User = require('../src/models/User');
 
 // Use your MongoDB Atlas connection string
-const MONGO_URI =
-  process.env.MONGO_URI ||
-  "mongodb+srv://loto_app_user:6hsMKn4SwqFKpPtV@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://<YOUR_ATLAS_USERNAME>:<YOUR_ATLAS_PASSWORD>@<YOUR_CLUSTER>.xxxxx.gcp.mongodb.net/loto_management?retryWrites=true&w=majority&appName=LOTO-App";
 
-// Location hierarchy based on your Excel file
-const locationHierarchy = [
-  {
-    name: "Processing",
-    code: "PKG",
-    type: "location",
-    children: [
-      { name: "Line A", code: "DA01", type: "line" },
-      { name: "Line B", code: "DB01", type: "line" },
-      { name: "Line C", code: "GUCP07", type: "line" },
-      { name: "Line D", code: "DD01", type: "line" },
-      { name: "Multi Bag", code: "MP01", type: "line" },
-    ],
-  },
-  {
-    name: "WH-FG",
-    code: "WH-FG",
-    type: "location",
-    children: [],
-  },
-  {
-    name: "WH-RM",
-    code: "WH-RM",
-    type: "location",
-    children: [],
-  },
-  {
-    name: "Project",
-    code: "Project",
-    type: "location",
-    children: [],
-  },
-  {
-    name: "Other",
-    code: "Other",
-    type: "location",
-    children: [],
-  },
-];
-
-// Process hierarchy to create locations
-async function createLocations() {
+async function fixUserCreation() {
   try {
+    console.log('Connecting to MongoDB Atlas...');
     await mongoose.connect(MONGO_URI);
-    console.log("Connected to MongoDB Atlas");
+    console.log('✅ Connected to MongoDB Atlas');
 
-    // Clear existing locations
-    await Location.deleteMany({});
-    console.log("Cleared existing locations");
+    // Clear existing users
+    await User.deleteMany({});
+    console.log('🧹 Cleared existing users');
 
-    // Create locations recursively
-    const createdLocations = [];
+    // Users to create with plain text passwords (will be hashed by Mongoose)
+    const usersToCreate = [
+      {
+        username: "systemadmin",
+        email: "admin@lotosystem.com",
+        password: "admin123!", // Plain text - will be hashed by Mongoose
+        firstName: "System",
+        lastName: "Administrator",
+        employeeId: "EMP001",
+        role: "admin",
+        isActive: true
+      },
+      {
+        username: "plantmanager",
+        email: "manager@lotosystem.com",
+        password: "manager123", // Plain text - will be hashed by Mongoose
+        firstName: "Plant",
+        lastName: "Manager",
+        employeeId: "EMP002",
+        role: "manager",
+        isActive: true
+      }
+    ];
 
-    for (const locationData of locationHierarchy) {
+    // Add 10 technicians
+    for (let i = 1; i <= 10; i++) {
+      const paddedNum = i.toString().padStart(2, '0');
+      usersToCreate.push({
+        username: `tech${paddedNum}`,
+        email: `tech${i}@company.com`,
+        password: "tech123", // Plain text - will be hashed by Mongoose
+        firstName: "Technician",
+        lastName: `${paddedNum}`,
+        employeeId: `EMP${(i + 2).toString().padStart(3, '0')}`,
+        role: "technician",
+        isActive: true
+      });
+    }
+
+    // Create users through Mongoose (passwords will be automatically hashed)
+    for (const userData of usersToCreate) {
       try {
-        // Create parent location
-        const parentLocation = await Location.create({
-          name: locationData.name,
-          code: locationData.code,
-          type: locationData.type,
-          isLeaf: locationData.children.length === 0,
-          description: locationData.description || "",
-        });
+        console.log(`Creating user: ${userData.username} (${userData.role})`);
 
-        createdLocations.push(parentLocation);
-        console.log(
-          `Created parent location: ${parentLocation.name} (${parentLocation.code})`
-        );
+        const user = new User(userData);
+        await user.save();
 
-        // Create child locations
-        for (const childData of locationData.children) {
-          try {
-            const childLocation = await Location.create({
-              name: childData.name,
-              code: childData.code,
-              type: childData.type,
-              parent: parentLocation._id,
-              isLeaf: true,
-              description: childData.description || "",
-            });
-
-            // Add child to parent's children array
-            parentLocation.children.push(childLocation._id);
-            await parentLocation.save();
-
-            createdLocations.push(childLocation);
-            console.log(
-              `  Created child location: ${childLocation.name} (${childLocation.code}) under ${parentLocation.name}`
-            );
-          } catch (err) {
-            console.error(
-              `  Error creating child location ${childData.name}:`,
-              err.message
-            );
-          }
-        }
+        console.log(`✅ Created user: ${user.username} with hashed password`);
       } catch (err) {
-        console.error(
-          `Error creating parent location ${locationData.name}:`,
-          err.message
-        );
+        console.error(`❌ Error creating user ${userData.username}:`, err.message);
       }
     }
 
-    console.log("All locations created successfully!");
+    console.log('🎉 All users created successfully with hashed passwords!');
 
-    // Verify locations were created
-    const locations = await Location.find().select(
-      "name code type parent isLeaf children"
-    );
-    console.log("\nLocations in database:");
-    locations.forEach((location) => {
-      console.log(
-        `  - ${location.name} (${location.code}) - Type: ${
-          location.type
-        } - Leaf: ${location.isLeaf} - Children: ${
-          location.children?.length || 0
-        }`
-      );
+    // Verify users were created
+    const users = await User.find().select('username email role isActive employeeId');
+    console.log('\n📋 Users in database:');
+    users.forEach(user => {
+      console.log(`  - ${user.username} (${user.role}) - Employee ID: ${user.employeeId} - Active: ${user.isActive}`);
     });
 
     process.exit(0);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('💥 Error:', error);
     process.exit(1);
   }
 }
 
-createLocations();
+fixUserCreation();

@@ -8,6 +8,9 @@ const {
   completeLOTO,
   handoverLOTO,
   acceptHandover,
+  rejectHandover,
+
+  deleteLOTO,
 } = require("../controllers/lotoController");
 const { protect } = require("../middleware/auth");
 
@@ -24,5 +27,8 @@ router.route("/:id/complete").put(protect, completeLOTO);
 router.route("/:id/handover").put(protect, handoverLOTO);
 
 router.route("/:id/accept-handover").put(protect, acceptHandover);
+router.route("/:id/reject-handover").put(protect, rejectHandover);
+
+router.route("/:id").delete(protect, deleteLOTO);
 
 module.exports = router;

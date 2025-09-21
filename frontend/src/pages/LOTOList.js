@@ -84,6 +84,46 @@ const LOTOList = () => {
       setLoading(false);
     }
   };
+  const handleDelete = async (lotoId, serialNumber) => {
+  if (!window.confirm(`Are you sure you want to delete LOTO ${serialNumber}? This action cannot be undone.`)) return;
+
+  try {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    };
+
+    console.log("Sending delete request for LOTO:", lotoId);
+
+    // Use the correct API URL
+    const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://loto-backend-643788243736.europe-west1.run.app/api';
+
+    const response = await axios.delete(
+      `${API_BASE_URL}/loto/${lotoId}`,
+      config
+    );
+
+    console.log("Delete LOTO response:", response);
+
+    if (response.data.success) {
+      alert("LOTO deleted successfully!");
+      fetchLOTOs(); // Refresh the list
+    } else {
+      alert(response.data.message || "Error deleting LOTO");
+    }
+  } catch (err) {
+    console.error("Delete LOTO error:", err);
+    console.error("Error response:", err.response);
+
+    const errorMessage = err.response?.data?.message ||
+                        err.response?.data?.error ||
+                        "Error deleting LOTO";
+
+    alert(`Delete failed: ${errorMessage}`);
+  }
+};
 
   const handleVerify = async (lotoId) => {
     try {
@@ -264,9 +304,6 @@ const LOTOList = () => {
                     </span>
                     LOTO Management
                   </h1>
-                  <p className="lead text-muted mb-0">
-                    Manage all your lockout/tagout procedures in one place
-                  </p>
                 </div>
                 <div className="d-flex gap-2 flex-wrap">
                   <Button
@@ -294,49 +331,6 @@ const LOTOList = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Search and Filter Section */}
-      <div className="row mb-4">
-        <div className="col-md-8">
-          <div className="search-container">
-            <div className="position-relative">
-              <input
-                type="text"
-                className="search-input form-control"
-                placeholder="Search LOTOs by serial number, equipment, reason, or isolator..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  paddingLeft: "3rem",
-                  borderRadius: "2rem",
-                  border: "2px solid #e2e8f0",
-                  background: "rgba(255, 255, 255, 0.9)",
-                  backdropFilter: "blur(10px)",
-                }}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <select
-            className="search-input form-control"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            style={{
-              borderRadius: "1rem",
-              border: "2px solid #e2e8f0",
-              background: "rgba(255, 255, 255, 0.9)",
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-            <option value="pending_handover">Pending Handover</option>
-          </select>
         </div>
       </div>
 
@@ -425,6 +419,48 @@ const LOTOList = () => {
           </div>
         </div>
       )}
+      {/* Search and Filter Section */}
+      <div className="row mb-4">
+        <div className="col-md-8">
+          <div className="search-container">
+            <div className="position-relative">
+              <input
+                type="text"
+                className="search-input form-control"
+                placeholder="Search LOTOs by serial number, equipment, reason, or isolator..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  paddingLeft: "3rem",
+                  borderRadius: "2rem",
+                  border: "2px solid #e2e8f0",
+                  background: "rgba(255, 255, 255, 0.9)",
+                  backdropFilter: "blur(10px)",
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4">
+          <select
+            className="search-input form-control"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            style={{
+              borderRadius: "1rem",
+              border: "2px solid #e2e8f0",
+              background: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="pending_handover">Pending Handover</option>
+          </select>
+        </div>
+      </div>
 
       {/* LOTO Table */}
       {filteredLotos.length === 0 && !loading ? (
@@ -493,14 +529,10 @@ const LOTOList = () => {
                       {canVerify && loto.status === "pending" && (
                         <Button
                           variant="success"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleVerify(loto._id);
-                          }}
-                          className="hover-scale"
+                          onClick={handleVerify}
+                          className="w-100"
                         >
-                          <span className="me-1">✔️</span> Verify
+                          <Icon name="check" /> Verify LOTO
                         </Button>
                       )}
                       {isTechnician && loto.status === "active" && (

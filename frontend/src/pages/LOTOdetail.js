@@ -56,6 +56,51 @@ const LOTOdetail = () => {
       setLoading(false);
     }
   };
+  const handleDelete = async () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete this LOTO? This action cannot be undone.`
+      )
+    )
+      return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      console.log("Sending delete request for LOTO:", id);
+
+      // Use the correct API URL
+      const API_BASE_URL =
+        process.env.REACT_APP_API_URL ||
+        "https://loto-backend-643788243736.europe-west1.run.app/api";
+
+      const response = await axios.delete(`${API_BASE_URL}/loto/${id}`, config);
+
+      console.log("Delete LOTO response:", response);
+
+      if (response.data.success) {
+        alert("LOTO deleted successfully!");
+        navigate("/loto-list"); // Navigate back to list
+      } else {
+        alert(response.data.message || "Error deleting LOTO");
+      }
+    } catch (err) {
+      console.error("Delete LOTO error:", err);
+      console.error("Error response:", err.response);
+
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Error deleting LOTO";
+
+      alert(`Delete failed: ${errorMessage}`);
+    }
+  };
 
   const handleAcceptHandover = async () => {
     if (
@@ -214,6 +259,7 @@ const LOTOdetail = () => {
     (currentUser.role === "supervisor" || currentUser.role === "admin");
   const isTechnician = currentUser && currentUser.role === "technician";
   const isSupervisor = currentUser && currentUser.role === "supervisor";
+
   return (
     <div className="container-fluid py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -250,52 +296,55 @@ const LOTOdetail = () => {
             </div>
             <div className="card-body">
               <div className="row">
-                <div className="row mb-3">
-                  <div className="col-md-6">
-                    <p className="mb-1">
-                      <strong>Serial Number:</strong> {loto.serialNumber}
-                    </p>
-                    <p className="mb-1">
-                      <strong>Date:</strong>{" "}
-                      {new Date(loto.date).toLocaleDateString()}
-                    </p>
-                    <p className="mb-1">
-                      <strong>Shift:</strong> {loto.shift}
-                    </p>
-                    <p className="mb-1">
-                      <strong>Isolator:</strong> {loto.isolatorName}
-                    </p>
-                    <p className="mb-1">
-                      <strong>line:</strong> {loto.line}
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    {/* NEW AUTHORIZED SUPERVISOR HANDLER DISPLAY */}
-                    <p className="mb-1">
-                      <strong>Authorized Supervisor Handler:</strong>
-                      {loto.supervisorName ? (
-                        <span className="cf-text-success cf-ml-2">
-                          {loto.supervisorName}
-                        </span>
-                      ) : (
-                        <span className="cf-text-muted cf-ml-2">
-                          None - Only isolator can handle
-                        </span>
-                      )}
-                    </p>
-                    <p className="mb-1">
-                      <strong>Isolated Part:</strong> {loto.isolatedPart}
-                    </p>
-                    <p className="mb-1">
-                      <strong>Reason:</strong> {loto.reason}
-                    </p>
-                    <p className="mb-1">
-                      <strong>PTW Number:</strong> {loto.ptwNumber}
-                    </p>
-                  </div>
+                <div className="col-md-6">
+                  <p className="mb-1">
+                    <strong>Serial Number:</strong> {loto.serialNumber}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Date:</strong>{" "}
+                    {new Date(loto.date).toLocaleDateString()}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Shift:</strong> {loto.shift}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Isolator:</strong> {loto.isolatorName}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Line:</strong> {location.line}
+                  </p>
+                </div>
+                <div className="col-md-6">
+                  {/* Authorized Supervisor Handler */}
+                  <p className="mb-1">
+                    <strong>Authorized Supervisor Handler:</strong>
+                    {loto.supervisorName ? (
+                      <span className="cf-text-success cf-ml-2">
+                        {loto.supervisorName}
+                      </span>
+                    ) : (
+                      <span className="cf-text-muted cf-ml-2">
+                        None - Only isolator can handle
+                      </span>
+                    )}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Isolated Part:</strong> {loto.isolatedPart}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Reason:</strong> {loto.reason}
+                  </p>
+                  <p className="mb-1">
+                    <strong>PTW Number:</strong> {loto.ptwNumber}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Expected Duration:</strong> {loto.expectedDuration}{" "}
+                    hours
+                  </p>
                 </div>
               </div>
 
+              {/* Verified By Information */}
               {loto.verifiedBy && (
                 <div className="mt-3 p-3 bg-light rounded">
                   <p>
@@ -309,10 +358,34 @@ const LOTOdetail = () => {
                 </div>
               )}
 
+              {/* Handover Notes */}
               {loto.handoverNotes && (
                 <div className="mt-3 p-3 bg-info bg-opacity-10 rounded">
                   <p>
                     <strong>Handover Notes:</strong> {loto.handoverNotes}
+                  </p>
+                </div>
+              )}
+
+              {/* Completion Notes */}
+              {loto.completionNotes && (
+                <div className="mt-3 p-3 bg-success bg-opacity-10 rounded">
+                  <p>
+                    <strong>Completion Notes:</strong> {loto.completionNotes}
+                  </p>
+                </div>
+              )}
+
+              {/* Actual Finish Time */}
+              {loto.actualFinishTime && (
+                <div className="mt-3 p-3 bg-secondary bg-opacity-10 rounded">
+                  <p>
+                    <strong>Actual Finish Time:</strong>{" "}
+                    {new Date(loto.actualFinishTime).toLocaleTimeString()}
+                  </p>
+                  <p>
+                    <strong>Actual Finish Date:</strong>{" "}
+                    {new Date(loto.actualFinishDate).toLocaleDateString()}
                   </p>
                 </div>
               )}
@@ -420,7 +493,7 @@ const LOTOdetail = () => {
                 </div>
               )}
               {/* admin Actions */}
-              {loto.status === "active" && currentUser.role === "admin" && (
+              {currentUser.role === "admin" && (
                 <div className="mb-4">
                   <h6 className="mb-3">
                     <Icon name="tools" /> Admin Actions

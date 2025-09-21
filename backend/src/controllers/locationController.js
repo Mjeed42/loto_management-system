@@ -1,4 +1,4 @@
-const Location = require('../models/Location');
+const Location = require("../models/Location");
 
 // @desc    Get all locations with hierarchy
 // @route   GET /api/locations
@@ -9,7 +9,7 @@ exports.getLocations = async (req, res) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to access this resource'
+        message: "Not authorized to access this resource",
       });
     }
 
@@ -20,8 +20,11 @@ exports.getLocations = async (req, res) => {
       const result = [];
 
       for (const loc of locations) {
-        if ((loc.parent && loc.parent.toString() !== parentId) ||
-            (!loc.parent && parentId !== null)) continue;
+        if (
+          (loc.parent && loc.parent.toString() !== parentId) ||
+          (!loc.parent && parentId !== null)
+        )
+          continue;
 
         const node = {
           _id: loc._id,
@@ -30,8 +33,7 @@ exports.getLocations = async (req, res) => {
           type: loc.type,
           isLeaf: loc.isLeaf,
           description: loc.description,
-          isActive: loc.isActive,
-          children: []
+          children: [],
         };
 
         // Find children
@@ -51,13 +53,13 @@ exports.getLocations = async (req, res) => {
     res.status(200).json({
       success: true,
       count: locations.length,
-       hierarchy
+      hierarchy,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error',
-      error: error.message
+      message: "Server Error",
+      error: error.message,
     });
   }
 };
@@ -71,7 +73,7 @@ exports.getLocationsByType = async (req, res) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to access this resource'
+        message: "Not authorized to access this resource",
       });
     }
 
@@ -80,22 +82,24 @@ exports.getLocationsByType = async (req, res) => {
     if (!type) {
       return res.status(400).json({
         success: false,
-        message: 'Location type is required'
+        message: "Location type is required",
       });
     }
 
-    const locations = await Location.find({ type, isActive: true }).sort({ name: 1 });
+    const locations = await Location.find({ type, isActive: true }).sort({
+      name: 1,
+    });
 
     res.status(200).json({
       success: true,
       count: locations.length,
-       locations
+      locations,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error',
-      error: error.message
+      message: "Server Error",
+      error: error.message,
     });
   }
 };
@@ -109,7 +113,7 @@ exports.getChildLocations = async (req, res) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to access this resource'
+        message: "Not authorized to access this resource",
       });
     }
 
@@ -117,19 +121,19 @@ exports.getChildLocations = async (req, res) => {
 
     const locations = await Location.find({
       parent: id,
-      isActive: true
+      isActive: true,
     }).sort({ name: 1 });
 
     res.status(200).json({
       success: true,
       count: locations.length,
-       locations
+      locations,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error',
-      error: error.message
+      message: "Server Error",
+      error: error.message,
     });
   }
 };
@@ -140,10 +144,10 @@ exports.getChildLocations = async (req, res) => {
 exports.createLocation = async (req, res) => {
   try {
     // Only admin can access this
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to access this resource'
+        message: "Not authorized to access this resource",
       });
     }
 
@@ -151,13 +155,13 @@ exports.createLocation = async (req, res) => {
 
     // Check if location already exists
     const existingLocation = await Location.findOne({
-      $or: [{ name }, { code }]
+      $or: [{ name }, { code }],
     });
 
     if (existingLocation) {
       return res.status(400).json({
         success: false,
-        message: 'Location with this name or code already exists'
+        message: "Location with this name or code already exists",
       });
     }
 
@@ -168,7 +172,7 @@ exports.createLocation = async (req, res) => {
       if (!parentLocation) {
         return res.status(404).json({
           success: false,
-          message: 'Parent location not found'
+          message: "Parent location not found",
         });
       }
     }
@@ -179,9 +183,9 @@ exports.createLocation = async (req, res) => {
       code,
       type,
       parent: parent ? parent : null,
-      description: description || '',
-      isLeaf: type === 'machine' || type === 'utility',
-      isActive: true
+      description: description || "",
+      isLeaf: type === "machine" || type === "utility",
+      isActive: true,
     });
 
     // Update parent's children array
@@ -192,14 +196,14 @@ exports.createLocation = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Location created successfully',
-       location
+      message: "Location created successfully",
+      location,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error',
-      error: error.message
+      message: "Server Error",
+      error: error.message,
     });
   }
 };
@@ -210,10 +214,10 @@ exports.createLocation = async (req, res) => {
 exports.updateLocation = async (req, res) => {
   try {
     // Only admin can access this
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to access this resource'
+        message: "Not authorized to access this resource",
       });
     }
 
@@ -222,22 +226,22 @@ exports.updateLocation = async (req, res) => {
     if (!location) {
       return res.status(404).json({
         success: false,
-        message: 'Location not found'
+        message: "Location not found",
       });
     }
 
-    const { name, code, type, parent, description, isActive } = req.body;
+    const { name, code, type, parent, description } = req.body;
 
     // Check if name or code is already taken by another location
     if (name && name !== location.name) {
       const existingLocation = await Location.findOne({
         name,
-        _id: { $ne: req.params.id }
+        _id: { $ne: req.params.id },
       });
       if (existingLocation) {
         return res.status(400).json({
           success: false,
-          message: 'Location with this name already exists'
+          message: "Location with this name already exists",
         });
       }
     }
@@ -245,12 +249,12 @@ exports.updateLocation = async (req, res) => {
     if (code && code !== location.code) {
       const existingLocation = await Location.findOne({
         code,
-        _id: { $ne: req.params.id }
+        _id: { $ne: req.params.id },
       });
       if (existingLocation) {
         return res.status(400).json({
           success: false,
-          message: 'Location with this code already exists'
+          message: "Location with this code already exists",
         });
       }
     }
@@ -260,7 +264,6 @@ exports.updateLocation = async (req, res) => {
     if (code) location.code = code;
     if (type) location.type = type;
     if (description !== undefined) location.description = description;
-    if (isActive !== undefined) location.isActive = isActive;
 
     // Handle parent change
     if (parent !== undefined) {
@@ -268,8 +271,8 @@ exports.updateLocation = async (req, res) => {
       if (location.parent) {
         const currentParent = await Location.findById(location.parent);
         if (currentParent) {
-          currentParent.children = currentParent.children.filter(childId =>
-            childId.toString() !== location._id.toString()
+          currentParent.children = currentParent.children.filter(
+            (childId) => childId.toString() !== location._id.toString()
           );
           await currentParent.save();
         }
@@ -292,19 +295,21 @@ exports.updateLocation = async (req, res) => {
     await location.save();
 
     // Populate the updated location
-    const updatedLocation = await Location.findById(location._id)
-      .populate('parent', 'name code type');
+    const updatedLocation = await Location.findById(location._id).populate(
+      "parent",
+      "name code type"
+    );
 
     res.status(200).json({
       success: true,
-      message: 'Location updated successfully',
-       location: updatedLocation
+      message: "Location updated successfully",
+      location: updatedLocation,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error',
-      error: error.message
+      message: "Server Error",
+      error: error.message,
     });
   }
 };
@@ -315,10 +320,10 @@ exports.updateLocation = async (req, res) => {
 exports.deleteLocation = async (req, res) => {
   try {
     // Only admin can access this
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to access this resource'
+        message: "Not authorized to access this resource",
       });
     }
 
@@ -327,7 +332,7 @@ exports.deleteLocation = async (req, res) => {
     if (!location) {
       return res.status(404).json({
         success: false,
-        message: 'Location not found'
+        message: "Location not found",
       });
     }
 
@@ -335,7 +340,7 @@ exports.deleteLocation = async (req, res) => {
     if (location.children && location.children.length > 0) {
       return res.status(400).json({
         success: false,
-        message: 'Cannot delete location with children. Delete children first.'
+        message: "Cannot delete location with children. Delete children first.",
       });
     }
 
@@ -343,8 +348,8 @@ exports.deleteLocation = async (req, res) => {
     if (location.parent) {
       const parent = await Location.findById(location.parent);
       if (parent) {
-        parent.children = parent.children.filter(childId =>
-          childId.toString() !== location._id.toString()
+        parent.children = parent.children.filter(
+          (childId) => childId.toString() !== location._id.toString()
         );
         await parent.save();
       }
@@ -354,13 +359,13 @@ exports.deleteLocation = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Location deleted successfully'
+      message: "Location deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error',
-      error: error.message
+      message: "Server Error",
+      error: error.message,
     });
   }
 };
@@ -371,5 +376,5 @@ module.exports = {
   getChildLocations: exports.getChildLocations,
   createLocation: exports.createLocation,
   updateLocation: exports.updateLocation,
-  deleteLocation: exports.deleteLocation
+  deleteLocation: exports.deleteLocation,
 };
