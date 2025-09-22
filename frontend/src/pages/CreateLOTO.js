@@ -162,7 +162,10 @@ const CreateLOTO = () => {
         line: formData.line || "N/A",
         machine: formData.machine || "N/A",
         isolatedPart: formData.isolatedPart || "N/A",
-        reason: formData.reason === "Other" && customReason ? customReason : formData.reason || "Other",
+        reason:
+          formData.reason === "Other" && customReason
+            ? customReason
+            : formData.reason || "Other",
         ptwNumber: ptwNumber || "N/A",
         expectedDuration: parseFloat(expectedDuration),
         supervisor,
@@ -246,10 +249,10 @@ const CreateLOTO = () => {
                   </Button>
                   <Button
                     variant="outline-primary"
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => navigate("/Home")}
                     className="hover-scale"
                   >
-                    <span className="me-2">🏠</span> Dashboard
+                    <span className="me-2">🏠</span> Home
                   </Button>
                 </div>
               </div>
@@ -916,10 +919,10 @@ const CreateLOTO = () => {
 
                       <Button
                         variant="outline-primary"
-                        onClick={() => navigate("/dashboard")}
+                        onClick={() => navigate("/Home")}
                         className="hover-scale"
                       >
-                        <span className="me-2">🏠</span> Dashboard
+                        <span className="me-2">🏠</span> Home
                       </Button>
                     </div>
                   </div>

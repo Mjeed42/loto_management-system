@@ -61,14 +61,14 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   // Check role authorization
   if (allowedRoles && !allowedRoles.includes(userRole)) {
-    // Redirect to appropriate dashboard based on role
+    // Redirect to appropriate Home based on role
     switch (userRole) {
       case "admin":
         navigate("/admin");
         return null;
 
       default:
-        navigate("/dashboard");
+        navigate("/Home");
         return null;
     }
   }

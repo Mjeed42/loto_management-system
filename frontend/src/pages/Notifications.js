@@ -122,7 +122,7 @@ const Notifications = () => {
       >
         <h1>Handover Notifications</h1>
         <button
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/Home")}
           style={{
             padding: "8px 16px",
             backgroundColor: "#6c757d",
@@ -132,7 +132,7 @@ const Notifications = () => {
             cursor: "pointer",
           }}
         >
-          Back to Dashboard
+          Back to Home
         </button>
       </div>
 

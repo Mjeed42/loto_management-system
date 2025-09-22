@@ -69,7 +69,7 @@ const Header = ({ currentUser }) => {
       <div className="container">
         <div
           className="navbar-brand cursor-pointer hover-scale transition"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/Home")}
         >
           <Icon name="lock" className="me-2" />
           <span className="fw-bold">LOTO</span>
@@ -135,12 +135,12 @@ const Header = ({ currentUser }) => {
               <button
                 className="dropdown-item d-flex align-items-center"
                 onClick={() => {
-                  navigate("/dashboard");
+                  navigate("/Home");
                   setUserDropdownOpen(false);
                 }}
               >
-                <Icon name="dashboard" className="me-2" />
-                Dashboard
+                <Icon name="Home" className="me-2" />
+                Home
               </button>
 
               <button
@@ -154,7 +154,7 @@ const Header = ({ currentUser }) => {
                 My LOTOs
               </button>
 
-              {/* Admin Dashboard Link */}
+              {/* Admin Page Link */}
               {currentUser.role === "admin" && (
                 <>
                   <div className="dropdown-divider"></div>
@@ -166,7 +166,7 @@ const Header = ({ currentUser }) => {
                     }}
                   >
                     <Icon name="settings" className="me-2" />
-                    Admin Dashboard
+                    Admin Page
                   </button>
                 </>
               )}
@@ -174,7 +174,6 @@ const Header = ({ currentUser }) => {
                 (currentUser.role === "supervisor" ||
                   currentUser.role === "admin") && (
                   <>
-                    
                     <div className="dropdown-divider"></div>
                   </>
                 )}

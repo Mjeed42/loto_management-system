@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
 
-const AdminDashboard = () => {
+const AdminHome = () => {
   const [users, setUsers] = useState([]);
   const [lotos, setLotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,10 +32,10 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchHomeData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchHomeData = async () => {
     try {
       const token = localStorage.getItem("token");
       const config = {
@@ -87,8 +87,8 @@ const AdminDashboard = () => {
       setLotos(lotosData);
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching dashboard data:", err);
-      setError(err.response?.data?.message || "Error fetching dashboard data");
+      console.error("Error fetching Home data:", err);
+      setError(err.response?.data?.message || "Error fetching Home data");
       setUsers([]);
       setLotos([]);
       setLoading(false);
@@ -123,7 +123,7 @@ const AdminDashboard = () => {
         employeeId: "",
         role: "technician",
       });
-      fetchDashboardData();
+      fetchHomeData();
     } catch (err) {
       alert(err.response?.data?.message || "Error creating user");
     }
@@ -159,7 +159,7 @@ const AdminDashboard = () => {
         expectedDuration: "",
         supervisor: "",
       });
-      fetchDashboardData();
+      fetchHomeData();
     } catch (err) {
       alert(err.response?.data?.message || "Error creating LOTO");
     }
@@ -190,7 +190,7 @@ const AdminDashboard = () => {
       );
 
       alert("Password reset successfully!");
-      fetchDashboardData();
+      fetchHomeData();
     } catch (err) {
       alert(err.response?.data?.message || "Error resetting password");
     }
@@ -216,7 +216,7 @@ const AdminDashboard = () => {
       );
 
       alert(`User ${username} ${action}d successfully!`);
-      fetchDashboardData();
+      fetchHomeData();
     } catch (err) {
       alert(err.response?.data?.message || `Error ${action}ing user`);
     }
@@ -244,7 +244,7 @@ const AdminDashboard = () => {
       );
 
       alert("User deleted successfully!");
-      fetchDashboardData();
+      fetchHomeData();
     } catch (err) {
       alert(err.response?.data?.message || "Error deleting user");
     }
@@ -272,7 +272,7 @@ const AdminDashboard = () => {
       );
 
       alert("LOTO deleted successfully!");
-      fetchDashboardData();
+      fetchHomeData();
     } catch (err) {
       alert(err.response?.data?.message || "Error deleting LOTO");
     }
@@ -299,7 +299,7 @@ const AdminDashboard = () => {
       );
 
       alert("LOTO verified successfully!");
-      fetchDashboardData();
+      fetchHomeData();
     } catch (err) {
       alert(err.response?.data?.message || "Error verifying LOTO");
     }
@@ -326,7 +326,7 @@ const AdminDashboard = () => {
       );
 
       alert("LOTO completed successfully!");
-      fetchDashboardData();
+      fetchHomeData();
     } catch (err) {
       alert(err.response?.data?.message || "Error completing LOTO");
     }
@@ -356,7 +356,7 @@ const AdminDashboard = () => {
       );
 
       alert("LOTO handed over successfully!");
-      fetchDashboardData();
+      fetchHomeData();
     } catch (err) {
       alert(err.response?.data?.message || "Error handing over LOTO");
     }
@@ -428,7 +428,7 @@ const AdminDashboard = () => {
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
-        <p className="mt-2">Loading admin dashboard...</p>
+        <p className="mt-2">Loading Admin Page...</p>
       </div>
     );
   }
@@ -437,7 +437,7 @@ const AdminDashboard = () => {
     <div className="container-fluid py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>
-          <Icon name="settings" /> Admin Dashboard
+          <Icon name="settings" /> Admin Page
         </h1>
         <div className="d-flex gap-2">
           <Button
@@ -446,20 +446,12 @@ const AdminDashboard = () => {
           >
             <Icon name="add" /> {showCreateForm ? "Cancel" : "Create User"}
           </Button>
-          <Button
-            variant="outline-primary"
-            onClick={() => setShowCreateLotoForm(!showCreateLotoForm)}
-          >
-            <Icon name="add" /> {showCreateLotoForm ? "Cancel" : "Create LOTO"}
-          </Button>
-          <Button variant="outline-secondary" onClick={fetchDashboardData}>
+
+          <Button variant="outline-secondary" onClick={fetchHomeData}>
             <Icon name="refresh" /> Refresh
           </Button>
-          <Button
-            variant="outline-primary"
-            onClick={() => navigate("/dashboard")}
-          >
-            <Icon name="dashboard" /> Dashboard
+          <Button variant="outline-primary" onClick={() => navigate("/Home")}>
+            <Icon name="Home" /> Home
           </Button>
         </div>
       </div>
@@ -625,7 +617,6 @@ const AdminDashboard = () => {
                       <option value="A">A</option>
                       <option value="B">B</option>
                       <option value="C">C</option>
-                      
                     </select>
                   </div>
                 </div>
@@ -728,7 +719,7 @@ const AdminDashboard = () => {
           <h5 className="mb-0">
             <Icon name="users" /> User Management
           </h5>
-          <Button variant="outline-primary" onClick={fetchDashboardData}>
+          <Button variant="outline-primary" onClick={fetchHomeData}>
             <Icon name="refresh" /> Refresh Users
           </Button>
         </div>
@@ -834,7 +825,7 @@ const AdminDashboard = () => {
           <h5 className="mb-0">
             <Icon name="list" /> LOTO Management
           </h5>
-          <Button variant="outline-primary" onClick={fetchDashboardData}>
+          <Button variant="outline-primary" onClick={fetchHomeData}>
             <Icon name="refresh" /> Refresh LOTOs
           </Button>
         </div>
@@ -962,4 +953,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default AdminHome;

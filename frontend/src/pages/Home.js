@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
 
-const Dashboard = () => {
+const Home = () => {
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -43,13 +43,13 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="dashboard-container">
+    <div className="Home-container">
       {/* Welcome Header */}
-      <div className="dashboard-header">
+      <div className="Home-header">
         <div className="header-content">
           <div className="header-logo">
             <span className="lock-icon">🔒</span>
-            <h1>LOTO Management Dashboard</h1>
+            <h1>LOTO Management Home</h1>
           </div>
           <div className="header-time">
             <div className="clock-icon">⏰</div>
@@ -68,23 +68,13 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        <div className="welcome-message">
-          Welcome back! Manage your lockout/tagout procedures with confidence.
-        </div>
       </div>
 
       {/* Quick Actions Grid */}
-      <div className="dashboard-cards">
+      <div className="Home-cards">
         {quickActions.map((action, index) => (
-          <div
-            key={index}
-            className="dashboard-card"
-            onClick={action.action}
-          >
-            <div
-              className="card-icon"
-              style={{ background: action.gradient }}
-            >
+          <div key={index} className="Home-card" onClick={action.action}>
+            <div className="card-icon" style={{ background: action.gradient }}>
               <span>{action.icon}</span>
             </div>
             <div className="card-content">
@@ -105,4 +95,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Home;

@@ -85,45 +85,53 @@ const LOTOList = () => {
     }
   };
   const handleDelete = async (lotoId, serialNumber) => {
-  if (!window.confirm(`Are you sure you want to delete LOTO ${serialNumber}? This action cannot be undone.`)) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to delete LOTO ${serialNumber}? This action cannot be undone.`
+      )
+    )
+      return;
 
-  try {
-    const token = localStorage.getItem("token");
-    const config = {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-    };
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
 
-    console.log("Sending delete request for LOTO:", lotoId);
+      console.log("Sending delete request for LOTO:", lotoId);
 
-    // Use the correct API URL
-    const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://loto-backend-643788243736.europe-west1.run.app/api';
+      // Use the correct API URL
+      const API_BASE_URL =
+        process.env.REACT_APP_API_URL ||
+        "https://loto-backend-643788243736.europe-west1.run.app/api";
 
-    const response = await axios.delete(
-      `${API_BASE_URL}/loto/${lotoId}`,
-      config
-    );
+      const response = await axios.delete(
+        `${API_BASE_URL}/loto/${lotoId}`,
+        config
+      );
 
-    console.log("Delete LOTO response:", response);
+      console.log("Delete LOTO response:", response);
 
-    if (response.data.success) {
-      alert("LOTO deleted successfully!");
-      fetchLOTOs(); // Refresh the list
-    } else {
-      alert(response.data.message || "Error deleting LOTO");
+      if (response.data.success) {
+        alert("LOTO deleted successfully!");
+        fetchLOTOs(); // Refresh the list
+      } else {
+        alert(response.data.message || "Error deleting LOTO");
+      }
+    } catch (err) {
+      console.error("Delete LOTO error:", err);
+      console.error("Error response:", err.response);
+
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Error deleting LOTO";
+
+      alert(`Delete failed: ${errorMessage}`);
     }
-  } catch (err) {
-    console.error("Delete LOTO error:", err);
-    console.error("Error response:", err.response);
-
-    const errorMessage = err.response?.data?.message ||
-                        err.response?.data?.error ||
-                        "Error deleting LOTO";
-
-    alert(`Delete failed: ${errorMessage}`);
-  }
-};
+  };
 
   const handleVerify = async (lotoId) => {
     try {
@@ -322,10 +330,10 @@ const LOTOList = () => {
                   </Button>
                   <Button
                     variant="outline-primary"
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => navigate("/Home")}
                     className="hover-scale"
                   >
-                    <span className="me-2">🏠</span> Dashboard
+                    <span className="me-2">🏠</span> Home
                   </Button>
                 </div>
               </div>

@@ -3,13 +3,13 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import "./styles/cloudflare-dashboard.css";
+import "./styles/cloudflare-Home.css";
 
 // Components
 import GlobalStyles from "./components/GlobalStyles";
 import Header from "./components/Header";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 import CreateLOTO from "./pages/CreateLOTO";
 import LOTOList from "./pages/LOTOList";
 import LOTOdetail from "./pages/LOTOdetail";
@@ -17,7 +17,7 @@ import UpdateLOTO from "./pages/UpdateLOTO";
 import HandoverLOTO from "./pages/HandoverLOTO";
 import CompleteLOTO from "./pages/CompleteLOTO";
 import Notifications from "./pages/Notifications";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminHome from "./pages/AdminHome";
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -57,10 +57,10 @@ function App() {
         <main className="container py-4">
           <Routes>
             <Route path="/" element={<Login onLogin={fetchCurrentUser} />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/Home" element={<Home />} />
             <Route path="/create-loto" element={<CreateLOTO />} />
             <Route path="/loto-list" element={<LOTOList />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin" element={<AdminHome />} />
             <Route path="/loto/:id" element={<LOTOdetail />} />
             <Route path="/loto/:id/update" element={<UpdateLOTO />} />
             <Route path="/loto/:id/handover" element={<HandoverLOTO />} />

@@ -29,7 +29,7 @@ const SVGIcons = {
       <polyline points="9,22 9,12 15,12 15,22" />
     </svg>
   ),
-  dashboard: (
+  Home: (
     <svg
       viewBox="0 0 24 24"
       fill="none"

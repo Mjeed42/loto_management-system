@@ -2146,9 +2146,9 @@ const GlobalStyles = () => (
         font-size: 0.875rem;
       }
     }
-      /* ============ DASHBOARD STYLES ============ */
-    /* Dashboard Styles */
-    .dashboard-container {
+      /* ============ Home STYLES ============ */
+    /* Home Styles */
+    .Home-container {
     width: 300%%;
       max-width: 1400px;
       margin: 0 auto;
@@ -2157,7 +2157,7 @@ const GlobalStyles = () => (
       min-height: 100vh;
     }
 
-    .dashboard-header {
+    .Home-header {
       background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
       border-radius: 1.5rem;
       padding: 2rem;
@@ -2226,13 +2226,13 @@ const GlobalStyles = () => (
       font-weight: 500;
     }
 
-    .dashboard-cards {
+    .Home-cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 2rem;
     }
 
-    .dashboard-card {
+    .Home-card {
       background: white;
       border-radius: 1rem;
       padding: 2rem;
@@ -2242,7 +2242,7 @@ const GlobalStyles = () => (
       cursor: pointer;
     }
 
-    .dashboard-card:hover {
+    .Home-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
       border-color: #3b82f6;
@@ -2290,11 +2290,11 @@ const GlobalStyles = () => (
 
     /* Responsive Design */
     @media (max-width: 768px) {
-      .dashboard-container {
+      .Home-container {
         padding: 1rem;
       }
 
-      .dashboard-header {
+      .Home-header {
         padding: 1.5rem;
       }
 
@@ -2307,16 +2307,16 @@ const GlobalStyles = () => (
         margin-top: 0.5rem;
       }
 
-      .dashboard-cards {
+      .Home-cards {
         gap: 1.5rem;
       }
 
-      .dashboard-card {
+      .Home-card {
         padding: 1.5rem;
       }
     }
 
-    /* ============ ADMIN DASHBOARD STYLES ============ */
+    /* ============ Admin Page STYLES ============ */
     /* Statistics Cards */
     .stats-card {
       background: white;
@@ -2440,7 +2440,7 @@ const GlobalStyles = () => (
       transform: translateY(-1px);
     }
 
-    /* Responsive adjustments for Admin Dashboard */
+    /* Responsive adjustments for Admin Page */
     @media (max-width: 768px) {
       .stats-card {
         padding: 1rem;

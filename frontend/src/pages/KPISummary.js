@@ -210,7 +210,7 @@ const KPISummary = () => {
           >
             <span className="cf-visually-hidden">Loading...</span>
           </div>
-          <p className="cf-mt-3 cf-fw-semibold">Loading KPI Dashboard...</p>
+          <p className="cf-mt-3 cf-fw-semibold">Loading KPI Home...</p>
         </div>
       </div>
     );
@@ -222,7 +222,7 @@ const KPISummary = () => {
       <div className="cf-d-flex cf-justify-content-between cf-align-items-center cf-mb-4">
         <div>
           <h1 className="cf-mb-1">
-            <Icon name="chart" className="cf-me-2" /> KPI Dashboard
+            <Icon name="chart" className="cf-me-2" /> KPI Home
           </h1>
           <p className="cf-text-muted cf-mb-0">
             Operational & Safety Performance Metrics
@@ -243,11 +243,8 @@ const KPISummary = () => {
           <Button variant="outline-primary" onClick={fetchKPIData}>
             <Icon name="refresh" /> Refresh
           </Button>
-          <Button
-            variant="outline-secondary"
-            onClick={() => navigate("/dashboard")}
-          >
-            <Icon name="dashboard" /> Dashboard
+          <Button variant="outline-secondary" onClick={() => navigate("/Home")}>
+            <Icon name="Home" /> Home
           </Button>
         </div>
       </div>

@@ -34,7 +34,7 @@ const Login = ({ onLogin }) => {
         config
       );
 
-      // If successful, redirect to appropriate dashboard
+      // If successful, redirect to appropriate Home
       if (onLogin) {
         onLogin();
       }
@@ -45,7 +45,7 @@ const Login = ({ onLogin }) => {
           navigate("/admin");
           break;
         default:
-          navigate("/dashboard");
+          navigate("/Home");
           break;
       }
     } catch (err) {
@@ -89,10 +89,10 @@ const Login = ({ onLogin }) => {
           navigate("/loto-list");
           break;
         case "technician":
-          navigate("/dashboard");
+          navigate("/Home");
           break;
         default:
-          navigate("/dashboard");
+          navigate("/Home");
           break;
       }
     } catch (err) {

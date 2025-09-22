@@ -160,7 +160,7 @@ const UpdateLOTO = () => {
     formData;
 
   return (
-    <div className="cf-dashboard">
+    <div className="cf-Home">
       <main className="cf-main">
         <div className="cf-card">
           <div className="cf-card-header cf-flex cf-justify-between cf-items-center">
@@ -176,9 +176,9 @@ const UpdateLOTO = () => {
               </Button>
               <Button
                 variant="outline-primary"
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate("/Home")}
               >
-                <Icon name="dashboard" className="cf-mr-2" /> Dashboard
+                <Icon name="Home" className="cf-mr-2" /> Home
               </Button>
             </div>
           </div>
@@ -318,9 +318,9 @@ const UpdateLOTO = () => {
 
                 <Button
                   variant="outline-primary"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/Home")}
                 >
-                  <Icon name="dashboard" className="cf-mr-2" /> Dashboard
+                  <Icon name="Home" className="cf-mr-2" /> Home
                 </Button>
               </div>
             </form>
