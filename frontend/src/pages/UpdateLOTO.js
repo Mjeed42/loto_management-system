@@ -9,21 +9,23 @@ const UpdateLOTO = () => {
     expectedDuration: "",
     reason: "",
     ptwNumber: "N/A",
-    isolatedPart: "", // NEW FIELD
-    supervisor: "", // NEW FIELD - Supervisor assignment
+    isolatedPart: "",
+    supervisor: "",
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [loto, setLoto] = useState(null);
-  const [supervisors, setSupervisors] = useState([]); // NEW STATE FOR SUPERVISORS
-  const [fetchingSupervisors, setFetchingSupervisors] = useState(true); // NEW LOADING STATE
+  const [supervisors, setSupervisors] = useState([]);
+  const [fetchingSupervisors, setFetchingSupervisors] = useState(true);
+  const [showCustomReason, setShowCustomReason] = useState(false); // 👈 For "Other" reason
+  const [customReason, setCustomReason] = useState(""); // 👈 Custom reason text
   const { id } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchLOTO();
-    fetchSupervisors(); // NEW: Fetch supervisors
+    fetchSupervisors();
   }, [id]);
 
   const fetchLOTO = async () => {
@@ -42,14 +44,25 @@ const UpdateLOTO = () => {
 
       setLoto(res.data.data);
 
-      // Prefill form with current LOTO data
+      // Prefill form
       setFormData({
         expectedDuration: res.data.data.expectedDuration,
         reason: res.data.data.reason,
         ptwNumber: res.data.data.ptwNumber,
         isolatedPart: res.data.data.isolatedPart,
-        supervisor: res.data.data.supervisor?._id || "", // NEW: Prefill supervisor
+        supervisor: res.data.data.supervisor?._id || "",
       });
+
+      // Check if reason is "Other" → show custom input
+      if (
+        res.data.data.reason &&
+        !["Change over", "Shutdown", "Maintenance"].includes(
+          res.data.data.reason
+        )
+      ) {
+        setShowCustomReason(true);
+        setCustomReason(res.data.data.reason);
+      }
 
       setLoading(false);
     } catch (err) {
@@ -58,7 +71,6 @@ const UpdateLOTO = () => {
     }
   };
 
-  // NEW: Fetch all supervisors and supervisors
   const fetchSupervisors = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -73,7 +85,6 @@ const UpdateLOTO = () => {
         config
       );
 
-      // Handle different possible response formats
       let supervisorsData = [];
       if (res.data.supervisors) {
         supervisorsData = res.data.supervisors;
@@ -83,7 +94,6 @@ const UpdateLOTO = () => {
         supervisorsData = res.data.data;
       }
 
-      // Ensure it's always an array
       supervisorsData = Array.isArray(supervisorsData) ? supervisorsData : [];
 
       setSupervisors(supervisorsData);
@@ -100,6 +110,19 @@ const UpdateLOTO = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleReasonChange = (e) => {
+    const selectedReason = e.target.value;
+    setFormData({ ...formData, reason: selectedReason });
+    setShowCustomReason(selectedReason === "Other");
+    if (selectedReason !== "Other") {
+      setCustomReason("");
+    }
+  };
+
+  const handleCustomReasonChange = (e) => {
+    setCustomReason(e.target.value);
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -114,9 +137,20 @@ const UpdateLOTO = () => {
         },
       };
 
+      // Prepare final reason
+      const finalReason =
+        formData.reason === "Other" && customReason
+          ? customReason
+          : formData.reason;
+
+      const dataToSend = {
+        ...formData,
+        reason: finalReason,
+      };
+
       const res = await axios.put(
         `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
-        formData,
+        dataToSend,
         config
       );
 
@@ -142,8 +176,13 @@ const UpdateLOTO = () => {
 
   if (error) {
     return (
-      <div className="alert alert-danger">
-        <Icon name="warning" className="me-2" /> {error}
+      <div className="alert alert-danger d-flex align-items-center">
+        <span className="me-3" style={{ fontSize: "1.5rem" }}>
+          ⚠️
+        </span>
+        <div>
+          <strong>Error:</strong> {error}
+        </div>
       </div>
     );
   }
@@ -158,175 +197,281 @@ const UpdateLOTO = () => {
 
   const { expectedDuration, reason, ptwNumber, isolatedPart, supervisor } =
     formData;
+  const safeSupervisors = Array.isArray(supervisors) ? supervisors : [];
+  const reasonOptions = ["Change over", "Shutdown", "Maintenance", "Other"];
 
   return (
-    <div className="cf-Home">
-      <main className="cf-main">
-        <div className="cf-card">
-          <div className="cf-card-header cf-flex cf-justify-between cf-items-center">
-            <h1 className="cf-card-title cf-flex cf-items-center">
-              <Icon name="edit" className="cf-mr-2" /> Update LOTO
-            </h1>
-            <div className="cf-flex cf-gap-2">
-              <Button
-                variant="outline-secondary"
-                onClick={() => navigate(`/loto/${id}`)}
-              >
-                <Icon name="back" className="cf-mr-2" /> Back to Detail
-              </Button>
-              <Button
-                variant="outline-primary"
-                onClick={() => navigate("/Home")}
-              >
-                <Icon name="Home" className="cf-mr-2" /> Home
-              </Button>
+    <div className="animate-fade-in">
+      {/* Header Section */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="card bg-glass border-0 shadow-lg">
+            <div className="card-body py-4">
+              <div className="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                  <h1
+                    className="fw-bold mb-2 d-flex align-items-center"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    <span className="me-3" style={{ fontSize: "2rem" }}>
+                      ✏️
+                    </span>
+                    Update LOTO
+                  </h1>
+                  <p className="lead text-muted mb-0">
+                    Modify lockout/tagout details for ongoing maintenance
+                  </p>
+                </div>
+                <div className="d-flex gap-2 flex-wrap">
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => navigate(`/loto/${id}`)}
+                    className="hover-scale"
+                  >
+                    <span className="me-2">⬅️</span> Back to Detail
+                  </Button>
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => navigate("/Home")}
+                    className="hover-scale"
+                  >
+                    <span className="me-2">🏠</span> Home
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="cf-card-body">
-            {error && (
-              <div className="cf-alert cf-alert-danger cf-mb-4">
-                <Icon name="warning" className="cf-mr-2" /> {error}
-              </div>
-            )}
-
-            <form onSubmit={onSubmit}>
-              <div className="cf-grid cf-grid-cols-1 md:cf-grid-cols-2 cf-gap-6">
-                <div>
-                  <div className="cf-form-group cf-mb-3">
-                    <label className="cf-form-label">
-                      Expected Duration (hours)
-                    </label>
-                    <input
-                      type="number"
-                      name="expectedDuration"
-                      value={expectedDuration}
-                      onChange={onChange}
-                      placeholder="Enter duration in hours"
-                      step="0.5"
-                      min="0.5"
-                      className="cf-form-control"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="cf-form-group cf-mb-3">
-                    <label className="cf-form-label">PTW Number</label>
-                    <input
-                      type="text"
-                      name="ptwNumber"
-                      value={ptwNumber}
-                      onChange={onChange}
-                      placeholder="Enter PTW number or N/A"
-                      className="cf-form-control"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="cf-form-group cf-mb-3">
-                <label className="cf-form-label">Isolated Part</label>
-                <input
-                  type="text"
-                  name="isolatedPart"
-                  value={isolatedPart}
-                  onChange={onChange}
-                  placeholder="Enter part description"
-                  className="cf-form-control"
-                  required
-                />
-              </div>
-
-              <div className="cf-form-group cf-mb-3">
-                <label className="cf-form-label">Reason</label>
-                <input
-                  type="text"
-                  name="reason"
-                  value={reason}
-                  onChange={onChange}
-                  placeholder="Enter reason"
-                  className="cf-form-control"
-                  required
-                />
-              </div>
-
-              {/* NEW: Supervisor Assignment Section */}
-              <div className="cf-form-group cf-mb-4">
-                <label className="cf-form-label">
-                  Assign Supervisor for Verification (Optional)
-                </label>
-                {fetchingSupervisors ? (
-                  <div className="cf-flex cf-items-center">
-                    <span
-                      className="cf-spinner cf-spinner-sm cf-mr-2"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    <span>Loading supervisors...</span>
-                  </div>
-                ) : (
-                  <select
-                    name="supervisor"
-                    value={supervisor}
-                    onChange={onChange}
-                    className="cf-form-control"
-                  >
-                    <option value="">
-                      None - Any supervisor/admin can verify
-                    </option>
-                    {supervisors.map((sup) => (
-                      <option key={sup._id} value={sup._id}>
-                        {sup.firstName} {sup.lastName} ({sup.username}) -{" "}
-                        {sup.role === "admin" ? "Admin" : "Supervisor"}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <div className="cf-form-help">
-                  Select a specific supervisor or admin who will verify this
-                  LOTO request. If none selected, any supervisor or admin can
-                  verify.
-                </div>
-              </div>
-
-              <div className="cf-flex cf-gap-2">
-                <Button type="submit" variant="primary" disabled={submitting}>
-                  {submitting ? (
-                    <>
-                      <span
-                        className="cf-spinner cf-spinner-sm cf-mr-2"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      Updating...
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="save" className="cf-mr-2" /> Update LOTO
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate(`/loto/${id}`)}
-                >
-                  <Icon name="cancel" className="cf-mr-2" /> Cancel
-                </Button>
-
-                <Button
-                  variant="outline-primary"
-                  onClick={() => navigate("/Home")}
-                >
-                  <Icon name="Home" className="cf-mr-2" /> Home
-                </Button>
-              </div>
-            </form>
+      {/* Error Display */}
+      {error && (
+        <div className="alert alert-danger d-flex align-items-center mb-4">
+          <span className="me-3" style={{ fontSize: "1.5rem" }}>
+            ⚠️
+          </span>
+          <div>
+            <strong>Error:</strong> {error}
           </div>
         </div>
-      </main>
+      )}
+
+      {/* Form Card */}
+      <div className="row">
+        <div className="col-12">
+          <div className="card bg-glass border-0 shadow-lg">
+            <div className="card-body">
+              <form onSubmit={onSubmit}>
+                <div className="row">
+                  {/* Expected Duration */}
+                  <div className="col-md-6 mb-4">
+                    <div className="form-group">
+                      <label className="form-label fw-medium">
+                        Expected Duration (hours)
+                      </label>
+                      <input
+                        type="number"
+                        name="expectedDuration"
+                        value={expectedDuration}
+                        onChange={onChange}
+                        placeholder="Enter duration in hours"
+                        step="0.5"
+                        min="0.5"
+                        className="form-control"
+                        style={{
+                          borderRadius: "0.75rem",
+                          border: "2px solid #e2e8f0",
+                          background: "rgba(255, 255, 255, 0.9)",
+                          backdropFilter: "blur(10px)",
+                        }}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* PTW Number */}
+                  <div className="col-md-6 mb-4">
+                    <div className="form-group">
+                      <label className="form-label fw-medium">PTW Number</label>
+                      <input
+                        type="text"
+                        name="ptwNumber"
+                        value={ptwNumber}
+                        onChange={onChange}
+                        placeholder="Enter PTW number or N/A"
+                        className="form-control"
+                        style={{
+                          borderRadius: "0.75rem",
+                          border: "2px solid #e2e8f0",
+                          background: "rgba(255, 255, 255, 0.9)",
+                          backdropFilter: "blur(10px)",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Isolated Part */}
+                  <div className="col-12 mb-4">
+                    <div className="form-group">
+                      <label className="form-label fw-medium">
+                        Isolated Part
+                      </label>
+                      <input
+                        type="text"
+                        name="isolatedPart"
+                        value={isolatedPart}
+                        onChange={onChange}
+                        placeholder="Enter part description"
+                        className="form-control"
+                        style={{
+                          borderRadius: "0.75rem",
+                          border: "2px solid #e2e8f0",
+                          background: "rgba(255, 255, 255, 0.9)",
+                          backdropFilter: "blur(10px)",
+                        }}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Reason Dropdown — NOW LIKE CREATELOTO */}
+                  <div className="col-12 mb-4">
+                    <label className="form-label fw-medium">Reason</label>
+                    <select
+                      name="reason"
+                      value={reason}
+                      onChange={handleReasonChange}
+                      className="form-control"
+                      required
+                    >
+                      <option value="">Select a reason</option>
+                      {reasonOptions.map((option, index) => (
+                        <option key={index} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Custom Reason Input */}
+                  {showCustomReason && (
+                    <div className="col-12 mb-4">
+                      <label className="form-label fw-medium">
+                        Specify Custom Reason
+                      </label>
+                      <input
+                        type="text"
+                        name="customReason"
+                        value={customReason}
+                        onChange={handleCustomReasonChange}
+                        placeholder="Enter custom reason"
+                        className="form-control"
+                        style={{
+                          borderRadius: "0.75rem",
+                          border: "2px solid #e2e8f0",
+                          background: "rgba(255, 255, 255, 0.9)",
+                          backdropFilter: "blur(10px)",
+                        }}
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* Supervisor Assignment */}
+                  <div className="col-12 mb-4">
+                    <div className="form-group">
+                      <label className="form-label fw-medium">
+                        Assign Supervisor for Verification (Optional)
+                      </label>
+                      {fetchingSupervisors ? (
+                        <div className="d-flex align-items-center">
+                          <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
+                          <span>Loading supervisors...</span>
+                        </div>
+                      ) : (
+                        <select
+                          name="supervisor"
+                          value={supervisor}
+                          onChange={onChange}
+                          className="form-control"
+                        >
+                          <option value="">
+                            None - Any supervisor can verify
+                          </option>
+                          {supervisors
+                            .filter((sup) => sup.role === "supervisor") // only supervisors
+                            .map((sup) => (
+                              <option key={sup._id} value={sup._id}>
+                                {sup.firstName} {sup.lastName} ({sup.username})
+                                = Supervisor
+                              </option>
+                            ))}
+                        </select>
+                      )}
+                      <div className="form-text mt-2">
+                        Select a specific supervisor who will verify
+                        this LOTO request. If none selected, any supervisor can verify.
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="col-12">
+                    <div className="d-flex gap-2">
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={submitting}
+                        className="hover-scale"
+                      >
+                        {submitting ? (
+                          <>
+                            <span
+                              className="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"
+                            ></span>
+                            Updating...
+                          </>
+                        ) : (
+                          <>
+                            <span className="me-2">💾</span> Update LOTO
+                          </>
+                        )}
+                      </Button>
+
+                      <Button
+                        variant="secondary"
+                        onClick={() => navigate(`/loto/${id}`)}
+                        className="hover-scale"
+                      >
+                        <span className="me-2">❌</span> Cancel
+                      </Button>
+
+                      <Button
+                        variant="outline-primary"
+                        onClick={() => navigate("/Home")}
+                        className="hover-scale"
+                      >
+                        <span className="me-2">🏠</span> Home
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

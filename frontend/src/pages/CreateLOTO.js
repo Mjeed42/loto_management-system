@@ -794,27 +794,23 @@ const CreateLOTO = () => {
                           value={supervisor}
                           onChange={onChange}
                           className="form-control"
-                          style={{
-                            borderRadius: "0.75rem",
-                            border: "2px solid #e2e8f0",
-                            background: "rgba(255, 255, 255, 0.9)",
-                            backdropFilter: "blur(10px)",
-                          }}
                         >
                           <option value="">
-                            None - Any supervisor/admin can verify
+                            None - Any supervisor can verify
                           </option>
-                          {safeSupervisors.map((sup) => (
-                            <option key={sup._id} value={sup._id}>
-                              {sup.firstName} {sup.lastName}
-                            </option>
-                          ))}
+                          {supervisors
+                            .filter((sup) => sup.role === "supervisor") // only supervisors
+                            .map((sup) => (
+                              <option key={sup._id} value={sup._id}>
+                                {sup.firstName} {sup.lastName} ({sup.username})
+                                = Supervisor
+                              </option>
+                            ))}
                         </select>
                       )}
                       <div className="form-text mt-2">
-                        Select a specific supervisor or admin who will verify
-                        this LOTO request. If none selected, any supervisor or
-                        admin can verify.
+                        Select a specific supervisor who will verify this LOTO
+                        request. If none selected, any supervisor can verify.
                       </div>
                     </div>
                   </div>
