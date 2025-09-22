@@ -21,8 +21,10 @@ const CreateLOTO = () => {
   const [error, setError] = useState("");
   const [supervisors, setSupervisors] = useState([]);
   const [fetchingSupervisors, setFetchingSupervisors] = useState(true);
-  const [showCustomReason, setShowCustomReason] = useState(false); // For "Other" reason
+  const [showCustomReason, setShowCustomReason] = useState(false);
   const [customReason, setCustomReason] = useState("");
+  const [showCustomLocation, setShowCustomLocation] = useState(false); // 👈 NEW
+  const [customLocation, setCustomLocation] = useState(""); // 👈 NEW
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,7 +45,6 @@ const CreateLOTO = () => {
         config
       );
 
-      // Handle different possible response formats
       let supervisorsData = [];
       if (res.data.supervisors) {
         supervisorsData = res.data.supervisors;
@@ -53,7 +54,6 @@ const CreateLOTO = () => {
         supervisorsData = res.data.data;
       }
 
-      // Ensure it's always an array
       supervisorsData = Array.isArray(supervisorsData) ? supervisorsData : [];
 
       setSupervisors(supervisorsData);
@@ -82,6 +82,7 @@ const CreateLOTO = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // 👇 UPDATED: Handle Location Change (like Reason)
   const handleLocationChange = (e) => {
     const selectedLocation = e.target.value;
     setFormData({
@@ -91,6 +92,10 @@ const CreateLOTO = () => {
       machine: "",
       isolatedPart: "",
     });
+    setShowCustomLocation(selectedLocation === "Other");
+    if (selectedLocation !== "Other") {
+      setCustomLocation("");
+    }
   };
 
   const handleLineChange = (e) => {
@@ -111,6 +116,7 @@ const CreateLOTO = () => {
       isolatedPart: selectedMachine,
     });
   };
+
   const handleReasonChange = (e) => {
     const selectedReason = e.target.value;
     setFormData({ ...formData, reason: selectedReason });
@@ -118,15 +124,15 @@ const CreateLOTO = () => {
     if (selectedReason !== "Other") {
       setCustomReason("");
     }
-    if (selectedReason === "Other") {
-      setCustomReason("");
-    }
   };
 
   const handleCustomReasonChange = (e) => {
-    const customReasonText = e.target.value;
-    setCustomReason(customReasonText);
-    // Do not update formData.reason here; keep it as "Other"
+    setCustomReason(e.target.value);
+  };
+
+  // 👇 NEW: Handle Custom Location Input
+  const handleCustomLocationChange = (e) => {
+    setCustomLocation(e.target.value);
   };
 
   const onSubmit = async (e) => {
@@ -142,7 +148,7 @@ const CreateLOTO = () => {
           Authorization: `Bearer ${token}`,
         },
       };
-      // Validate required fields
+
       if (
         !shift ||
         !location ||
@@ -155,10 +161,15 @@ const CreateLOTO = () => {
         return;
       }
 
-      // Prepare data to send - ensure location hierarchy is properly structured
+      // 👇 UPDATED: Use customLocation if location is "Other"
+      const finalLocation =
+        location === "Other" && customLocation
+          ? customLocation
+          : location || "Other";
+
       const dataToSend = {
         shift,
-        location: formData.location || "Other", // Default to "Other" if not selected
+        location: finalLocation,
         line: formData.line || "N/A",
         machine: formData.machine || "N/A",
         isolatedPart: formData.isolatedPart || "N/A",
@@ -181,7 +192,6 @@ const CreateLOTO = () => {
 
       console.log("LOTO creation response:", res.data);
 
-      // FIX: Properly check for success
       if (res.data && res.data.success) {
         alert(
           `LOTO created successfully!\nSerial Number: ${
@@ -190,11 +200,9 @@ const CreateLOTO = () => {
         );
         navigate("/loto-list");
       } else {
-        // Handle case where response exists but success is false
         setError(res.data?.message || "Error creating LOTO");
       }
     } catch (err) {
-      // FIX: Better error handling for network/API errors
       console.error("LOTO creation error:", err);
       const errorMessage =
         err.response?.data?.message ||
@@ -206,11 +214,9 @@ const CreateLOTO = () => {
     }
   };
 
-  // Ensure supervisors is always an array before mapping
   const safeSupervisors = Array.isArray(supervisors) ? supervisors : [];
-
-  // Predefined reason options
   const reasonOptions = ["Change over", "Shutdown", "Maintenance", "Other"];
+
   return (
     <div className="animate-fade-in">
       {/* Header Section */}
@@ -335,7 +341,7 @@ const CreateLOTO = () => {
                         Location Selection
                       </label>
 
-                      {/* Step 1: Main Location */}
+                      {/* Step 1: Main Location (now like Reason) */}
                       <div className="mb-3">
                         <label className="form-label fw-medium">
                           Select Main Location
@@ -354,7 +360,6 @@ const CreateLOTO = () => {
                           required
                         >
                           <option value="">-- Select Location --</option>
-                          <option value="Processing">Processing</option>
                           <option value="PKG">PKG</option>
                           <option value="Process">Process</option>
                           <option value="Utility">Utility</option>
@@ -365,18 +370,18 @@ const CreateLOTO = () => {
                         </select>
                       </div>
 
-                      {/* Step 2: Line Selection (appears when location is selected) */}
-                      {location && (
+                      {/* 👇 Custom Location Input */}
+                      {showCustomLocation && (
                         <div className="mb-3">
                           <label className="form-label fw-medium">
-                            {["Processing", "PKG", "Process"].includes(location)
-                              ? "Select Line"
-                              : "Select Part"}
+                            Specify Custom Location
                           </label>
-                          <select
-                            name="line"
-                            value={line}
-                            onChange={handleLineChange}
+                          <input
+                            type="text"
+                            name="customLocation"
+                            value={customLocation}
+                            onChange={handleCustomLocationChange}
+                            placeholder="Enter custom location"
                             className="form-control"
                             style={{
                               borderRadius: "0.75rem",
@@ -385,356 +390,285 @@ const CreateLOTO = () => {
                               backdropFilter: "blur(10px)",
                             }}
                             required
-                          >
-                            <option value="">
-                              -- Select{" "}
-                              {["Processing", "PKG", "Process"].includes(
-                                location
-                              )
-                                ? "Line"
-                                : "Part"}{" "}
-                              --
-                            </option>
-                            {location === "Processing" && (
-                              <>
-                                <option value="A">A</option>
-                                <option value="B">B</option>
-                                <option value="C">C</option>
-                                <option value="D">D</option>
-                                <option value="Multi-Bag">Multi-Bag</option>
-                              </>
-                            )}
-                            {location === "PKG" && (
-                              <>
-                                <option value="A">A</option>
-                                <option value="B">B</option>
-                                <option value="C">C</option>
-                                <option value="D">D</option>
-                                <option value="Multi-Bag">Multi-Bag</option>
-                              </>
-                            )}
-                            {location === "Process" && (
-                              <>
-                                <option value="PC">PC</option>
-                                <option value="TC">TC</option>
-                                <option value="FCP">FCP</option>
-                                <option value="RBS">RBS</option>
-                                <option value="CKF">CKF</option>
-                              </>
-                            )}
-                            {location === "Utility" && (
-                              <>
-                                <option value="Chiller">Chiller</option>
-                                <option value="AC">AC</option>
-                                <option value="Pump">Pump</option>
-                                <option value="Gate">Gate</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "WH-FG" && (
-                              <>
-                                <option value="Gate">Gate</option>
-                                <option value="Dock Leveler">
-                                  Dock Leveler
-                                </option>
-                                <option value="Crate Dumper">
-                                  Crate Dumper
-                                </option>
-                                <option value="Pallet Inverter">
-                                  Pallet Inverter
-                                </option>
-                                <option value="Banker">Banker</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "WH-RM" && (
-                              <>
-                                <option value="Gate">Gate</option>
-                                <option value="Dock Leveler">
-                                  Dock Leveler
-                                </option>
-                                <option value="Crate Dumper">
-                                  Crate Dumper
-                                </option>
-                                <option value="Pallet Inverter">
-                                  Pallet Inverter
-                                </option>
-                                <option value="Banker">Banker</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "Project" && (
-                              <>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "Other" && (
-                              <>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                          </select>
+                          />
                         </div>
                       )}
 
-                      {/* Step 3: Machine/Part Selection (appears when line is selected) */}
-                      {location && line && (
-                        <div className="mb-3">
-                          <label className="form-label fw-medium">
-                            Select Machine/Part
-                          </label>
-                          <select
-                            name="machine"
-                            value={machine}
-                            onChange={handleMachineChange}
-                            className="form-control"
-                            style={{
-                              borderRadius: "0.75rem",
-                              border: "2px solid #e2e8f0",
-                              background: "rgba(255, 255, 255, 0.9)",
-                              backdropFilter: "blur(10px)",
-                            }}
-                            required
-                          >
-                            <option value="">-- Select Machine/Part --</option>
-                            {/* Processing/PKG Machines */}
-                            {location === "Processing" && line === "A" && (
-                              <>
-                                <option value="DA01">DA01</option>
-                                <option value="DA02">DA02</option>
-                                <option value="DA03">DA03</option>
-                                <option value="DA04">DA04</option>
-                                <option value="DA05">DA05</option>
-                                <option value="DA06">DA06</option>
-                                <option value="DA07">DA07</option>
-                                <option value="DA08">DA08</option>
-                                <option value="DA09">DA09</option>
-                                <option value="DA10">DA10</option>
-                                <option value="DA11">DA11</option>
-                                <option value="DA12">DA12</option>
-                                <option value="DA13">DA13</option>
-                                <option value="DA14">DA14</option>
-                                <option value="DA15">DA15</option>
-                                <option value="DA16">DA16</option>
-                                <option value="DA17">DA17</option>
-                                <option value="DA18">DA18</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "Processing" && line === "B" && (
-                              <>
-                                <option value="DB01">DB01</option>
-                                <option value="DB02">DB02</option>
-                                <option value="DB03">DB03</option>
-                                <option value="DB04">DB04</option>
-                                <option value="GUCP01">GUCP01</option>
-                                <option value="DB05">DB05</option>
-                                <option value="DB06">DB06</option>
-                                <option value="DB07">DB07</option>
-                                <option value="DB08">DB08</option>
-                                <option value="DB09">DB09</option>
-                                <option value="DB10">DB10</option>
-                                <option value="DB11">DB11</option>
-                                <option value="DB12">DB12</option>
-                                <option value="DB13">DB13</option>
-                                <option value="DB14">DB14</option>
-                                <option value="DB15">DB15</option>
-                                <option value="DB16">DB16</option>
-                                <option value="DB17">DB17</option>
-                                <option value="DB18">DB18</option>
-                                <option value="GUCP06">GUCP06</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "Processing" && line === "C" && (
-                              <>
-                                <option value="GUCP07">GUCP07</option>
-                                <option value="DC01">DC01</option>
-                                <option value="DC02">DC02</option>
-                                <option value="DC03">DC03</option>
-                                <option value="DC04">DC04</option>
-                                <option value="DC05">DC05</option>
-                                <option value="DC06">DC06</option>
-                                <option value="DC07">DC07</option>
-                                <option value="DC08">DC08</option>
-                                <option value="GUCP10">GUCP10</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "Processing" && line === "D" && (
-                              <>
-                                <option value="DD01">DD01</option>
-                                <option value="DD02">DD02</option>
-                                <option value="DD03">DD03</option>
-                                <option value="DD04">DD04</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "Processing" &&
-                              line === "Multi-Bag" && (
+                      {/* 👇 Only show Line/Machine selectors if NOT "Other" location */}
+                      {!showCustomLocation && location && (
+                        <>
+                          {/* Step 2: Line Selection */}
+                          <div className="mb-3">
+                            <label className="form-label fw-medium">
+                              {["PKG", "Process"].includes(location)
+                                ? "Select Line"
+                                : "Select Part"}
+                            </label>
+                            <select
+                              name="line"
+                              value={line}
+                              onChange={handleLineChange}
+                              className="form-control"
+                              style={{
+                                borderRadius: "0.75rem",
+                                border: "2px solid #e2e8f0",
+                                background: "rgba(255, 255, 255, 0.9)",
+                                backdropFilter: "blur(10px)",
+                              }}
+                              required
+                            >
+                              <option value="">
+                                -- Select{" "}
+                                {["PKG", "Process"].includes(location)
+                                  ? "Line"
+                                  : "Part"}{" "}
+                                --
+                              </option>
+
+                              {location === "PKG" && (
                                 <>
-                                  <option value="MP01">MP01</option>
-                                  <option value="MP02">MP02</option>
-                                  <option value="MP03">MP03</option>
-                                  <option value="MP04">MP04</option>
-                                  <option value="MP05">MP05</option>
+                                  <option value="A">A</option>
+                                  <option value="B">B</option>
+                                  <option value="C">C</option>
+                                  <option value="D">D</option>
+                                  <option value="Multi-Bag">Multi-Bag</option>
+                                </>
+                              )}
+                              {location === "Process" && (
+                                <>
+                                  <option value="PC">PC</option>
+                                  <option value="TC">TC</option>
+                                  <option value="FCP">FCP</option>
+                                  <option value="RBS">RBS</option>
+                                  <option value="CKF">CKF</option>
+                                </>
+                              )}
+                              {location === "Utility" && (
+                                <>
+                                  <option value="Chiller">Chiller</option>
+                                  <option value="AC">AC</option>
+                                  <option value="Pump">Pump</option>
+                                  <option value="Gate">Gate</option>
                                   <option value="Other">Other</option>
                                 </>
                               )}
-                            {/* PKG Machines */}
-                            {location === "PKG" && line === "A" && (
-                              <>
-                                <option value="DA01">DA01</option>
-                                <option value="DA02">DA02</option>
-                                <option value="DA03">DA03</option>
-                                <option value="DA04">DA04</option>
-                                <option value="DA05">DA05</option>
-                                <option value="DA06">DA06</option>
-                                <option value="DA07">DA07</option>
-                                <option value="DA08">DA08</option>
-                                <option value="DA09">DA09</option>
-                                <option value="DA10">DA10</option>
-                                <option value="DA11">DA11</option>
-                                <option value="DA12">DA12</option>
-                                <option value="DA13">DA13</option>
-                                <option value="DA14">DA14</option>
-                                <option value="DA15">DA15</option>
-                                <option value="DA16">DA16</option>
-                                <option value="DA17">DA17</option>
-                                <option value="DA18">DA18</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "PKG" && line === "B" && (
-                              <>
-                                <option value="DB01">DB01</option>
-                                <option value="DB02">DB02</option>
-                                <option value="DB03">DB03</option>
-                                <option value="DB04">DB04</option>
-                                <option value="GUCP01">GUCP01</option>
-                                <option value="DB05">DB05</option>
-                                <option value="DB06">DB06</option>
-                                <option value="DB07">DB07</option>
-                                <option value="DB08">DB08</option>
-                                <option value="DB09">DB09</option>
-                                <option value="DB10">DB10</option>
-                                <option value="DB11">DB11</option>
-                                <option value="DB12">DB12</option>
-                                <option value="DB13">DB13</option>
-                                <option value="DB14">DB14</option>
-                                <option value="DB15">DB15</option>
-                                <option value="DB16">DB16</option>
-                                <option value="DB17">DB17</option>
-                                <option value="DB18">DB18</option>
-                                <option value="GUCP06">GUCP06</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "PKG" && line === "C" && (
-                              <>
-                                <option value="GUCP07">GUCP07</option>
-                                <option value="DC01">DC01</option>
-                                <option value="DC02">DC02</option>
-                                <option value="DC03">DC03</option>
-                                <option value="DC04">DC04</option>
-                                <option value="DC05">DC05</option>
-                                <option value="DC06">DC06</option>
-                                <option value="DC07">DC07</option>
-                                <option value="DC08">DC08</option>
-                                <option value="GUCP10">GUCP10</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "PKG" && line === "D" && (
-                              <>
-                                <option value="DD01">DD01</option>
-                                <option value="DD02">DD02</option>
-                                <option value="DD03">DD03</option>
-                                <option value="DD04">DD04</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "PKG" && line === "Multi-Bag" && (
-                              <>
-                                <option value="MP01">MP01</option>
-                                <option value="MP02">MP02</option>
-                                <option value="MP03">MP03</option>
-                                <option value="MP04">MP04</option>
-                                <option value="MP05">MP05</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {/* Process Parts */}
-                            {location === "Process" && line === "PC" && (
-                              <>
-                                <option value="Oven">Oven</option>
-                                <option value="Fryer">Fryer</option>
-                                <option value="Slicer">Slicer</option>
-                                <option value="Starch Recovery">
-                                  Starch Recovery
-                                </option>
-                                <option value="Optical Sorter">
-                                  Optical Sorter
-                                </option>
-                                <option value="Sessioning Loop">
-                                  Sessioning Loop
-                                </option>
-                                <option value="Dump Station">
-                                  Dump Station
-                                </option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "Process" && line === "TC" && (
-                              <>
-                                <option value="Oven">Oven</option>
-                                <option value="Starch Recovery">
-                                  Starch Recovery
-                                </option>
-                                <option value="Dump Station">
-                                  Dump Station
-                                </option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "Process" && line === "FCP" && (
-                              <>
-                                <option value="Optical Sorter">
-                                  Optical Sorter
-                                </option>
-                                <option value="Mill Mixer">Mill Mixer</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "Process" && line === "RBS" && (
-                              <>
-                                <option value="Extruder">Extruder</option>
-                                <option value="Sheeter">Sheeter</option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {location === "Process" && line === "CKF" && (
-                              <>
-                                <option value="Sessioning Loop">
-                                  Sessioning Loop
-                                </option>
-                                <option value="Other">Other</option>
-                              </>
-                            )}
-                            {/* Utility, WH-FG, WH-RM, Project, Other Parts */}
-                            {(location === "Utility" ||
-                              location === "WH-FG" ||
-                              location === "WH-RM" ||
-                              location === "Project" ||
-                              location === "Other") &&
-                              line && (
+                              {location === "WH-FG" && (
                                 <>
-                                  <option value={line}>{line}</option>
+                                  <option value="Gate">Gate</option>
+                                  <option value="Dock Leveler">
+                                    Dock Leveler
+                                  </option>
+                                  <option value="Crate Dumper">
+                                    Crate Dumper
+                                  </option>
+                                  <option value="Pallet Inverter">
+                                    Pallet Inverter
+                                  </option>
+                                  <option value="Banker">Banker</option>
                                   <option value="Other">Other</option>
                                 </>
                               )}
-                          </select>
-                        </div>
+                              {location === "WH-RM" && (
+                                <>
+                                  <option value="Gate">Gate</option>
+                                  <option value="Dock Leveler">
+                                    Dock Leveler
+                                  </option>
+                                  <option value="Crate Dumper">
+                                    Crate Dumper
+                                  </option>
+                                  <option value="Pallet Inverter">
+                                    Pallet Inverter
+                                  </option>
+                                  <option value="Banker">Banker</option>
+                                  <option value="Other">Other</option>
+                                </>
+                              )}
+                              {location === "Project" && (
+                                <>
+                                  <option value="Other">Other</option>
+                                </>
+                              )}
+                            </select>
+                          </div>
+
+                          {/* Step 3: Machine/Part Selection */}
+                          {line && (
+                            <div className="mb-3">
+                              <label className="form-label fw-medium">
+                                Select Machine/Part
+                              </label>
+                              <select
+                                name="machine"
+                                value={machine}
+                                onChange={handleMachineChange}
+                                className="form-control"
+                                style={{
+                                  borderRadius: "0.75rem",
+                                  border: "2px solid #e2e8f0",
+                                  background: "rgba(255, 255, 255, 0.9)",
+                                  backdropFilter: "blur(10px)",
+                                }}
+                                required
+                              >
+                                <option value="">
+                                  -- Select Machine/Part --
+                                </option>
+
+                                {location === "PKG" && line === "A" && (
+                                  <>
+                                    <option value="DA01">DA01</option>
+                                    <option value="DA02">DA02</option>
+                                    <option value="DA03">DA03</option>
+                                    <option value="DA04">DA04</option>
+                                    <option value="DA05">DA05</option>
+                                    <option value="DA06">DA06</option>
+                                    <option value="DA07">DA07</option>
+                                    <option value="DA08">DA08</option>
+                                    <option value="DA09">DA09</option>
+                                    <option value="DA10">DA10</option>
+                                    <option value="DA11">DA11</option>
+                                    <option value="DA12">DA12</option>
+                                    <option value="DA13">DA13</option>
+                                    <option value="DA14">DA14</option>
+                                    <option value="DA15">DA15</option>
+                                    <option value="DA16">DA16</option>
+                                    <option value="DA17">DA17</option>
+                                    <option value="DA18">DA18</option>
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
+                                {location === "PKG" && line === "B" && (
+                                  <>
+                                    <option value="DB01">DB01</option>
+                                    <option value="DB02">DB02</option>
+                                    <option value="DB03">DB03</option>
+                                    <option value="DB04">DB04</option>
+                                    <option value="GUCP01">GUCP01</option>
+                                    <option value="DB05">DB05</option>
+                                    <option value="DB06">DB06</option>
+                                    <option value="DB07">DB07</option>
+                                    <option value="DB08">DB08</option>
+                                    <option value="DB09">DB09</option>
+                                    <option value="DB10">DB10</option>
+                                    <option value="DB11">DB11</option>
+                                    <option value="DB12">DB12</option>
+                                    <option value="DB13">DB13</option>
+                                    <option value="DB14">DB14</option>
+                                    <option value="DB15">DB15</option>
+                                    <option value="DB16">DB16</option>
+                                    <option value="DB17">DB17</option>
+                                    <option value="DB18">DB18</option>
+                                    <option value="GUCP06">GUCP06</option>
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
+                                {location === "PKG" && line === "C" && (
+                                  <>
+                                    <option value="GUCP07">GUCP07</option>
+                                    <option value="DC01">DC01</option>
+                                    <option value="DC02">DC02</option>
+                                    <option value="DC03">DC03</option>
+                                    <option value="DC04">DC04</option>
+                                    <option value="DC05">DC05</option>
+                                    <option value="DC06">DC06</option>
+                                    <option value="DC07">DC07</option>
+                                    <option value="DC08">DC08</option>
+                                    <option value="GUCP10">GUCP10</option>
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
+                                {location === "PKG" && line === "D" && (
+                                  <>
+                                    <option value="DD01">DD01</option>
+                                    <option value="DD02">DD02</option>
+                                    <option value="DD03">DD03</option>
+                                    <option value="DD04">DD04</option>
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
+                                {location === "PKG" && line === "Multi-Bag" && (
+                                  <>
+                                    <option value="MP01">MP01</option>
+                                    <option value="MP02">MP02</option>
+                                    <option value="MP03">MP03</option>
+                                    <option value="MP04">MP04</option>
+                                    <option value="MP05">MP05</option>
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
+                                {location === "Process" && line === "PC" && (
+                                  <>
+                                    <option value="Oven">Oven</option>
+                                    <option value="Fryer">Fryer</option>
+                                    <option value="Slicer">Slicer</option>
+                                    <option value="Starch Recovery">
+                                      Starch Recovery
+                                    </option>
+                                    <option value="Optical Sorter">
+                                      Optical Sorter
+                                    </option>
+                                    <option value="Sessioning Loop">
+                                      Sessioning Loop
+                                    </option>
+                                    <option value="Dump Station">
+                                      Dump Station
+                                    </option>
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
+                                {location === "Process" && line === "TC" && (
+                                  <>
+                                    <option value="Oven">Oven</option>
+                                    <option value="Starch Recovery">
+                                      Starch Recovery
+                                    </option>
+                                    <option value="Dump Station">
+                                      Dump Station
+                                    </option>
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
+                                {location === "Process" && line === "FCP" && (
+                                  <>
+                                    <option value="Optical Sorter">
+                                      Optical Sorter
+                                    </option>
+                                    <option value="Mill Mixer">
+                                      Mill Mixer
+                                    </option>
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
+                                {location === "Process" && line === "RBS" && (
+                                  <>
+                                    <option value="Extruder">Extruder</option>
+                                    <option value="Sheeter">Sheeter</option>
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
+                                {location === "Process" && line === "CKF" && (
+                                  <>
+                                    <option value="Sessioning Loop">
+                                      Sessioning Loop
+                                    </option>
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
+                                {(location === "Utility" ||
+                                  location === "WH-FG" ||
+                                  location === "WH-RM" ||
+                                  location === "Project") &&
+                                  line && (
+                                    <>
+                                      <option value={line}>{line}</option>
+                                      <option value="Other">Other</option>
+                                    </>
+                                  )}
+                              </select>
+                            </div>
+                          )}
+                        </>
                       )}
 
                       {/* Display Selected Location Path */}
@@ -746,7 +680,9 @@ const CreateLOTO = () => {
                           <div>
                             <strong>Selected Location Path:</strong>
                             <span className="ms-2">
-                              {location}
+                              {location === "Other" && customLocation
+                                ? customLocation
+                                : location}
                               {line && ` > ${line}`}
                               {machine && ` > ${machine}`}
                             </span>
@@ -765,7 +701,6 @@ const CreateLOTO = () => {
                       <input
                         type="text"
                         name="isolatedPart"
-                        value={isolatedPart}
                         onChange={onChange}
                         placeholder="Enter part description"
                         className="form-control"
@@ -780,7 +715,7 @@ const CreateLOTO = () => {
                     </div>
                   </div>
 
-                  {/* Reason Dropdown - CONVERTED FROM TEXT BOX */}
+                  {/* Reason Dropdown */}
                   <div className="col-12 mb-4">
                     <label className="form-label fw-medium">Reason</label>
                     <select
@@ -799,7 +734,7 @@ const CreateLOTO = () => {
                     </select>
                   </div>
 
-                  {/* Custom Reason Text Box (appears when "Other" is selected) */}
+                  {/* Custom Reason Text Box */}
                   {showCustomReason && (
                     <div className="col-12 mb-4">
                       <label className="form-label fw-medium">
@@ -811,7 +746,7 @@ const CreateLOTO = () => {
                         value={customReason}
                         onChange={handleCustomReasonChange}
                         placeholder="Enter custom reason"
-                        className="control form-control"
+                        className="form-control"
                         required
                       />
                     </div>
