@@ -21,6 +21,8 @@ const CreateLOTO = () => {
   const [error, setError] = useState("");
   const [supervisors, setSupervisors] = useState([]);
   const [fetchingSupervisors, setFetchingSupervisors] = useState(true);
+  const [showCustomReason, setShowCustomReason] = useState(false); // For "Other" reason
+  const [customReason, setCustomReason] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -109,6 +111,23 @@ const CreateLOTO = () => {
       isolatedPart: selectedMachine,
     });
   };
+  const handleReasonChange = (e) => {
+    const selectedReason = e.target.value;
+    setFormData({ ...formData, reason: selectedReason });
+    setShowCustomReason(selectedReason === "Other");
+    if (selectedReason !== "Other") {
+      setCustomReason("");
+    }
+    if (selectedReason === "Other") {
+      setCustomReason("");
+    }
+  };
+
+  const handleCustomReasonChange = (e) => {
+    const customReasonText = e.target.value;
+    setCustomReason(customReasonText);
+    // Do not update formData.reason here; keep it as "Other"
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -123,6 +142,18 @@ const CreateLOTO = () => {
           Authorization: `Bearer ${token}`,
         },
       };
+      // Validate required fields
+      if (
+        !shift ||
+        !location ||
+        !isolatedPart ||
+        !reason ||
+        !expectedDuration
+      ) {
+        setError("Please fill in all required fields");
+        setSubmitting(false);
+        return;
+      }
 
       // Prepare data to send - ensure location hierarchy is properly structured
       const dataToSend = {
@@ -131,7 +162,7 @@ const CreateLOTO = () => {
         line: formData.line || "N/A",
         machine: formData.machine || "N/A",
         isolatedPart: formData.isolatedPart || "N/A",
-        reason,
+        reason: formData.reason === "Other" && customReason ? customReason : formData.reason || "Other",
         ptwNumber: ptwNumber || "N/A",
         expectedDuration: parseFloat(expectedDuration),
         supervisor,
@@ -175,6 +206,8 @@ const CreateLOTO = () => {
   // Ensure supervisors is always an array before mapping
   const safeSupervisors = Array.isArray(supervisors) ? supervisors : [];
 
+  // Predefined reason options
+  const reasonOptions = ["Change over", "Shutdown", "Maintenance", "Other"];
   return (
     <div className="animate-fade-in">
       {/* Header Section */}
@@ -744,27 +777,42 @@ const CreateLOTO = () => {
                     </div>
                   </div>
 
-                  {/* Reason */}
+                  {/* Reason Dropdown - CONVERTED FROM TEXT BOX */}
                   <div className="col-12 mb-4">
-                    <div className="form-group">
-                      <label className="form-label fw-medium">Reason</label>
+                    <label className="form-label fw-medium">Reason</label>
+                    <select
+                      name="reason"
+                      value={reason}
+                      onChange={handleReasonChange}
+                      className="form-control"
+                      required
+                    >
+                      <option value="">Select a reason</option>
+                      {reasonOptions.map((option, index) => (
+                        <option key={index} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Custom Reason Text Box (appears when "Other" is selected) */}
+                  {showCustomReason && (
+                    <div className="col-12 mb-4">
+                      <label className="form-label fw-medium">
+                        Specify Custom Reason
+                      </label>
                       <input
                         type="text"
-                        name="reason"
-                        value={reason}
-                        onChange={onChange}
-                        placeholder="Enter reason"
-                        className="form-control"
-                        style={{
-                          borderRadius: "0.75rem",
-                          border: "2px solid #e2e8f0",
-                          background: "rgba(255, 255, 255, 0.9)",
-                          backdropFilter: "blur(10px)",
-                        }}
+                        name="customReason"
+                        value={customReason}
+                        onChange={handleCustomReasonChange}
+                        placeholder="Enter custom reason"
+                        className="control form-control"
                         required
                       />
                     </div>
-                  </div>
+                  )}
 
                   {/* PTW Number */}
                   <div className="col-12 mb-4">
