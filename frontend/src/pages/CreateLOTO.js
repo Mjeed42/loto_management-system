@@ -802,8 +802,7 @@ const CreateLOTO = () => {
                             .filter((sup) => sup.role === "supervisor") // only supervisors
                             .map((sup) => (
                               <option key={sup._id} value={sup._id}>
-                                {sup.firstName} {sup.lastName} ({sup.username})
-                                = Supervisor
+                                {sup.firstName} {sup.lastName}
                               </option>
                             ))}
                         </select>
