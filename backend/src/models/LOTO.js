@@ -92,6 +92,29 @@ const lotoSchema = new mongoose.Schema(
     completionNotes: {
       type: String,
     },
+    energyTypes: [
+      {
+        type: {
+          type: String,
+          required: true,
+          enum: [
+            "Electrical",
+            "Water",
+            "Air",
+            "Gas",
+            "Chemical",
+            "Rotating Machine",
+            "Mechanical",
+            "Nitrogen",
+            "Hydraulic Oil",
+          ],
+        },
+        isolationPoint: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
     createdAt: {
       type: Date,
       default: Date.now,

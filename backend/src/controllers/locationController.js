@@ -5,34 +5,20 @@ const Location = require("../models/Location");
 // @access  Private
 exports.getLocations = async (req, res) => {
   try {
-    // Only authenticated users can access this
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized to access this resource",
-      });
-    }
-
-    const locations = await Location.find({ isActive: true }).sort({ name: 1 });
+    const locations = await Location.find().sort({ name: 1 });
 
     // Build hierarchy
     const buildHierarchy = (locations, parentId = null) => {
       const result = [];
 
       for (const loc of locations) {
-        if (
-          (loc.parent && loc.parent.toString() !== parentId) ||
-          (!loc.parent && parentId !== null)
-        )
-          continue;
+        if (loc.parent && loc.parent.toString() !== parentId) continue;
 
         const node = {
           _id: loc._id,
           name: loc.name,
-          code: loc.code,
           type: loc.type,
           isLeaf: loc.isLeaf,
-          description: loc.description,
           children: [],
         };
 
@@ -52,7 +38,7 @@ exports.getLocations = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      count: locations.length,
+      count: hierarchy.length,
       hierarchy,
     });
   } catch (error) {
@@ -65,19 +51,11 @@ exports.getLocations = async (req, res) => {
 };
 
 // @desc    Get locations by type
-// @route   GET /api/locations/type/:type
+// @route   GET /api/locations?type=location
 // @access  Private
 exports.getLocationsByType = async (req, res) => {
   try {
-    // Only authenticated users can access this
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized to access this resource",
-      });
-    }
-
-    const { type } = req.params;
+    const { type } = req.query;
 
     if (!type) {
       return res.status(400).json({
@@ -86,9 +64,7 @@ exports.getLocationsByType = async (req, res) => {
       });
     }
 
-    const locations = await Location.find({ type, isActive: true }).sort({
-      name: 1,
-    });
+    const locations = await Location.find({ type }).sort({ name: 1 });
 
     res.status(200).json({
       success: true,
@@ -143,25 +119,22 @@ exports.getChildLocations = async (req, res) => {
 // @access  Private (admin only)
 exports.createLocation = async (req, res) => {
   try {
-    // Only admin can access this
+    const { name, type, parent } = req.body;
+
+    // Validate user role
     if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Not authorized to access this resource",
+        message: "Only admin can create locations",
       });
     }
 
-    const { name, code, type, parent, description } = req.body;
-
     // Check if location already exists
-    const existingLocation = await Location.findOne({
-      $or: [{ name }, { code }],
-    });
-
+    const existingLocation = await Location.findOne({ name });
     if (existingLocation) {
       return res.status(400).json({
         success: false,
-        message: "Location with this name or code already exists",
+        message: "Location with this name already exists",
       });
     }
 
@@ -180,12 +153,9 @@ exports.createLocation = async (req, res) => {
     // Create new location
     const location = await Location.create({
       name,
-      code,
       type,
       parent: parent ? parent : null,
-      description: description || "",
-      isLeaf: type === "machine" || type === "utility",
-      isActive: true,
+      isLeaf: type === "machine" || type === "line",
     });
 
     // Update parent's children array
@@ -196,7 +166,6 @@ exports.createLocation = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Location created successfully",
       location,
     });
   } catch (error) {
@@ -213,16 +182,19 @@ exports.createLocation = async (req, res) => {
 // @access  Private (admin only)
 exports.updateLocation = async (req, res) => {
   try {
-    // Only admin can access this
+    const { id } = req.params;
+    const { name, type, parent } = req.body;
+
+    // Validate user role
     if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Not authorized to access this resource",
+        message: "Only admin can update locations",
       });
     }
 
-    const location = await Location.findById(req.params.id);
-
+    // Check if location exists
+    const location = await Location.findById(id);
     if (!location) {
       return res.status(404).json({
         success: false,
@@ -230,40 +202,18 @@ exports.updateLocation = async (req, res) => {
       });
     }
 
-    const { name, code, type, parent, description } = req.body;
-
-    // Check if name or code is already taken by another location
-    if (name && name !== location.name) {
-      const existingLocation = await Location.findOne({
-        name,
-        _id: { $ne: req.params.id },
+    // Check if name is already taken by another location
+    const existingLocation = await Location.findOne({ name, _id: { $ne: id } });
+    if (existingLocation) {
+      return res.status(400).json({
+        success: false,
+        message: "Location with this name already exists",
       });
-      if (existingLocation) {
-        return res.status(400).json({
-          success: false,
-          message: "Location with this name already exists",
-        });
-      }
     }
 
-    if (code && code !== location.code) {
-      const existingLocation = await Location.findOne({
-        code,
-        _id: { $ne: req.params.id },
-      });
-      if (existingLocation) {
-        return res.status(400).json({
-          success: false,
-          message: "Location with this code already exists",
-        });
-      }
-    }
-
-    // Update fields if provided
-    if (name) location.name = name;
-    if (code) location.code = code;
-    if (type) location.type = type;
-    if (description !== undefined) location.description = description;
+    // Update location
+    location.name = name;
+    location.type = type;
 
     // Handle parent change
     if (parent !== undefined) {
@@ -280,30 +230,25 @@ exports.updateLocation = async (req, res) => {
 
       // Set new parent
       if (parent) {
+        location.parent = parent;
         const newParent = await Location.findById(parent);
         if (newParent) {
           newParent.children.push(location._id);
           await newParent.save();
-          location.parent = parent;
         }
       } else {
         location.parent = null;
       }
     }
 
-    location.updatedAt = Date.now();
-    await location.save();
+    // Update isLeaf based on type
+    location.isLeaf = type === "machine" || type === "line";
 
-    // Populate the updated location
-    const updatedLocation = await Location.findById(location._id).populate(
-      "parent",
-      "name code type"
-    );
+    await location.save();
 
     res.status(200).json({
       success: true,
-      message: "Location updated successfully",
-      location: updatedLocation,
+      location,
     });
   } catch (error) {
     res.status(500).json({
@@ -319,16 +264,18 @@ exports.updateLocation = async (req, res) => {
 // @access  Private (admin only)
 exports.deleteLocation = async (req, res) => {
   try {
-    // Only admin can access this
+    const { id } = req.params;
+
+    // Validate user role
     if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Not authorized to access this resource",
+        message: "Only admin can delete locations",
       });
     }
 
-    const location = await Location.findById(req.params.id);
-
+    // Check if location exists
+    const location = await Location.findById(id);
     if (!location) {
       return res.status(404).json({
         success: false,
@@ -336,11 +283,11 @@ exports.deleteLocation = async (req, res) => {
       });
     }
 
-    // Prevent deletion if location has children
+    // Check if location has children
     if (location.children && location.children.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "Cannot delete location with children. Delete children first.",
+        message: "Cannot delete location with children",
       });
     }
 
@@ -355,7 +302,8 @@ exports.deleteLocation = async (req, res) => {
       }
     }
 
-    await location.remove();
+    // Delete location
+    await Location.findByIdAndDelete(id);
 
     res.status(200).json({
       success: true,

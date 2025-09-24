@@ -1601,7 +1601,7 @@ const GlobalStyles = () => (
     }
     .fw-bold {
      font-weight: 700;
-     font-size: 50px;
+     font-size: 20px;
     }
     .fw-semibold {
       font-weight: 600;
@@ -2439,6 +2439,24 @@ const GlobalStyles = () => (
       background-color: rgba(99, 102, 241, 0.05);
       transform: translateY(-1px);
     }
+      .cf-badge {
+  display: inline-block;
+  padding: 0.35em 0.65em;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  color: #8e0000;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+}
+  .cf-text-sm {
+  font-size: 17px;
+}
+  .cf-text-muted {
+  color: #000 !important;
+}
 
     /* Responsive adjustments for Admin Page */
     @media (max-width: 768px) {

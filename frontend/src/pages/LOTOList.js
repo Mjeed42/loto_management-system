@@ -73,6 +73,8 @@ const LOTOList = () => {
           reason: loto.reason || "N/A",
           status: loto.status || "pending",
           expectedDuration: loto.expectedDuration || 0,
+          energyTypes: Array.isArray(loto.energyTypes) ? loto.energyTypes : [],
+          // Add other fields as necessary
         }));
 
       setLotos(validatedLotos);
@@ -506,7 +508,9 @@ const LOTOList = () => {
                 <th scope="col">Isolated Part</th>
                 <th scope="col">Reason</th>
                 <th scope="col">Isolator</th>
+                <th scope="col">Energy Types</th>
                 <th scope="col">Status</th>
+
                 <th scope="col" className="text-center">
                   Actions
                 </th>
@@ -531,6 +535,12 @@ const LOTOList = () => {
                         }`
                       : "N/A"}
                   </td>
+                  <td>
+                    {loto.energyTypes && loto.energyTypes.length > 0
+                      ? loto.energyTypes.map((et) => et.name).join(", ")
+                      : "N/A"}
+                  </td>
+
                   <td>{getStatusBadge(loto.status)}</td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center gap-2">

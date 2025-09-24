@@ -15,6 +15,7 @@ const CreateLOTO = () => {
     ptwNumber: "N/A",
     expectedDuration: "",
     supervisor: "",
+    energyTypes: [{ type: "", isolationPoint: "" }],
   });
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -23,10 +24,10 @@ const CreateLOTO = () => {
   const [fetchingSupervisors, setFetchingSupervisors] = useState(true);
   const [showCustomReason, setShowCustomReason] = useState(false);
   const [customReason, setCustomReason] = useState("");
-  const [showCustomLocation, setShowCustomLocation] = useState(false); // 👈 NEW
-  const [customLocation, setCustomLocation] = useState(""); // 👈 NEW
-  const [showCustomMachine, setShowCustomMachine] = useState(false); // 👈 NEW
-  const [customMachine, setCustomMachine] = useState(""); // 👈 NEW
+  const [showCustomLocation, setShowCustomLocation] = useState(false);
+  const [customLocation, setCustomLocation] = useState("");
+  const [showCustomMachine, setShowCustomMachine] = useState(false);
+  const [customMachine, setCustomMachine] = useState("");
 
   const navigate = useNavigate();
 
@@ -79,13 +80,35 @@ const CreateLOTO = () => {
     ptwNumber,
     expectedDuration,
     supervisor,
+    energyTypes,
   } = formData;
 
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 👇 UPDATED: Handle Location Change (like Reason)
+  // --- NEW ENERGY TYPES HANDLERS ---
+  const handleEnergyTypeChange = (index, field, value) => {
+    const updatedEnergyTypes = [...formData.energyTypes];
+    updatedEnergyTypes[index][field] = value;
+    setFormData({ ...formData, energyTypes: updatedEnergyTypes });
+  };
+
+  const addEnergyType = () => {
+    setFormData({
+      ...formData,
+      energyTypes: [...formData.energyTypes, { type: "", isolationPoint: "" }],
+    });
+  };
+
+  const removeEnergyType = (index) => {
+    if (formData.energyTypes.length <= 1) return; // Prevent removing the last one
+    const updatedEnergyTypes = formData.energyTypes.filter(
+      (_, i) => i !== index
+    );
+    setFormData({ ...formData, energyTypes: updatedEnergyTypes });
+  };
+
   const handleLocationChange = (e) => {
     const selectedLocation = e.target.value;
     setFormData({
@@ -137,11 +160,10 @@ const CreateLOTO = () => {
     setCustomReason(e.target.value);
   };
 
-  // 👇 NEW: Handle Custom Location Input
   const handleCustomLocationChange = (e) => {
     setCustomLocation(e.target.value);
   };
-  // 👇 NEW: Handle Custom Machine Input
+
   const handleCustomMachineChange = (e) => {
     setCustomMachine(e.target.value);
   };
@@ -160,6 +182,7 @@ const CreateLOTO = () => {
         },
       };
 
+      // Enhanced validation - includes energy types
       if (
         !shift ||
         !location ||
@@ -172,16 +195,33 @@ const CreateLOTO = () => {
         return;
       }
 
-      // 👇 UPDATED: Use customLocation if location is "Other"
+      // Validate energy types
+      if (energyTypes.length === 0) {
+        setError("Please select at least one energy type to isolate");
+        setSubmitting(false);
+        return;
+      }
+
+      // Validate that all selected energy types have isolation points
+      const hasEmptyIsolationPoints = energyTypes.some(
+        (energy) => !energy.isolationPoint.trim()
+      );
+      if (hasEmptyIsolationPoints) {
+        setError(
+          "Please provide isolation point reference for all selected energy types"
+        );
+        setSubmitting(false);
+        return;
+      }
+
+      // Prepare data to send with energy types
       const finalLocation =
         location === "Other" && customLocation
           ? customLocation
           : location || "Other";
-      // 👇 UPDATED: Use customMachine if machine is "Other"
+
       const finalMachine =
         machine === "Other" && customMachine ? customMachine : machine || "N/A";
-
-      // Prepare data to send
 
       const dataToSend = {
         shift,
@@ -196,6 +236,11 @@ const CreateLOTO = () => {
         ptwNumber: ptwNumber || "N/A",
         expectedDuration: parseFloat(expectedDuration),
         supervisor,
+        // --- INCLUDE ENERGY TYPES IN DATA TO SEND ---
+        energyTypes: formData.energyTypes.filter(
+          (et) => et.type && et.isolationPoint
+        ),
+        // --- END INCLUDE ENERGY TYPES ---
       };
 
       console.log("Sending LOTO creation request:", dataToSend);
@@ -232,6 +277,19 @@ const CreateLOTO = () => {
 
   const safeSupervisors = Array.isArray(supervisors) ? supervisors : [];
   const reasonOptions = ["Change over", "Shutdown", "Maintenance", "Other"];
+
+  // Energy type options with symbols
+  const energyTypeOptions = [
+    { name: "Electrical", symbol: "🔴" },
+    { name: "Water", symbol: "🔵" },
+    { name: "Air", symbol: "🟣" },
+    { name: "Gas", symbol: "🟡" },
+    { name: "Chemical", symbol: "🔺" },
+    { name: "Rotating Machine", symbol: "🔺" },
+    { name: "Mechanical", symbol: "🔵" },
+    { name: "Nitrogen", symbol: "🟢" },
+    { name: "Hydraulic Oil", symbol: "⚫" },
+  ];
 
   return (
     <div className="animate-fade-in">
@@ -357,7 +415,7 @@ const CreateLOTO = () => {
                         Location Selection
                       </label>
 
-                      {/* Step 1: Main Location (now like Reason) */}
+                      {/* Step 1: Main Location */}
                       <div className="mb-3">
                         <label className="form-label fw-medium">
                           Select Main Location
@@ -386,7 +444,7 @@ const CreateLOTO = () => {
                         </select>
                       </div>
 
-                      {/* 👇 Custom Location Input */}
+                      {/* Custom Location Input */}
                       {showCustomLocation && (
                         <div className="mb-3">
                           <label className="form-label fw-medium">
@@ -410,7 +468,7 @@ const CreateLOTO = () => {
                         </div>
                       )}
 
-                      {/* 👇 Only show Line/Machine selectors if NOT "Other" location */}
+                      {/* Only show Line/Machine selectors if NOT "Other" location */}
                       {!showCustomLocation && location && (
                         <>
                           {/* Step 2: Line Selection */}
@@ -686,7 +744,7 @@ const CreateLOTO = () => {
                           )}
                         </>
                       )}
-                      {/* 👇 Custom Machine Input */}
+                      {/* Custom Machine Input */}
                       {showCustomMachine && (
                         <div className="mb-3">
                           <label className="form-label fw-medium">
@@ -812,6 +870,105 @@ const CreateLOTO = () => {
                     </div>
                   </div>
 
+                  {/* ENERGY TYPES SECTION - ADDED FROM SECOND CODE */}
+                  <div className="col-12 mb-4">
+                    <div className="form-group">
+                      <h5 className="mb-3 fw-medium">
+                        <span className="me-2">⚡</span> Energy Types to Isolate
+                      </h5>
+                      <p className="text-muted mb-3">
+                        Select the energy types that need to be isolated for
+                        this LOTO procedure.
+                      </p>
+
+                      {energyTypes.map((energy, index) => (
+                        <div
+                          key={index}
+                          className="border rounded p-3 mb-3 bg-light"
+                        >
+                          <div className="d-flex justify-content-between align-items-center mb-2">
+                            <h6 className="mb-0">Energy Type {index + 1}</h6>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-danger"
+                              onClick={() => removeEnergyType(index)}
+                              disabled={energyTypes.length <= 1}
+                            >
+                              <span className="me-1">🗑️</span> Remove
+                            </button>
+                          </div>
+
+                          <div className="row">
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">
+                                Energy Type
+                              </label>
+                              <select
+                                value={energy.type}
+                                onChange={(e) =>
+                                  handleEnergyTypeChange(
+                                    index,
+                                    "type",
+                                    e.target.value
+                                  )
+                                }
+                                className="form-control"
+                                style={{
+                                  borderRadius: "0.75rem",
+                                  border: "2px solid #e2e8f0",
+                                  background: "rgba(255, 255, 255, 0.9)",
+                                  backdropFilter: "blur(10px)",
+                                }}
+                                required
+                              >
+                                <option value="">Select energy type</option>
+                                {energyTypeOptions.map((et) => (
+                                  <option key={et.name} value={et.name}>
+                                    {et.symbol} {et.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="col-md-6">
+                              <label className="form-label fw-medium">
+                                Isolation Point Reference
+                              </label>
+                              <input
+                                type="text"
+                                value={energy.isolationPoint}
+                                onChange={(e) =>
+                                  handleEnergyTypeChange(
+                                    index,
+                                    "isolationPoint",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Enter isolation point reference"
+                                className="form-control"
+                                style={{
+                                  borderRadius: "0.75rem",
+                                  border: "2px solid #e2e8f0",
+                                  background: "rgba(255, 255, 255, 0.9)",
+                                  backdropFilter: "blur(10px)",
+                                }}
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary hover-scale"
+                        onClick={addEnergyType}
+                      >
+                        <span className="me-2">➕</span> Add Another Energy Type
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Supervisor Assignment */}
                   <div className="col-12 mb-4">
                     <div className="form-group">
@@ -833,12 +990,18 @@ const CreateLOTO = () => {
                           value={supervisor}
                           onChange={onChange}
                           className="form-control"
+                          style={{
+                            borderRadius: "0.75rem",
+                            border: "2px solid #e2e8f0",
+                            background: "rgba(255, 255, 255, 0.9)",
+                            backdropFilter: "blur(10px)",
+                          }}
                         >
                           <option value="">
                             None - Any supervisor can verify
                           </option>
                           {supervisors
-                            .filter((sup) => sup.role === "supervisor") // only supervisors
+                            .filter((sup) => sup.role === "supervisor")
                             .map((sup) => (
                               <option key={sup._id} value={sup._id}>
                                 {sup.firstName} {sup.lastName}

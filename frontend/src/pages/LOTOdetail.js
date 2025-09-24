@@ -388,6 +388,31 @@ const LOTOdetail = () => {
                       {loto.expectedDuration} hours
                     </span>
                   </p>
+                  <div className="cf-mt-3">
+                    <p>
+                      <strong>Energy Types to Isolate:</strong>
+                    </p>
+                    {loto.energyTypes && loto.energyTypes.length > 0 ? (
+                      <div className="cf-flex cf-flex-wrap cf-gap-2">
+                        {loto.energyTypes.map((energy, index) => (
+                          <div key={index} className="cf-card cf-card-sm">
+                            <div className="cf-card-body cf-p-2">
+                              <div className="cf-flex cf-items-center">
+                                <span className="cf-badge cf-badge-info cf-badge-pill cf-mr-2">
+                                  {energy.type}
+                                </span>
+                                <span className="cf-text-muted cf-text-sm">
+                                  {energy.isolationPoint}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="cf-text-muted">None specified</span>
+                    )}
+                  </div>
                 </div>
               </div>
 

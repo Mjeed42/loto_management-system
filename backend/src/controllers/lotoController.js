@@ -46,6 +46,7 @@ exports.createLOTO = async (req, res) => {
       ptwNumber,
       expectedDuration,
       supervisor,
+      energyTypes,
     } = req.body;
 
     // Destructure line and machine from location if available
@@ -68,7 +69,20 @@ exports.createLOTO = async (req, res) => {
       expectedDuration: parseFloat(expectedDuration),
       status: "pending",
     };
+    // --- ADD ENERGY TYPES TO LOTO DATA ---
+    if (energyTypes && Array.isArray(energyTypes)) {
+      // Filter out any empty energy types
+      const filteredEnergyTypes = energyTypes.filter(
+        (et) => et.type && et.isolationPoint
+      );
+      if (filteredEnergyTypes.length > 0) {
+        lotoData.energyTypes = filteredEnergyTypes;
+      }
+    }
+    // --- END ADD ENERGY TYPES ---
 
+    console.log("Creating LOTO with ", lotoData);
+    
     // Add authorized handler if provided
     if (supervisor) {
       // Validate that the supervisor exists and is a supervisor
