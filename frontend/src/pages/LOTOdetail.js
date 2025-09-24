@@ -11,14 +11,10 @@ const LOTOdetail = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
-  const [locations, setLocations] = useState([null]);
-  const [selectedLocation, setSelectedLocation] = useState(null);
 
   useEffect(() => {
     fetchLOTO();
     fetchCurrentUser();
-    // Fetch locations only once
-    fetchLocations();
   }, [id]);
 
   const fetchCurrentUser = async () => {
@@ -36,25 +32,7 @@ const LOTOdetail = () => {
       );
       setCurrentUser(res.data.user);
     } catch (err) {
-      console.log("Error fetching current user");
-    }
-  };
-  const fetchLocations = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/locations",
-        config
-      );
-      setLocations(res.data.locations || []);
-    } catch (err) {
-      console.log("Error fetching locations");
+      console.log("Error fetching current user:", err);
     }
   };
 
@@ -71,6 +49,7 @@ const LOTOdetail = () => {
         `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
         config
       );
+
       setLoto(res.data.data);
       setLoading(false);
     } catch (err) {
@@ -78,10 +57,11 @@ const LOTOdetail = () => {
       setLoading(false);
     }
   };
+
   const handleDelete = async () => {
     if (
       !window.confirm(
-        `Are you sure you want to delete this LOTO? This action cannot be undone.`
+        `Are you sure you want to delete LOTO ${loto.serialNumber}? This action cannot be undone.`
       )
     )
       return;
@@ -94,32 +74,19 @@ const LOTOdetail = () => {
         },
       };
 
-      console.log("Sending delete request for LOTO:", id);
+      await axios.delete(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
+        config
+      );
 
-      // Use the correct API URL
-      const API_BASE_URL =
-        process.env.REACT_APP_API_URL ||
-        "https://loto-backend-643788243736.europe-west1.run.app/api";
-
-      const response = await axios.delete(`${API_BASE_URL}/loto/${id}`, config);
-
-      console.log("Delete LOTO response:", response);
-
-      if (response.data.success) {
-        alert("LOTO deleted successfully!");
-        navigate("/loto-list"); // Navigate back to list
-      } else {
-        alert(response.data.message || "Error deleting LOTO");
-      }
+      alert("LOTO deleted successfully!");
+      navigate("/loto-list");
     } catch (err) {
       console.error("Delete LOTO error:", err);
-      console.error("Error response:", err.response);
-
       const errorMessage =
         err.response?.data?.message ||
         err.response?.data?.error ||
         "Error deleting LOTO";
-
       alert(`Delete failed: ${errorMessage}`);
     }
   };
@@ -150,8 +117,6 @@ const LOTOdetail = () => {
       alert(
         "Handover accepted successfully! The LOTO has been reset to pending status and requires re-verification."
       );
-
-      // Refresh the page to show updated status
       fetchLOTO();
     } catch (err) {
       alert(err.response?.data?.message || "Error accepting handover");
@@ -178,8 +143,6 @@ const LOTOdetail = () => {
 
       setLoto(res.data.data);
       alert("Handover rejected successfully!");
-
-      // Refresh the page to show updated status
       fetchLOTO();
     } catch (err) {
       alert(err.response?.data?.message || "Error rejecting handover");
@@ -205,25 +168,15 @@ const LOTOdetail = () => {
 
       setLoto(res.data.data);
       alert("LOTO verified successfully!");
-
-      // Refresh the page to show updated status
       fetchLOTO();
     } catch (err) {
       alert(err.response?.data?.message || "Error verifying LOTO");
     }
   };
 
-  const handleUpdate = async () => {
-    navigate(`/loto/${id}/update`);
-  };
-
-  const handleHandover = async () => {
-    navigate(`/loto/${id}/handover`);
-  };
-
-  const handleComplete = async () => {
-    navigate(`/loto/${id}/complete`);
-  };
+  const handleUpdate = () => navigate(`/loto/${id}/update`);
+  const handleHandover = () => navigate(`/loto/${id}/handover`);
+  const handleComplete = () => navigate(`/loto/${id}/complete`);
 
   if (loading) {
     return (
@@ -238,8 +191,13 @@ const LOTOdetail = () => {
 
   if (error) {
     return (
-      <div className="alert alert-danger">
-        <Icon name="warning" /> {error}
+      <div className="alert alert-danger d-flex align-items-center mb-4">
+        <span className="me-3" style={{ fontSize: "1.5rem" }}>
+          ⚠️
+        </span>
+        <div>
+          <strong>Error:</strong> {error}
+        </div>
       </div>
     );
   }
@@ -252,21 +210,36 @@ const LOTOdetail = () => {
     );
   }
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      pending: { text: "Pending", variant: "warning" },
-      active: { text: "Active", variant: "success" },
-      completed: { text: "Completed", variant: "secondary" },
-      pending_handover: { text: "Pending Handover", variant: "info" },
-    };
+  // 👇 Build full location path — handle missing fields gracefully
+  // 👇 Build full location path — with fallback message if incomplete
+  const locationPathParts = [];
 
-    const config = statusConfig[status] || {
-      text: status,
-      variant: "secondary",
-    };
+  if (loto.location) locationPathParts.push(loto.location);
+  if (loto.line) locationPathParts.push(loto.line);
+  if (loto.machine) locationPathParts.push(loto.machine);
+
+  let locationPath = locationPathParts.join(" > ");
+
+  // 👇 If only location is present, hint that more could be added
+  if (locationPath && !loto.line && !loto.machine) {
+    locationPath += " (add line/machine for full path)";
+  }
+
+  locationPath = locationPath || "N/A";
+
+  // 👇 Status Badge with Emoji — styled like CreateLOTO
+  const getStatusBadge = (status) => {
+    const config = {
+      pending: { text: "⏳ Pending", variant: "warning" },
+      active: { text: "✅ Active", variant: "success" },
+      completed: { text: "🏁 Completed", variant: "secondary" },
+      pending_handover: { text: "🤝 Pending Handover", variant: "info" },
+    }[status] || { text: status, variant: "secondary" };
 
     return (
-      <span className={`badge bg-${config.variant} badge-pill`}>
+      <span
+        className={`badge bg-${config.variant} fs-6 px-3 py-2 rounded-pill`}
+      >
         {config.text}
       </span>
     );
@@ -283,98 +256,151 @@ const LOTOdetail = () => {
   const isSupervisor = currentUser && currentUser.role === "supervisor";
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-          <Icon name="document" /> LOTO Details
-        </h1>
-        <div className="d-flex gap-2">
-          <Button variant="outline-secondary" onClick={fetchLOTO}>
-            <Icon name="refresh" /> Refresh
-          </Button>
-          <Button
-            variant="outline-primary"
-            onClick={() => navigate("/loto-list")}
-          >
-            <Icon name="back" /> Back to List
-          </Button>
+    <div className="animate-fade-in">
+      {/* Header Section — IDENTICAL TO CREATELOTO */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="card bg-glass border-0 shadow-lg">
+            <div className="card-body py-4">
+              <div className="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                  <h1
+                    className="fw-bold mb-2 d-flex align-items-center"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    <span className="me-3" style={{ fontSize: "2rem" }}>
+                      📄
+                    </span>
+                    LOTO Details - {loto.serialNumber}
+                  </h1>
+                  <p className="lead text-muted mb-0">
+                    View and manage lockout/tagout procedure details
+                  </p>
+                </div>
+                <div className="d-flex gap-2 flex-wrap">
+                  <Button
+                    variant="outline-secondary"
+                    onClick={fetchLOTO}
+                    className="hover-scale"
+                  >
+                    <span className="me-2">🔄</span> Refresh
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => navigate("/loto-list")}
+                    className="hover-scale"
+                  >
+                    <span className="me-2">⬅️</span> Back to List
+                  </Button>
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => navigate("/Home")}
+                    className="hover-scale"
+                  >
+                    <span className="me-2">🏠</span> Home
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Error Display */}
       {error && (
-        <div className="alert alert-danger">
-          <Icon name="warning" /> {error}
+        <div className="alert alert-danger d-flex align-items-center mb-4">
+          <span className="me-3" style={{ fontSize: "1.5rem" }}>
+            ⚠️
+          </span>
+          <div>
+            <strong>Error:</strong> {error}
+          </div>
         </div>
       )}
 
       <div className="row">
-        <div className="col-lg-8">
-          <div className="card mb-4">
-            <div className="card-header d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">
-                <Icon name="info" /> LOTO Information
-              </h5>
-              <div className="d-flex gap-2">{getStatusBadge(loto.status)}</div>
+        {/* Main Info Card — STYLED LIKE CREATELOTO */}
+        <div className="col-lg-8 mb-4">
+          <div className="card bg-glass border-0 shadow-lg">
+            <div className="card-header bg-light border-0">
+              <div className="d-flex justify-content-between align-items-center">
+                <h5 className="mb-0 fw-bold">📋 LOTO Information</h5>
+                <div>{getStatusBadge(loto.status)}</div>
+              </div>
             </div>
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6">
-                  <p className="mb-1">
-                    <strong>Serial Number:</strong> {loto.serialNumber}
+                  <p className="mb-2">
+                    <strong>Serial Number:</strong>{" "}
+                    <span className="fw-medium">{loto.serialNumber}</span>
                   </p>
-                  <p className="mb-1">
-                    <strong>Date:</strong>{" "}
-                    {new Date(loto.date).toLocaleDateString()}
+                  <p className="mb-2">
+                    <strong>Date Created:</strong>{" "}
+                    <span className="fw-medium">
+                      {new Date(loto.date).toLocaleString()}
+                    </span>
                   </p>
-                  <p className="mb-1">
-                    <strong>Shift:</strong> {loto.shift}
+                  <p className="mb-2">
+                    <strong>Shift:</strong>{" "}
+                    <span className="fw-medium">{loto.shift}</span>
                   </p>
-                  <p className="mb-1">
-                    <strong>Isolator:</strong> {loto.isolatorName}
+                  <p className="mb-2">
+                    <strong>Isolator:</strong>{" "}
+                    <span className="fw-medium">{loto.isolatorName}</span>
                   </p>
-                  <p className="mb-1">
-                    <strong>Line:</strong> {locations.line}
+                  <p className="mb-2">
+                    <strong>Location Path:</strong>{" "}
+                    <span className="fw-medium text-info">{locationPath}</span>
                   </p>
                 </div>
                 <div className="col-md-6">
-                  {/* Authorized Supervisor Handler */}
-                  <p className="mb-1">
-                    <strong>Authorized Supervisor Handler:</strong>
+                  <p className="mb-2">
+                    <strong>Authorized Supervisor:</strong>{" "}
                     {loto.supervisorName ? (
-                      <span className="cf-text-success cf-ml-2">
+                      <span className="fw-medium text-success">
                         {loto.supervisorName}
                       </span>
                     ) : (
-                      <span className="cf-text-muted cf-ml-2">
-                        None - Only isolator can handle
-                      </span>
+                      <span className="text-muted">None assigned</span>
                     )}
                   </p>
-                  <p className="mb-1">
-                    <strong>Isolated Part:</strong> {loto.isolatedPart}
+                  <p className="mb-2">
+                    <strong>Isolated Part:</strong>{" "}
+                    <span className="fw-medium">{loto.isolatedPart}</span>
                   </p>
-                  <p className="mb-1">
-                    <strong>Reason:</strong> {loto.reason}
+                  <p className="mb-2">
+                    <strong>Reason:</strong>{" "}
+                    <span className="fw-medium">{loto.reason}</span>
                   </p>
-                  <p className="mb-1">
-                    <strong>PTW Number:</strong> {loto.ptwNumber}
+                  <p className="mb-2">
+                    <strong>PTW Number:</strong>{" "}
+                    <span className="fw-medium">{loto.ptwNumber}</span>
                   </p>
-                  <p className="mb-1">
-                    <strong>Expected Duration:</strong> {loto.expectedDuration}{" "}
-                    hours
+                  <p className="mb-2">
+                    <strong>Expected Duration:</strong>{" "}
+                    <span className="fw-medium">
+                      {loto.expectedDuration} hours
+                    </span>
                   </p>
                 </div>
               </div>
 
-              {/* Verified By Information */}
+              {/* Verified By */}
               {loto.verifiedBy && (
-                <div className="mt-3 p-3 bg-light rounded">
-                  <p>
-                    <strong>Verified By:</strong> {loto.verifiedBy.firstName}{" "}
+                <div className="mt-4 p-3 bg-light border rounded">
+                  <h6 className="fw-bold mb-2">✅ Verified By</h6>
+                  <p className="mb-1">
+                    <strong>Name:</strong> {loto.verifiedBy.firstName}{" "}
                     {loto.verifiedBy.lastName}
                   </p>
-                  <p>
-                    <strong>Verified At:</strong>{" "}
+                  <p className="mb-0">
+                    <strong>At:</strong>{" "}
                     {new Date(loto.verifiedAt).toLocaleString()}
                   </p>
                 </div>
@@ -382,31 +408,30 @@ const LOTOdetail = () => {
 
               {/* Handover Notes */}
               {loto.handoverNotes && (
-                <div className="mt-3 p-3 bg-info bg-opacity-10 rounded">
-                  <p>
-                    <strong>Handover Notes:</strong> {loto.handoverNotes}
-                  </p>
+                <div className="mt-4 p-3 bg-info bg-opacity-10 border rounded">
+                  <h6 className="fw-bold mb-2">🤝 Handover Notes</h6>
+                  <p className="mb-0">{loto.handoverNotes}</p>
                 </div>
               )}
 
               {/* Completion Notes */}
               {loto.completionNotes && (
-                <div className="mt-3 p-3 bg-success bg-opacity-10 rounded">
-                  <p>
-                    <strong>Completion Notes:</strong> {loto.completionNotes}
-                  </p>
+                <div className="mt-4 p-3 bg-success bg-opacity-10 border rounded">
+                  <h6 className="fw-bold mb-2">🏁 Completion Notes</h6>
+                  <p className="mb-0">{loto.completionNotes}</p>
                 </div>
               )}
 
               {/* Actual Finish Time */}
               {loto.actualFinishTime && (
-                <div className="mt-3 p-3 bg-secondary bg-opacity-10 rounded">
-                  <p>
-                    <strong>Actual Finish Time:</strong>{" "}
+                <div className="mt-4 p-3 bg-secondary bg-opacity-10 border rounded">
+                  <h6 className="fw-bold mb-2">⏱️ Actual Finish</h6>
+                  <p className="mb-1">
+                    <strong>Time:</strong>{" "}
                     {new Date(loto.actualFinishTime).toLocaleTimeString()}
                   </p>
-                  <p>
-                    <strong>Actual Finish Date:</strong>{" "}
+                  <p className="mb-0">
+                    <strong>Date:</strong>{" "}
                     {new Date(loto.actualFinishDate).toLocaleDateString()}
                   </p>
                 </div>
@@ -415,51 +440,53 @@ const LOTOdetail = () => {
           </div>
         </div>
 
+        {/* Actions Card — FULLY STYLED + DELETE BUTTON */}
         <div className="col-lg-4">
-          <div className="card mb-4">
-            <div className="card-header">
-              <h5 className="mb-0">
-                <Icon name="actions" /> Actions
-              </h5>
+          <div className="card bg-glass border-0 shadow-lg mb-4">
+            <div className="card-header bg-light border-0">
+              <h5 className="mb-0 fw-bold">⚡ Actions</h5>
             </div>
             <div className="card-body">
-              {/* Handover Acceptance Section */}
+              {/* Handover Acceptance */}
               {loto.status === "pending_handover" && isHandoverRecipient && (
                 <div className="mb-4 p-3 bg-info bg-opacity-10 rounded">
-                  <h6 className="mb-3">
-                    <Icon name="handover" /> Handover Request
-                  </h6>
-                  <p className="mb-3">
-                    You have been requested to take over this LOTO. Accepting
-                    will reset the LOTO to pending status requiring
-                    re-verification.
+                  <h6 className="fw-bold mb-2">🤝 Handover Requested</h6>
+                  <p className="mb-3 small">
+                    You’ve been asked to take over this LOTO. Accepting resets
+                    it to pending.
                   </p>
                   <div className="d-flex gap-2">
-                    <Button variant="success" onClick={handleAcceptHandover}>
-                      <Icon name="check" /> Accept Handover
+                    <Button
+                      variant="success"
+                      onClick={handleAcceptHandover}
+                      className="hover-scale flex-grow-1"
+                    >
+                      ✅ Accept
                     </Button>
-                    <Button variant="danger" onClick={handleRejectHandover}>
-                      <Icon name="cancel" /> Reject Handover
+                    <Button
+                      variant="danger"
+                      onClick={handleRejectHandover}
+                      className="hover-scale flex-grow-1"
+                    >
+                      ❌ Reject
                     </Button>
                   </div>
                 </div>
               )}
 
-              {/* Verification Section */}
+              {/* Verification */}
               {loto.status === "pending" && canVerify && (
                 <div className="mb-4 p-3 bg-warning bg-opacity-10 rounded">
-                  <h6 className="mb-3">
-                    <Icon name="verify" /> Pending Verification
-                  </h6>
-                  <p className="mb-3">
-                    This LOTO requires verification before it can be activated.
+                  <h6 className="fw-bold mb-2">🔍 Needs Verification</h6>
+                  <p className="mb-3 small">
+                    Verify this LOTO to activate it for maintenance.
                   </p>
                   <Button
                     variant="success"
                     onClick={handleVerify}
-                    className="w-100"
+                    className="w-100 hover-scale"
                   >
-                    <Icon name="check" /> Verify LOTO
+                    ✅ Verify LOTO
                   </Button>
                 </div>
               )}
@@ -467,101 +494,108 @@ const LOTOdetail = () => {
               {/* Technician Actions */}
               {loto.status === "active" && isIsolator && isTechnician && (
                 <div className="mb-4">
-                  <h6 className="mb-3">
-                    <Icon name="tools" /> Technician Actions
-                  </h6>
+                  <h6 className="fw-bold mb-3">🛠️ Technician Actions</h6>
                   <div className="d-grid gap-2">
-                    <Button variant="info" onClick={handleHandover}>
-                      <Icon name="handover" /> Handover LOTO
+                    <Button
+                      variant="info"
+                      onClick={handleHandover}
+                      className="hover-scale"
+                    >
+                      🤝 Handover
                     </Button>
-                    <Button variant="success" onClick={handleComplete}>
-                      <Icon name="check" /> Complete LOTO
-                    </Button>
-                  </div>
-                </div>
-              )}
-              {((loto.status === "pending" && isIsolator && isTechnician) ||
-                (loto.status === "pending" && isIsolator && isSupervisor)) && (
-                <div className="mb-4">
-                  <h6 className="mb-3">
-                    <Icon name="tools" /> Technician Actions
-                  </h6>
-                  <div className="d-grid gap-2">
-                    <Button variant="primary" onClick={handleUpdate}>
-                      <Icon name="edit" /> Update LOTO
-                    </Button>
-                  </div>
-                </div>
-              )}
-              {/* Supervisor Actions */}
-              {loto.status === "active" && isIsolator && isSupervisor && (
-                <div className="mb-4">
-                  <h6 className="mb-3">
-                    <Icon name="tools" /> Supervisor Actions
-                  </h6>
-                  <div className="d-grid gap-2">
-                    <Button variant="primary" onClick={handleUpdate}>
-                      <Icon name="edit" /> Update LOTO
-                    </Button>
-                    <Button variant="info" onClick={handleHandover}>
-                      <Icon name="handover" /> Handover LOTO
-                    </Button>
-                    <Button variant="success" onClick={handleComplete}>
-                      <Icon name="check" /> Complete LOTO
-                    </Button>
-                  </div>
-                </div>
-              )}
-              {/* admin Actions */}
-              {currentUser.role === "admin" && (
-                <div className="mb-4">
-                  <h6 className="mb-3">
-                    <Icon name="tools" /> Admin Actions
-                  </h6>
-                  <div className="d-grid gap-2">
-                    <Button variant="primary" onClick={handleUpdate}>
-                      <Icon name="edit" /> Update LOTO
-                    </Button>
-                    <Button variant="info" onClick={handleHandover}>
-                      <Icon name="handover" /> Handover LOTO
-                    </Button>
-                    <Button variant="success" onClick={handleComplete}>
-                      <Icon name="check" /> Complete LOTO
+                    <Button
+                      variant="success"
+                      onClick={handleComplete}
+                      className="hover-scale"
+                    >
+                      🏁 Complete
                     </Button>
                   </div>
                 </div>
               )}
 
-              {/* Status Information */}
-              <div className="p-3 bg-light rounded">
-                <h6 className="mb-3">
-                  <Icon name="status" /> Current Status
-                </h6>
-                <p className="mb-2">
-                  <strong>Status:</strong> {getStatusBadge(loto.status)}
-                </p>
-                {loto.status === "pending" && (
-                  <p className="mb-0 text-muted">
-                    <Icon name="info" /> Awaiting verification by
-                    supervisor/admin
-                  </p>
+              {/* Update Button for Isolator (Pending) */}
+              {loto.status === "pending" && isIsolator && (
+                <div className="mb-4">
+                  <h6 className="fw-bold mb-3">✏️ Edit LOTO</h6>
+                  <Button
+                    variant="primary"
+                    onClick={handleUpdate}
+                    className="w-100 hover-scale"
+                  >
+                    ✏️ Update Details
+                  </Button>
+                </div>
+              )}
+
+              {/* Supervisor/Admin Full Actions */}
+              {loto.status === "active" &&
+                isIsolator &&
+                (isSupervisor || currentUser?.role === "admin") && (
+                  <div className="mb-4">
+                    <h6 className="fw-bold mb-3">
+                      {currentUser?.role === "admin"
+                        ? "👑 Admin"
+                        : "👷 Supervisor"}{" "}
+                      Actions
+                    </h6>
+                    <div className="d-grid gap-2">
+                      <Button
+                        variant="primary"
+                        onClick={handleUpdate}
+                        className="hover-scale"
+                      >
+                        ✏️ Update
+                      </Button>
+                      <Button
+                        variant="info"
+                        onClick={handleHandover}
+                        className="hover-scale"
+                      >
+                        🤝 Handover
+                      </Button>
+                      <Button
+                        variant="success"
+                        onClick={handleComplete}
+                        className="hover-scale"
+                      >
+                        🏁 Complete
+                      </Button>
+                    </div>
+                  </div>
                 )}
-                {loto.status === "pending_handover" && (
-                  <p className="mb-0 text-muted">
-                    <Icon name="info" /> Awaiting handover acceptance
-                  </p>
-                )}
-                {loto.status === "active" && (
-                  <p className="mb-0 text-muted">
-                    <Icon name="info" /> LOTO is currently active
-                  </p>
-                )}
-                {loto.status === "completed" && (
-                  <p className="mb-0 text-muted">
-                    <Icon name="info" /> LOTO has been completed
-                  </p>
-                )}
+
+              {/* Status Info */}
+              <div className="p-3 bg-light border rounded mt-4">
+                <h6 className="fw-bold mb-2">📌 Current Status</h6>
+                <div className="mb-2">{getStatusBadge(loto.status)}</div>
+                <small className="text-muted">
+                  {loto.status === "pending" &&
+                    "⏳ Awaiting supervisor verification"}
+                  {loto.status === "pending_handover" &&
+                    "🤝 Waiting for handover acceptance"}
+                  {loto.status === "active" && "✅ Maintenance in progress"}
+                  {loto.status === "completed" &&
+                    "🏁 Work completed and LOTO closed"}
+                </small>
               </div>
+
+              {/* 🗑️ DELETE BUTTON FOR ADMINS — STYLED LIKE CREATELOTO */}
+              {currentUser?.role === "admin" && (
+                <div className="mt-4 p-3 bg-danger bg-opacity-10 rounded">
+                  <h6 className="fw-bold text-danger mb-2">🧨 Danger Zone</h6>
+                  <p className="small text-muted mb-3">
+                    Deleting this LOTO cannot be undone. Use with caution.
+                  </p>
+                  <Button
+                    variant="danger"
+                    onClick={handleDelete}
+                    className="w-100 hover-scale"
+                  >
+                    🗑️ Delete LOTO Permanently
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

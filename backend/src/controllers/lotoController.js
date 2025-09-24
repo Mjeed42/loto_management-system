@@ -39,6 +39,8 @@ exports.createLOTO = async (req, res) => {
     const {
       shift,
       location,
+      line, // 👈 Save it
+      machine,
       isolatedPart,
       reason,
       ptwNumber,
@@ -47,8 +49,7 @@ exports.createLOTO = async (req, res) => {
     } = req.body;
 
     // Destructure line and machine from location if available
-    const line = location?.line || "N/A";
-    const machine = location?.machine || "N/A";
+
     const serialNumber = await generateSerialNumber();
 
     // Generate unique serial number
@@ -60,8 +61,8 @@ exports.createLOTO = async (req, res) => {
       isolatorName: `${req.user.firstName} ${req.user.lastName}`,
       location: location || "Other", // Default to 'Other' if not provided
       isolatedPart,
-      line,
-      machine,
+      line: req.body.line, // 👈 Save it
+      machine: req.body.machine, // 👈 Save it
       reason,
       ptwNumber: ptwNumber || "N/A",
       expectedDuration: parseFloat(expectedDuration),

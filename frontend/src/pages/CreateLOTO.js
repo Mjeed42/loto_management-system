@@ -25,6 +25,9 @@ const CreateLOTO = () => {
   const [customReason, setCustomReason] = useState("");
   const [showCustomLocation, setShowCustomLocation] = useState(false); // 👈 NEW
   const [customLocation, setCustomLocation] = useState(""); // 👈 NEW
+  const [showCustomMachine, setShowCustomMachine] = useState(false); // 👈 NEW
+  const [customMachine, setCustomMachine] = useState(""); // 👈 NEW
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -115,6 +118,10 @@ const CreateLOTO = () => {
       machine: selectedMachine,
       isolatedPart: selectedMachine,
     });
+    setShowCustomMachine(selectedMachine === "Other");
+    if (selectedMachine !== "Other") {
+      setCustomMachine("");
+    }
   };
 
   const handleReasonChange = (e) => {
@@ -133,6 +140,10 @@ const CreateLOTO = () => {
   // 👇 NEW: Handle Custom Location Input
   const handleCustomLocationChange = (e) => {
     setCustomLocation(e.target.value);
+  };
+  // 👇 NEW: Handle Custom Machine Input
+  const handleCustomMachineChange = (e) => {
+    setCustomMachine(e.target.value);
   };
 
   const onSubmit = async (e) => {
@@ -166,6 +177,11 @@ const CreateLOTO = () => {
         location === "Other" && customLocation
           ? customLocation
           : location || "Other";
+      // 👇 UPDATED: Use customMachine if machine is "Other"
+      const finalMachine =
+        machine === "Other" && customMachine ? customMachine : machine || "N/A";
+
+      // Prepare data to send
 
       const dataToSend = {
         shift,
@@ -669,6 +685,29 @@ const CreateLOTO = () => {
                             </div>
                           )}
                         </>
+                      )}
+                      {/* 👇 Custom Machine Input */}
+                      {showCustomMachine && (
+                        <div className="mb-3">
+                          <label className="form-label fw-medium">
+                            Specify Custom Machine
+                          </label>
+                          <input
+                            type="text"
+                            name="customMachine"
+                            value={customMachine}
+                            onChange={handleCustomMachineChange}
+                            placeholder="Enter custom machine"
+                            className="form-control"
+                            style={{
+                              borderRadius: "0.75rem",
+                              border: "2px solid #e2e8f0",
+                              background: "rgba(255, 255, 255, 0.9)",
+                              backdropFilter: "blur(10px)",
+                            }}
+                            required
+                          />
+                        </div>
                       )}
 
                       {/* Display Selected Location Path */}

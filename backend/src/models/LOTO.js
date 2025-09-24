@@ -30,6 +30,8 @@ const lotoSchema = new mongoose.Schema(
         "Other",
       ],
     },
+    line: String,
+    machine: String,
     isolator: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
