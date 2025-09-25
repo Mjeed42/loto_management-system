@@ -2,7 +2,16 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
-import Icon from "../components/Icon";
+
+// Helper: Format energy type for display (e.g., "electrical" → "Electrical")
+const formatEnergyType = (type) => {
+  if (!type) return "Unknown";
+  return type
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 
 const LOTOList = () => {
   const [lotos, setLotos] = useState([]);
@@ -49,7 +58,6 @@ const LOTOList = () => {
         config
       );
 
-      // Handle different possible response structures
       let lotosData = [];
       if (res.data && res.data.data) {
         lotosData = Array.isArray(res.data.data) ? res.data.data : [];
@@ -59,7 +67,6 @@ const LOTOList = () => {
         lotosData = [];
       }
 
-      // Validate each LOTO object
       const validatedLotos = lotosData
         .filter((loto) => loto && typeof loto === "object" && loto._id)
         .map((loto) => ({
@@ -74,7 +81,6 @@ const LOTOList = () => {
           status: loto.status || "pending",
           expectedDuration: loto.expectedDuration || 0,
           energyTypes: Array.isArray(loto.energyTypes) ? loto.energyTypes : [],
-          // Add other fields as necessary
         }));
 
       setLotos(validatedLotos);
@@ -86,6 +92,7 @@ const LOTOList = () => {
       setLoading(false);
     }
   };
+
   const handleDelete = async (lotoId, serialNumber) => {
     if (
       !window.confirm(
@@ -102,9 +109,6 @@ const LOTOList = () => {
         },
       };
 
-      console.log("Sending delete request for LOTO:", lotoId);
-
-      // Use the correct API URL
       const API_BASE_URL =
         process.env.REACT_APP_API_URL ||
         "https://loto-backend-643788243736.europe-west1.run.app/api";
@@ -114,23 +118,18 @@ const LOTOList = () => {
         config
       );
 
-      console.log("Delete LOTO response:", response);
-
       if (response.data.success) {
         alert("LOTO deleted successfully!");
-        fetchLOTOs(); // Refresh the list
+        fetchLOTOs();
       } else {
         alert(response.data.message || "Error deleting LOTO");
       }
     } catch (err) {
       console.error("Delete LOTO error:", err);
-      console.error("Error response:", err.response);
-
       const errorMessage =
         err.response?.data?.message ||
         err.response?.data?.error ||
         "Error deleting LOTO";
-
       alert(`Delete failed: ${errorMessage}`);
     }
   };
@@ -149,7 +148,6 @@ const LOTOList = () => {
         config
       );
 
-      // Update the specific LOTO in state
       setLotos(
         lotos.map((loto) =>
           loto._id === lotoId ? { ...loto, ...res.data.data } : loto
@@ -172,15 +170,15 @@ const LOTOList = () => {
     }
   };
 
-  const handleUpdate = async (lotoId) => {
+  const handleUpdate = (lotoId) => {
     navigate(`/loto/${lotoId}/update`);
   };
 
-  const handleHandover = async (lotoId) => {
+  const handleHandover = (lotoId) => {
     navigate(`/loto/${lotoId}/handover`);
   };
 
-  const handleComplete = async (lotoId) => {
+  const handleComplete = (lotoId) => {
     navigate(`/loto/${lotoId}/complete`);
   };
 
@@ -242,7 +240,6 @@ const LOTOList = () => {
     );
   };
 
-  // Filter LOTOs based on search and status
   const filteredLotos = lotos.filter((loto) => {
     if (!loto) return false;
 
@@ -429,6 +426,7 @@ const LOTOList = () => {
           </div>
         </div>
       )}
+
       {/* Search and Filter Section */}
       <div className="row mb-4">
         <div className="col-md-8">
@@ -510,7 +508,6 @@ const LOTOList = () => {
                 <th scope="col">Isolator</th>
                 <th scope="col">Energy Types</th>
                 <th scope="col">Status</th>
-
                 <th scope="col" className="text-center">
                   Actions
                 </th>
@@ -537,25 +534,30 @@ const LOTOList = () => {
                   </td>
                   <td>
                     {loto.energyTypes && loto.energyTypes.length > 0
-                      ? loto.energyTypes.map((et) => et.name).join(", ")
+                      ? loto.energyTypes
+                          .map((et) => formatEnergyType(et.type))
+                          .join(", ")
                       : "N/A"}
                   </td>
-
                   <td>{getStatusBadge(loto.status)}</td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center gap-2">
                       {canVerify && loto.status === "pending" && (
                         <Button
                           variant="success"
-                          onClick={handleVerify}
-                          className="w-100"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleVerify(loto._id);
+                          }}
+                          className="hover-scale"
                         >
-                          <Icon name="check" /> Verify LOTO
+                          ✅ Verify
                         </Button>
                       )}
                       {isTechnician && loto.status === "active" && (
                         <Button
-                          variant="warning"
+                          variant="info"
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -563,7 +565,7 @@ const LOTOList = () => {
                           }}
                           className="hover-scale"
                         >
-                          <span className="me-1">🔄</span> Handover
+                          🤝 Handover
                         </Button>
                       )}
                     </div>

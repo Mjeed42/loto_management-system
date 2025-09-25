@@ -94,7 +94,10 @@ const AdminHome = () => {
       setLoading(false);
     }
   };
-
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString();
+  };
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
@@ -377,7 +380,7 @@ const AdminHome = () => {
   const getRoleBadge = (role) => {
     const roleConfig = {
       admin: { text: "Admin", variant: "danger" },
-      manager: { text: "Manager", variant: "primary" },
+
       supervisor: { text: "Supervisor", variant: "primary" },
       technician: { text: "Technician", variant: "success" },
     };
@@ -434,12 +437,14 @@ const AdminHome = () => {
   }
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>
+    <div className="container py-4">
+      {" "}
+      {/* Use 'container' instead of 'container-fluid' for better mobile padding */}
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <h1 className="d-flex align-items-center gap-2">
           <Icon name="settings" /> Admin Page
         </h1>
-        <div className="d-flex gap-2">
+        <div className="d-flex flex-wrap gap-2 justify-content-center">
           <Button
             variant="primary"
             onClick={() => setShowCreateForm(!showCreateForm)}
@@ -455,13 +460,12 @@ const AdminHome = () => {
           </Button>
         </div>
       </div>
-
       {error && (
         <div className="alert alert-danger">
           <Icon name="warning" className="me-2" /> {error}
         </div>
       )}
-
+      {/* Create User Form */}
       {showCreateForm && (
         <div className="card mb-4">
           <div className="card-header">
@@ -529,7 +533,7 @@ const AdminHome = () => {
                     >
                       <option value="technician">Technician</option>
                       <option value="supervisor">Supervisor</option>
-                      <option value="manager">Manager</option>
+
                       <option value="admin">Admin</option>
                     </select>
                   </div>
@@ -594,129 +598,10 @@ const AdminHome = () => {
           </div>
         </div>
       )}
-
-      {showCreateLotoForm && (
-        <div className="card mb-4">
-          <div className="card-header">
-            <h5 className="mb-0">
-              <Icon name="add" /> Create New LOTO
-            </h5>
-          </div>
-          <div className="card-body">
-            <form onSubmit={handleCreateLoto}>
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Shift</label>
-                    <select
-                      name="shift"
-                      value={lotoFormData.shift}
-                      onChange={onLotoChange}
-                      className="form-control"
-                    >
-                      <option value="A">A</option>
-                      <option value="B">B</option>
-                      <option value="C">C</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">
-                      Expected Duration (hours)
-                    </label>
-                    <input
-                      type="number"
-                      name="expectedDuration"
-                      value={lotoFormData.expectedDuration}
-                      onChange={onLotoChange}
-                      placeholder="Enter duration in hours"
-                      step="0.5"
-                      min="0.5"
-                      className="form-control"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-group mb-3">
-                <label className="form-label">Location</label>
-                <select
-                  name="location"
-                  value={lotoFormData.location}
-                  onChange={onLotoChange}
-                  className="form-control"
-                >
-                  <option value="Processing">Processing</option>
-                  <option value="PKG">PKG</option>
-                  <option value="Process">Process</option>
-                  <option value="Utility">Utility</option>
-                  <option value="WH-FG">WH-FG</option>
-                  <option value="WH-RM">WH-RM</option>
-                  <option value="Project">Project</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div className="form-group mb-3">
-                <label className="form-label">Isolated Part</label>
-                <input
-                  type="text"
-                  name="isolatedPart"
-                  value={lotoFormData.isolatedPart}
-                  onChange={onLotoChange}
-                  placeholder="Enter part description"
-                  className="form-control"
-                  required
-                />
-              </div>
-
-              <div className="form-group mb-3">
-                <label className="form-label">Reason</label>
-                <input
-                  type="text"
-                  name="reason"
-                  value={lotoFormData.reason}
-                  onChange={onLotoChange}
-                  placeholder="Enter reason"
-                  className="form-control"
-                  required
-                />
-              </div>
-
-              <div className="form-group mb-4">
-                <label className="form-label">PTW Number</label>
-                <input
-                  type="text"
-                  name="ptwNumber"
-                  value={lotoFormData.ptwNumber}
-                  onChange={onLotoChange}
-                  placeholder="Enter PTW number or N/A"
-                  className="form-control"
-                />
-              </div>
-
-              <div className="d-flex gap-2">
-                <Button type="submit" variant="primary">
-                  <Icon name="save" /> Create LOTO
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowCreateLotoForm(false)}
-                >
-                  <Icon name="cancel" /> Cancel
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* User Management Section */}
+      {/* User Management */}
       <div className="card mb-4">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h5 className="mb-0">
+        <div className="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+          <h5 className="mb-0 d-flex align-items-center gap-2">
             <Icon name="users" /> User Management
           </h5>
           <Button variant="outline-primary" onClick={fetchHomeData}>
@@ -724,17 +609,19 @@ const AdminHome = () => {
           </Button>
         </div>
         <div className="card-body p-0">
-          <div className="table-responsive">
+          <div className="table-wrapper">
+            {" "}
+            {/* Use consistent wrapper class */}
             <table className="table table-hover mb-0">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Username</th>
-                  <th>Email</th>
+                  <th className="d-none d-md-table-cell">Email</th>
                   <th>Role</th>
                   <th>Status</th>
-                  <th>Employee ID</th>
-                  <th>Last Login</th>
+                  <th className="d-none d-lg-table-cell">Employee ID</th>
+                  <th className="d-none d-md-table-cell">Last Login</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -746,17 +633,17 @@ const AdminHome = () => {
                         {user.firstName} {user.lastName}
                       </td>
                       <td>{user.username}</td>
-                      <td>{user.email}</td>
+                      <td className="d-none d-md-table-cell">{user.email}</td>
                       <td>{getRoleBadge(user.role)}</td>
                       <td>{getStatusBadge(user.isActive)}</td>
-                      <td>{user.employeeId || "N/A"}</td>
-                      <td>
-                        {user.lastLogin
-                          ? new Date(user.lastLogin).toLocaleDateString()
-                          : "Never"}
+                      <td className="d-none d-lg-table-cell">
+                        {user.employeeId || "N/A"}
+                      </td>
+                      <td className="d-none d-md-table-cell">
+                        {formatDate(user.lastLogin)}
                       </td>
                       <td>
-                        <div className="btn-group" role="group">
+                        <div className="d-flex flex-wrap gap-1">
                           <Button
                             variant="outline-primary"
                             size="sm"
@@ -764,9 +651,8 @@ const AdminHome = () => {
                               handleResetPassword(user._id, user.username)
                             }
                             title="Reset Password"
-                            style={{ minWidth: "36px" }}
                           >
-                            <Icon name="key" /> Reset
+                            <Icon name="key" /> Reset Password
                           </Button>
                           <Button
                             variant={
@@ -785,7 +671,6 @@ const AdminHome = () => {
                             title={
                               user.isActive ? "Disable User" : "Enable User"
                             }
-                            style={{ minWidth: "36px" }}
                           >
                             {user.isActive ? "🚫" : "✅"}
                           </Button>
@@ -797,9 +682,8 @@ const AdminHome = () => {
                                 handleDeleteUser(user._id, user.username)
                               }
                               title="Delete User"
-                              style={{ minWidth: "36px" }}
                             >
-                              <Icon name="delete" /> Delete
+                              <Icon name="delete" />
                             </Button>
                           )}
                         </div>
@@ -818,11 +702,10 @@ const AdminHome = () => {
           </div>
         </div>
       </div>
-
-      {/* LOTO Management Section */}
+      {/* LOTO Management */}
       <div className="card">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h5 className="mb-0">
+        <div className="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+          <h5 className="mb-0 d-flex align-items-center gap-2">
             <Icon name="list" /> LOTO Management
           </h5>
           <Button variant="outline-primary" onClick={fetchHomeData}>
@@ -830,16 +713,16 @@ const AdminHome = () => {
           </Button>
         </div>
         <div className="card-body p-0">
-          <div className="table-responsive">
+          <div className="table-wrapper">
             <table className="table table-hover mb-0">
               <thead>
                 <tr>
                   <th>SN</th>
                   <th>Date</th>
                   <th>Shift</th>
-                  <th>Isolator</th>
+                  <th className="d-none d-md-table-cell">Isolator</th>
                   <th>Part</th>
-                  <th>Reason</th>
+                  <th className="d-none d-lg-table-cell">Reason</th>
                   <th>Status</th>
                   <th>Duration</th>
                   <th>Actions</th>
@@ -852,17 +735,17 @@ const AdminHome = () => {
                       <td>
                         <strong>{loto.serialNumber}</strong>
                       </td>
-                      <td>{new Date(loto.date).toLocaleDateString()}</td>
+                      <td>{formatDate(loto.date)}</td>
                       <td>{loto.shift}</td>
-                      <td>
+                      <td className="d-none d-md-table-cell">
                         {loto.isolator?.firstName} {loto.isolator?.lastName}
                       </td>
                       <td>{loto.isolatedPart}</td>
-                      <td>{loto.reason}</td>
+                      <td className="d-none d-lg-table-cell">{loto.reason}</td>
                       <td>{getLotoStatusBadge(loto.status)}</td>
                       <td>{loto.expectedDuration} hrs</td>
                       <td>
-                        <div className="btn-group" role="group">
+                        <div className="d-flex flex-wrap gap-1">
                           {loto.status === "pending" && (
                             <Button
                               variant="success"
@@ -871,26 +754,25 @@ const AdminHome = () => {
                                 handleVerifyLoto(loto._id, loto.serialNumber)
                               }
                               title="Verify LOTO"
-                              style={{ minWidth: "36px" }}
                             >
-                              <Icon name="check" /> Verify
+                              <Icon name="check" />
                             </Button>
                           )}
-
                           {(loto.status === "active" ||
                             loto.status === "handover") && (
                             <>
-                              <Button
+                              {/* Note: handleUpdateLoto is not defined in your code.
+                                   If you don't have it, remove this button or implement it. */}
+                              {/* <Button
                                 variant="primary"
                                 size="sm"
                                 onClick={() =>
                                   handleUpdateLoto(loto._id, loto.serialNumber)
                                 }
                                 title="Update LOTO"
-                                style={{ minWidth: "36px" }}
                               >
-                                <Icon name="edit" /> Update
-                              </Button>
+                                <Icon name="edit" />
+                              </Button> */}
                               <Button
                                 variant="info"
                                 size="sm"
@@ -901,9 +783,8 @@ const AdminHome = () => {
                                   )
                                 }
                                 title="Handover LOTO"
-                                style={{ minWidth: "36px" }}
                               >
-                                <Icon name="handover" /> Handover
+                                <Icon name="handover" />
                               </Button>
                               <Button
                                 variant="success"
@@ -915,13 +796,11 @@ const AdminHome = () => {
                                   )
                                 }
                                 title="Complete LOTO"
-                                style={{ minWidth: "36px" }}
                               >
-                                <Icon name="check" /> Complete
+                                <Icon name="check" />
                               </Button>
                             </>
                           )}
-
                           <Button
                             variant="danger"
                             size="sm"
@@ -929,9 +808,8 @@ const AdminHome = () => {
                               handleDeleteLoto(loto._id, loto.serialNumber)
                             }
                             title="Delete LOTO"
-                            style={{ minWidth: "36px" }}
                           >
-                            <Icon name="delete" /> Delete
+                            <Icon name="delete" />
                           </Button>
                         </div>
                       </td>

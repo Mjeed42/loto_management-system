@@ -314,10 +314,6 @@ const CreateLOTO = () => {
                     </span>
                     Create New LOTO
                   </h1>
-                  <p className="lead text-muted mb-0">
-                    Start a new lockout/tagout procedure for equipment
-                    maintenance
-                  </p>
                 </div>
                 <div className="d-flex gap-2 flex-wrap">
                   <Button
@@ -385,7 +381,7 @@ const CreateLOTO = () => {
 
                   <div className="col-md-6 mb-4">
                     <div className="form-group">
-                      <label className="form-label fw-medium">
+                      <label className="mb-2 form-label fw-medium">
                         Expected Duration (hours)
                       </label>
                       <input
@@ -417,9 +413,6 @@ const CreateLOTO = () => {
 
                       {/* Step 1: Main Location */}
                       <div className="mb-3">
-                        <label className="form-label fw-medium">
-                          Select Main Location
-                        </label>
                         <select
                           name="location"
                           value={location}
@@ -671,7 +664,7 @@ const CreateLOTO = () => {
                                     <option value="Other">Other</option>
                                   </>
                                 )}
-                                {location === "Process" && line === "PC" && (
+                                {location === "Process" && (
                                   <>
                                     <option value="Oven">Oven</option>
                                     <option value="Fryer">Fryer</option>
@@ -689,46 +682,14 @@ const CreateLOTO = () => {
                                       Dump Station
                                     </option>
                                     <option value="Other">Other</option>
-                                  </>
-                                )}
-                                {location === "Process" && line === "TC" && (
-                                  <>
-                                    <option value="Oven">Oven</option>
-                                    <option value="Starch Recovery">
-                                      Starch Recovery
-                                    </option>
-                                    <option value="Dump Station">
-                                      Dump Station
-                                    </option>
-                                    <option value="Other">Other</option>
-                                  </>
-                                )}
-                                {location === "Process" && line === "FCP" && (
-                                  <>
-                                    <option value="Optical Sorter">
-                                      Optical Sorter
-                                    </option>
                                     <option value="Mill Mixer">
                                       Mill Mixer
                                     </option>
-                                    <option value="Other">Other</option>
-                                  </>
-                                )}
-                                {location === "Process" && line === "RBS" && (
-                                  <>
                                     <option value="Extruder">Extruder</option>
                                     <option value="Sheeter">Sheeter</option>
-                                    <option value="Other">Other</option>
                                   </>
                                 )}
-                                {location === "Process" && line === "CKF" && (
-                                  <>
-                                    <option value="Sessioning Loop">
-                                      Sessioning Loop
-                                    </option>
-                                    <option value="Other">Other</option>
-                                  </>
-                                )}
+
                                 {(location === "Utility" ||
                                   location === "WH-FG" ||
                                   location === "WH-RM" ||

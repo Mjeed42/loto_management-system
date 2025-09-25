@@ -57,7 +57,7 @@ const Header = ({ currentUser }) => {
             onClick={() => navigate("/")}
           >
             <Icon name="lock" className="me-2" />
-            <span className="fw-bold">LOTO</span>
+            <h1>LOTO</h1>
           </div>
         </div>
       </header>
@@ -72,7 +72,7 @@ const Header = ({ currentUser }) => {
           onClick={() => navigate("/Home")}
         >
           <Icon name="lock" className="me-2" />
-          <span className="fw-bold">LOTO</span>
+          <h1>LOTO</h1>
         </div>
 
         <div className="d-flex align-items-center gap-3">

@@ -278,9 +278,6 @@ const LOTOdetail = () => {
                     </span>
                     LOTO Details - {loto.serialNumber}
                   </h1>
-                  <p className="lead text-muted mb-0">
-                    View and manage lockout/tagout procedure details
-                  </p>
                 </div>
                 <div className="d-flex gap-2 flex-wrap">
                   <Button
@@ -502,10 +499,6 @@ const LOTOdetail = () => {
               {/* Verification */}
               {loto.status === "pending" && canVerify && (
                 <div className="mb-4 p-3 bg-warning bg-opacity-10 rounded">
-                  <h6 className="fw-bold mb-2">🔍 Needs Verification</h6>
-                  <p className="mb-3 small">
-                    Verify this LOTO to activate it for maintenance.
-                  </p>
                   <Button
                     variant="success"
                     onClick={handleVerify}
@@ -541,8 +534,7 @@ const LOTOdetail = () => {
 
               {/* Update Button for Isolator (Pending) */}
               {loto.status === "pending" && isIsolator && (
-                <div className="mb-4">
-                  <h6 className="fw-bold mb-3">✏️ Edit LOTO</h6>
+                <div className="mb-4 p-3 bg-warning bg-opacity-10 rounded">
                   <Button
                     variant="primary"
                     onClick={handleUpdate}
@@ -608,10 +600,6 @@ const LOTOdetail = () => {
               {/* 🗑️ DELETE BUTTON FOR ADMINS — STYLED LIKE CREATELOTO */}
               {currentUser?.role === "admin" && (
                 <div className="mt-4 p-3 bg-danger bg-opacity-10 rounded">
-                  <h6 className="fw-bold text-danger mb-2">🧨 Danger Zone</h6>
-                  <p className="small text-muted mb-3">
-                    Deleting this LOTO cannot be undone. Use with caution.
-                  </p>
                   <Button
                     variant="danger"
                     onClick={handleDelete}

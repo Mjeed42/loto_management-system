@@ -51,15 +51,14 @@ const NotificationBadge = ({ onNotificationClick }) => {
           color: "white",
           borderRadius: "50%",
           padding: "2px 6px",
-          fontSize: "12px",
+          fontSize: "8px",
           position: "absolute",
-          top: "-8px",
-          right: "-8px",
+          top: "-14px",
+          right: "-3px",
         }}
       >
         {notificationCount}
       </span>
-      🔔
     </div>
   );
 };
