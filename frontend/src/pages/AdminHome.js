@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
@@ -19,6 +19,7 @@ const AdminHome = () => {
     lastName: "",
     employeeId: "",
     role: "technician",
+    lastLogin: null,
   });
   const [lotoFormData, setLotoFormData] = useState({
     shift: "A",
@@ -29,11 +30,27 @@ const AdminHome = () => {
     expectedDuration: "",
     supervisor: "",
   });
+  const [userSearchTerm, setUserSearchTerm] = useState(""); // New search state
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchHomeData();
   }, []);
+
+  // Memoized filtered users for performance
+  const filteredUsers = useMemo(() => {
+    if (!userSearchTerm) return users;
+
+    const term = userSearchTerm.toLowerCase();
+    return users.filter(
+      (user) =>
+        user.firstName?.toLowerCase().includes(term) ||
+        user.lastName?.toLowerCase().includes(term) ||
+        user.username?.toLowerCase().includes(term) ||
+        user.email?.toLowerCase().includes(term) ||
+        (user.employeeId && user.employeeId.toLowerCase().includes(term))
+    );
+  }, [users, userSearchTerm]);
 
   const fetchHomeData = async () => {
     try {
@@ -94,10 +111,12 @@ const AdminHome = () => {
       setLoading(false);
     }
   };
+
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
   };
+
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
@@ -125,6 +144,7 @@ const AdminHome = () => {
         lastName: "",
         employeeId: "",
         role: "technician",
+        lastLogin: null,
       });
       fetchHomeData();
     } catch (err) {
@@ -373,6 +393,14 @@ const AdminHome = () => {
     setLotoFormData({ ...lotoFormData, [e.target.name]: e.target.value });
   };
 
+  const onUserSearchChange = (e) => {
+    setUserSearchTerm(e.target.value);
+  };
+
+  const clearSearch = () => {
+    setUserSearchTerm("");
+  };
+
   // Ensure users and lotos are always arrays before mapping
   const safeUsers = Array.isArray(users) ? users : [];
   const safeLotos = Array.isArray(lotos) ? lotos : [];
@@ -380,7 +408,6 @@ const AdminHome = () => {
   const getRoleBadge = (role) => {
     const roleConfig = {
       admin: { text: "Admin", variant: "danger" },
-
       supervisor: { text: "Supervisor", variant: "primary" },
       technician: { text: "Technician", variant: "success" },
     };
@@ -438,8 +465,6 @@ const AdminHome = () => {
 
   return (
     <div className="container py-4">
-      {" "}
-      {/* Use 'container' instead of 'container-fluid' for better mobile padding */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <h1 className="d-flex align-items-center gap-2">
           <Icon name="settings" /> Admin Page
@@ -533,7 +558,6 @@ const AdminHome = () => {
                     >
                       <option value="technician">Technician</option>
                       <option value="supervisor">Supervisor</option>
-
                       <option value="admin">Admin</option>
                     </select>
                   </div>
@@ -604,14 +628,33 @@ const AdminHome = () => {
           <h5 className="mb-0 d-flex align-items-center gap-2">
             <Icon name="users" /> User Management
           </h5>
-          <Button variant="outline-primary" onClick={fetchHomeData}>
-            <Icon name="refresh" /> Refresh Users
-          </Button>
+          <div className="toolbar d-flex flex-wrap gap-2 justify-content-center">
+            <div className="input-group" style={{ maxWidth: "300px" }}>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search users..."
+                value={userSearchTerm}
+                onChange={onUserSearchChange}
+              />
+              {userSearchTerm && (
+                <button
+                  className="btn btn-outline-secondary"
+                  type="button"
+                  onClick={clearSearch}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <Button variant="outline-primary" onClick={fetchHomeData}>
+              <Icon name="refresh" /> Refresh Users
+            </Button>
+          </div>
         </div>
+
         <div className="card-body p-0">
           <div className="table-wrapper">
-            {" "}
-            {/* Use consistent wrapper class */}
             <table className="table table-hover mb-0">
               <thead>
                 <tr>
@@ -620,14 +663,14 @@ const AdminHome = () => {
                   <th className="d-none d-md-table-cell">Email</th>
                   <th>Role</th>
                   <th>Status</th>
-                  <th className="d-none d-lg-table-cell">Employee ID</th>
-                  <th className="d-none d-md-table-cell">Last Login</th>
+                  <th>Employee ID</th>
+                  <th>Last Login</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {safeUsers.length > 0 ? (
-                  safeUsers.map((user) => (
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((user) => (
                     <tr key={user._id}>
                       <td>
                         {user.firstName} {user.lastName}
@@ -636,12 +679,8 @@ const AdminHome = () => {
                       <td className="d-none d-md-table-cell">{user.email}</td>
                       <td>{getRoleBadge(user.role)}</td>
                       <td>{getStatusBadge(user.isActive)}</td>
-                      <td className="d-none d-lg-table-cell">
-                        {user.employeeId || "N/A"}
-                      </td>
-                      <td className="d-none d-md-table-cell">
-                        {formatDate(user.lastLogin)}
-                      </td>
+                      <td>{user.employeeId || "N/A"}</td>
+                      <td>{formatDate(user.lastLogin)}</td>
                       <td>
                         <div className="d-flex flex-wrap gap-1">
                           <Button
@@ -693,7 +732,15 @@ const AdminHome = () => {
                 ) : (
                   <tr>
                     <td colSpan="8" className="text-center py-4">
-                      <Icon name="info" /> No users found
+                      {userSearchTerm ? (
+                        <>
+                          <Icon name="search" /> No users match your search
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="info" /> No users found
+                        </>
+                      )}
                     </td>
                   </tr>
                 )}
@@ -761,18 +808,6 @@ const AdminHome = () => {
                           {(loto.status === "active" ||
                             loto.status === "handover") && (
                             <>
-                              {/* Note: handleUpdateLoto is not defined in your code.
-                                   If you don't have it, remove this button or implement it. */}
-                              {/* <Button
-                                variant="primary"
-                                size="sm"
-                                onClick={() =>
-                                  handleUpdateLoto(loto._id, loto.serialNumber)
-                                }
-                                title="Update LOTO"
-                              >
-                                <Icon name="edit" />
-                              </Button> */}
                               <Button
                                 variant="info"
                                 size="sm"

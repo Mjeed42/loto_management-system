@@ -643,25 +643,25 @@ const GlobalStyles = () => (
     .dropdown {
       position: relative;
     }
-    .dropdown-menu {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      z-index: 1000;
-      display: none;
-      min-width: 12rem;
-      padding: var(--space-2);
-      margin: var(--space-2) 0 0;
-      font-size: 1rem;
-      color: #000;
-      text-align: left;
-      list-style: none;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-xl);
-    }
+  .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  font-size: 1rem;
+  color: #000;
+  text-align: left;
+  list-style: none;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+}
     .dropdown-menu.show {
       display: block;
       animation: dropdownFadeIn 0.2s ease-out;
@@ -1431,25 +1431,25 @@ const GlobalStyles = () => (
       color: rgba(0, 0, 0, 0.9);
     }
     /* Dropdown Menu */
-    .dropdown-menu {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      z-index: 1000;
-      display: none;
-      min-width: 10rem;
-      padding: 0.5rem 0;
-      margin: 0.125rem 0 0;
-      font-size: 1rem;
-      color: #000;
-      text-align: left;
-      list-style: none;
-      background: rgba(197, 197, 197, 0.95);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-xl);
-    }
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  font-size: 1rem;
+  color: #000;
+  text-align: left;
+  list-style: none;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+}
     .dropdown-menu.show {
       display: block;
     }
