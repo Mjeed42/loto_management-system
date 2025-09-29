@@ -256,360 +256,416 @@ const LOTOdetail = () => {
   const isSupervisor = currentUser && currentUser.role === "supervisor";
 
   return (
-    <div className="animate-fade-in">
-      {/* Header Section — IDENTICAL TO CREATELOTO */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card bg-glass border-0 shadow-lg">
-            <div className="card-body py-4">
-              <div className="d-flex justify-content-between align-items-center flex-wrap">
-                <div>
-                  <h1
-                    className="fw-bold mb-2 d-flex align-items-center"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    <span className="me-3" style={{ fontSize: "2rem" }}>
-                      📄
-                    </span>
-                    LOTO Details - {loto.serialNumber}
-                  </h1>
-                </div>
-                <div className="d-flex gap-2 flex-wrap">
-                  <Button
-                    variant="outline-secondary"
-                    onClick={fetchLOTO}
-                    className="hover-scale"
-                  >
-                    <span className="me-2">🔄</span> Refresh
-                  </Button>
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() => navigate("/loto-list")}
-                    className="hover-scale"
-                  >
-                    <span className="me-2">⬅️</span> Back to List
-                  </Button>
-                  <Button
-                    variant="outline-primary"
-                    onClick={() => navigate("/Home")}
-                    className="hover-scale"
-                  >
-                    <span className="me-2">🏠</span> Home
-                  </Button>
-                </div>
-              </div>
+    <div className="loto-details-container animate-fade-in">
+      {/* Modern Header Section */}
+      <div className="loto-details-header">
+        <div className="header-content">
+          <div className="header-brand">
+            <div className="brand-icon">
+              <svg className="header-svg" viewBox="0 0 24 24" fill="none">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
+            <div className="brand-text">
+              <h1>LOTO Details</h1>
+              <p>Serial Number: {loto.serialNumber}</p>
+            </div>
+          </div>
+          <div className="header-actions">
+            <button
+              className="action-btn secondary"
+              onClick={fetchLOTO}
+            >
+              <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Refresh</span>
+            </button>
+            <button
+              className="action-btn secondary"
+              onClick={() => navigate("/loto-list")}
+            >
+              <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Back to List</span>
+            </button>
+            <button
+              className="action-btn primary"
+              onClick={() => navigate("/Home")}
+            >
+              <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Home</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Error Display */}
+      {/* Modern Error Display */}
       {error && (
-        <div className="alert alert-danger d-flex align-items-center mb-4">
-          <span className="me-3" style={{ fontSize: "1.5rem" }}>
-            ⚠️
-          </span>
-          <div>
-            <strong>Error:</strong> {error}
+        <div className="modern-error-alert">
+          <div className="error-icon">
+            <svg className="error-svg" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+              <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <div className="error-content">
+            <h4>Error</h4>
+            <p>{error}</p>
           </div>
         </div>
       )}
 
-      <div className="row">
-        {/* Main Info Card — STYLED LIKE CREATELOTO */}
-        <div className="col-lg-8 mb-4">
-          <div className="card bg-glass border-0 shadow-lg">
-            <div className="card-header bg-light border-0">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0 fw-bold">📋 LOTO Information</h5>
-                <div>{getStatusBadge(loto.status)}</div>
+      {/* Modern Content Layout */}
+      <div className="loto-details-content">
+        {/* Main Information Section */}
+        <div className="main-info-section">
+          <div className="info-header">
+            <div className="info-icon">
+              <svg className="info-svg" viewBox="0 0 24 24" fill="none">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div className="info-title">
+              <h3>LOTO Information</h3>
+              <p>Complete details and status</p>
+            </div>
+            <div className="status-badge-container">
+              {getStatusBadge(loto.status)}
+            </div>
+          </div>
+
+          <div className="info-grid">
+            {/* Basic Information */}
+            <div className="info-group">
+              <h4 className="group-title">Basic Information</h4>
+              <div className="info-items">
+                <div className="info-item">
+                  <span className="info-label">Serial Number</span>
+                  <span className="info-value">{loto.serialNumber}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Date Created</span>
+                  <span className="info-value">{new Date(loto.date).toLocaleString()}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Shift</span>
+                  <span className="info-value">{loto.shift}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Isolator</span>
+                  <span className="info-value">{loto.isolatorName}</span>
+                </div>
               </div>
             </div>
-            <div className="card-body">
-              <div className="row">
-                <div className="col-md-6">
-                  <p className="mb-2">
-                    <strong>Serial Number:</strong>{" "}
-                    <span className="fw-medium">{loto.serialNumber}</span>
-                  </p>
-                  <p className="mb-2">
-                    <strong>Date Created:</strong>{" "}
-                    <span className="fw-medium">
-                      {new Date(loto.date).toLocaleString()}
-                    </span>
-                  </p>
-                  <p className="mb-2">
-                    <strong>Shift:</strong>{" "}
-                    <span className="fw-medium">{loto.shift}</span>
-                  </p>
-                  <p className="mb-2">
-                    <strong>Isolator:</strong>{" "}
-                    <span className="fw-medium">{loto.isolatorName}</span>
-                  </p>
-                  <p className="mb-2">
-                    <strong>Location Path:</strong>{" "}
-                    <span className="fw-medium text-info">{locationPath}</span>
-                  </p>
+
+            {/* Location Information */}
+            <div className="info-group">
+              <h4 className="group-title">Location Details</h4>
+              <div className="info-items">
+                <div className="info-item">
+                  <span className="info-label">Location Path</span>
+                  <span className="info-value location-path">{locationPath}</span>
                 </div>
-                <div className="col-md-6">
-                  <p className="mb-2">
-                    <strong>Authorized Supervisor:</strong>{" "}
-                    {loto.supervisorName ? (
-                      <span className="fw-medium text-success">
-                        {loto.supervisorName}
-                      </span>
-                    ) : (
-                      <span className="text-muted">None assigned</span>
-                    )}
-                  </p>
-                  <p className="mb-2">
-                    <strong>Isolated Part:</strong>{" "}
-                    <span className="fw-medium">{loto.isolatedPart}</span>
-                  </p>
-                  <p className="mb-2">
-                    <strong>Reason:</strong>{" "}
-                    <span className="fw-medium">{loto.reason}</span>
-                  </p>
-                  <p className="mb-2">
-                    <strong>PTW Number:</strong>{" "}
-                    <span className="fw-medium">{loto.ptwNumber}</span>
-                  </p>
-                  <p className="mb-2">
-                    <strong>Expected Duration:</strong>{" "}
-                    <span className="fw-medium">
-                      {loto.expectedDuration} hours
-                    </span>
-                  </p>
-                  <div className="cf-mt-3">
-                    <p>
-                      <strong>Energy Types to Isolate:</strong>
-                    </p>
-                    {loto.energyTypes && loto.energyTypes.length > 0 ? (
-                      <div className="cf-flex cf-flex-wrap cf-gap-2">
-                        {loto.energyTypes.map((energy, index) => (
-                          <div key={index} className="cf-card cf-card-sm">
-                            <div className="cf-card-body cf-p-2">
-                              <div className="cf-flex cf-items-center">
-                                <span className="cf-badge cf-badge-info cf-badge-pill cf-mr-2">
-                                  {energy.type}
-                                </span>
-                                <span className="cf-text-muted cf-text-sm">
-                                  {energy.isolationPoint}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="cf-text-muted">None specified</span>
-                    )}
+                <div className="info-item">
+                  <span className="info-label">Isolated Part</span>
+                  <span className="info-value">{loto.isolatedPart}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Reason</span>
+                  <span className="info-value">{loto.reason}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">PTW Number</span>
+                  <span className="info-value">{loto.ptwNumber}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Duration & Supervisor */}
+            <div className="info-group">
+              <h4 className="group-title">Assignment & Duration</h4>
+              <div className="info-items">
+                <div className="info-item">
+                  <span className="info-label">Expected Duration</span>
+                  <span className="info-value">{loto.expectedDuration} hours</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Authorized Supervisor</span>
+                  <span className={`info-value ${loto.supervisorName ? 'supervisor-assigned' : 'no-supervisor'}`}>
+                    {loto.supervisorName || 'None assigned'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Energy Types Section */}
+          <div className="energy-types-section">
+            <h4 className="section-title">Energy Types to Isolate</h4>
+            {loto.energyTypes && loto.energyTypes.length > 0 ? (
+              <div className="energy-types-grid">
+                {loto.energyTypes.map((energy, index) => (
+                  <div key={index} className="energy-type-card">
+                    <div className="energy-type-header">
+                      <span className="energy-type-name">{energy.type}</span>
+                    </div>
+                    <div className="energy-type-content">
+                      <span className="isolation-point">{energy.isolationPoint}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-energy-types">
+                <span>No energy types specified</span>
+              </div>
+            )}
+          </div>
+
+          {/* Additional Information Sections */}
+          <div className="additional-info-sections">
+            {/* Verified By */}
+            {loto.verifiedBy && (
+              <div className="info-section verified-section">
+                <div className="section-icon">
+                  <svg className="section-svg" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="section-content">
+                  <h5>Verified By</h5>
+                  <div className="verification-details">
+                    <span className="verifier-name">{loto.verifiedBy.firstName} {loto.verifiedBy.lastName}</span>
+                    <span className="verification-time">{new Date(loto.verifiedAt).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* Verified By */}
-              {loto.verifiedBy && (
-                <div className="mt-4 p-3 bg-light border rounded">
-                  <h6 className="fw-bold mb-2">✅ Verified By</h6>
-                  <p className="mb-1">
-                    <strong>Name:</strong> {loto.verifiedBy.firstName}{" "}
-                    {loto.verifiedBy.lastName}
-                  </p>
-                  <p className="mb-0">
-                    <strong>At:</strong>{" "}
-                    {new Date(loto.verifiedAt).toLocaleString()}
-                  </p>
+            {/* Handover Notes */}
+            {loto.handoverNotes && (
+              <div className="info-section handover-section">
+                <div className="section-icon">
+                  <svg className="section-svg" viewBox="0 0 24 24" fill="none">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
-              )}
+                <div className="section-content">
+                  <h5>Handover Notes</h5>
+                  <p className="notes-text">{loto.handoverNotes}</p>
+                </div>
+              </div>
+            )}
 
-              {/* Handover Notes */}
-              {loto.handoverNotes && (
-                <div className="mt-4 p-3 bg-info bg-opacity-10 border rounded">
-                  <h6 className="fw-bold mb-2">🤝 Handover Notes</h6>
-                  <p className="mb-0">{loto.handoverNotes}</p>
+            {/* Completion Notes */}
+            {loto.completionNotes && (
+              <div className="info-section completion-section">
+                <div className="section-icon">
+                  <svg className="section-svg" viewBox="0 0 24 24" fill="none">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
-              )}
+                <div className="section-content">
+                  <h5>Completion Notes</h5>
+                  <p className="notes-text">{loto.completionNotes}</p>
+                </div>
+              </div>
+            )}
 
-              {/* Completion Notes */}
-              {loto.completionNotes && (
-                <div className="mt-4 p-3 bg-success bg-opacity-10 border rounded">
-                  <h6 className="fw-bold mb-2">🏁 Completion Notes</h6>
-                  <p className="mb-0">{loto.completionNotes}</p>
+            {/* Actual Finish Time */}
+            {loto.actualFinishTime && (
+              <div className="info-section finish-section">
+                <div className="section-icon">
+                  <svg className="section-svg" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                    <polyline points="12,6 12,12 16,14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
-              )}
-
-              {/* Actual Finish Time */}
-              {loto.actualFinishTime && (
-                <div className="mt-4 p-3 bg-secondary bg-opacity-10 border rounded">
-                  <h6 className="fw-bold mb-2">⏱️ Actual Finish</h6>
-                  <p className="mb-1">
-                    <strong>Time:</strong>{" "}
-                    {new Date(loto.actualFinishTime).toLocaleTimeString()}
-                  </p>
-                  <p className="mb-0">
-                    <strong>Date:</strong>{" "}
-                    {new Date(loto.actualFinishDate).toLocaleDateString()}
-                  </p>
+                <div className="section-content">
+                  <h5>Actual Finish Time</h5>
+                  <div className="finish-details">
+                    <span className="finish-time">{new Date(loto.actualFinishTime).toLocaleTimeString()}</span>
+                    <span className="finish-date">{new Date(loto.actualFinishDate).toLocaleDateString()}</span>
+                  </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Actions Card — FULLY STYLED + DELETE BUTTON */}
-        <div className="col-lg-4">
-          <div className="card bg-glass border-0 shadow-lg mb-4">
-            <div className="card-header bg-light border-0">
-              <h5 className="mb-0 fw-bold">⚡ Actions</h5>
+        {/* Modern Actions Section */}
+        <div className="actions-section">
+          <div className="actions-header">
+            <div className="actions-icon">
+              <svg className="actions-svg" viewBox="0 0 24 24" fill="none">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
-            <div className="card-body">
-              {/* Handover Acceptance */}
-              {loto.status === "pending_handover" && isHandoverRecipient && (
-                <div className="mb-4 p-3 bg-info bg-opacity-10 rounded">
-                  <h6 className="fw-bold mb-2">🤝 Handover Requested</h6>
-                  <p className="mb-3 small">
-                    You’ve been asked to take over this LOTO. Accepting resets
-                    it to pending.
-                  </p>
-                  <div className="d-flex gap-2">
-                    <Button
-                      variant="success"
-                      onClick={handleAcceptHandover}
-                      className="hover-scale flex-grow-1"
-                    >
-                      ✅ Accept
-                    </Button>
-                    <Button
-                      variant="danger"
-                      onClick={handleRejectHandover}
-                      className="hover-scale flex-grow-1"
-                    >
-                      ❌ Reject
-                    </Button>
-                  </div>
+            <div className="actions-title">
+              <h3>Actions</h3>
+              <p>Available operations</p>
+            </div>
+          </div>
+
+          <div className="actions-content">
+            {/* Handover Acceptance */}
+            {loto.status === "pending_handover" && isHandoverRecipient && (
+              <div className="action-group handover-group">
+                <div className="action-header">
+                  <h5>Handover Requested</h5>
+                  <p>You've been asked to take over this LOTO. Accepting resets it to pending.</p>
                 </div>
-              )}
-
-              {/* Verification */}
-              {loto.status === "pending" && canVerify && (
-                <div className="mb-4 p-3 bg-warning bg-opacity-10 rounded">
-                  <Button
-                    variant="success"
-                    onClick={handleVerify}
-                    className="w-100 hover-scale"
-                  >
-                    ✅ Verify LOTO
-                  </Button>
+                <div className="action-buttons">
+                  <button className="action-button success" onClick={handleAcceptHandover}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Accept</span>
+                  </button>
+                  <button className="action-button danger" onClick={handleRejectHandover}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    <span>Reject</span>
+                  </button>
                 </div>
-              )}
-
-              {/* Technician Actions */}
-              {loto.status === "active" && isIsolator && isTechnician && (
-                <div className="mb-4">
-                  <h6 className="fw-bold mb-3">🛠️ Technician Actions</h6>
-                  <div className="d-grid gap-2">
-                    <Button
-                      variant="info"
-                      onClick={handleHandover}
-                      className="hover-scale"
-                    >
-                      🤝 Handover
-                    </Button>
-                    <Button
-                      variant="success"
-                      onClick={handleComplete}
-                      className="hover-scale"
-                    >
-                      🏁 Complete
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Update Button for Isolator (Pending) */}
-              {loto.status === "pending" && isIsolator && (
-                <div className="mb-4 p-3 bg-warning bg-opacity-10 rounded">
-                  <Button
-                    variant="primary"
-                    onClick={handleUpdate}
-                    className="w-100 hover-scale"
-                  >
-                    ✏️ Update Details
-                  </Button>
-                </div>
-              )}
-
-              {/* Supervisor/Admin Full Actions */}
-              {loto.status === "active" &&
-                isIsolator &&
-                (isSupervisor || currentUser?.role === "admin") && (
-                  <div className="mb-4">
-                    <h6 className="fw-bold mb-3">
-                      {currentUser?.role === "admin"
-                        ? "👑 Admin"
-                        : "👷 Supervisor"}{" "}
-                      Actions
-                    </h6>
-                    <div className="d-grid gap-2">
-                      <Button
-                        variant="primary"
-                        onClick={handleUpdate}
-                        className="hover-scale"
-                      >
-                        ✏️ Update
-                      </Button>
-                      <Button
-                        variant="info"
-                        onClick={handleHandover}
-                        className="hover-scale"
-                      >
-                        🤝 Handover
-                      </Button>
-                      <Button
-                        variant="success"
-                        onClick={handleComplete}
-                        className="hover-scale"
-                      >
-                        🏁 Complete
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-              {/* Status Info */}
-              <div className="p-3 bg-light border rounded mt-4">
-                <h6 className="fw-bold mb-2">📌 Current Status</h6>
-                <div className="mb-2">{getStatusBadge(loto.status)}</div>
-                <small className="text-muted">
-                  {loto.status === "pending" &&
-                    "⏳ Awaiting supervisor verification"}
-                  {loto.status === "pending_handover" &&
-                    "🤝 Waiting for handover acceptance"}
-                  {loto.status === "active" && "✅ Maintenance in progress"}
-                  {loto.status === "completed" &&
-                    "🏁 Work completed and LOTO closed"}
-                </small>
               </div>
+            )}
 
-              {/* 🗑️ DELETE BUTTON FOR ADMINS — STYLED LIKE CREATELOTO */}
-              {currentUser?.role === "admin" && (
-                <div className="mt-4 p-3 bg-danger bg-opacity-10 rounded">
-                  <Button
-                    variant="danger"
-                    onClick={handleDelete}
-                    className="w-100 hover-scale"
-                  >
-                    🗑️ Delete LOTO Permanently
-                  </Button>
+            {/* Verification */}
+            {loto.status === "pending" && canVerify && (
+              <div className="action-group verification-group">
+                <div className="action-header">
+                  <h5>Verification Required</h5>
+                  <p>This LOTO is pending supervisor verification.</p>
                 </div>
-              )}
+                <div className="action-button-container">
+                  <button className="action-button success " onClick={handleVerify}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Verify LOTO</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Technician Actions */}
+            {loto.status === "active" && isIsolator && isTechnician && (
+              <div className="action-group technician-group">
+                <div className="action-header">
+                  <h5>Technician Actions</h5>
+                  <p>Available operations for technicians.</p>
+                </div>
+                <div className="action-buttons">
+                  <button className="action-button info" onClick={handleHandover}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Handover</span>
+                  </button>
+                  <button className="action-button success" onClick={handleComplete}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Complete</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Update Button for Isolator (Pending) */}
+            {loto.status === "pending" && isIsolator && (
+              <div className="action-group update-group">
+                <div className="action-header">
+                  <h5>Update Required</h5>
+                  <p>You can update the LOTO details while pending.</p>
+                </div>
+                <div className="action-button-container">
+                  <button className="action-button primary " onClick={handleUpdate}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Update Details</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Supervisor/Admin Full Actions */}
+            {loto.status === "active" && isIsolator && (isSupervisor || currentUser?.role === "admin") && (
+              <div className="action-group supervisor-group">
+                <div className="action-header">
+                  <h5>{currentUser?.role === "admin" ? "Admin" : "Supervisor"} Actions</h5>
+                  <p>Full administrative operations available.</p>
+                </div>
+                <div className="action-buttons">
+                  <button className="action-button primary" onClick={handleUpdate}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Update</span>
+                  </button>
+                  <button className="action-button info" onClick={handleHandover}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Handover</span>
+                  </button>
+                  <button className="action-button success" onClick={handleComplete}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Complete</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Status Information */}
+            <div className="status-info-section">
+              <div className="status-header">
+                <h5>Current Status</h5>
+                <div className="status-badge-large">{getStatusBadge(loto.status)}</div>
+              </div>
+              <div className="status-description">
+                {loto.status === "pending" && "⏳ Awaiting supervisor verification"}
+                {loto.status === "pending_handover" && "🤝 Waiting for handover acceptance"}
+                {loto.status === "active" && "✅ Maintenance in progress"}
+                {loto.status === "completed" && "🏁 Work completed and LOTO closed"}
+              </div>
             </div>
+
+            {/* Delete Button for Admins */}
+            {currentUser?.role === "admin" && (
+              <div className="action-group delete-group">
+                <div className="action-header">
+                  <h5>Danger Zone</h5>
+                  <p>Permanently delete this LOTO record.</p>
+                </div>
+                <div className="action-button-container">
+                  <button className="action-button danger" onClick={handleDelete}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <polyline points="3,6 5,6 21,6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Delete LOTO Permanently</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

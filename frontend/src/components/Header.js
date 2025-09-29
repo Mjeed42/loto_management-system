@@ -50,14 +50,28 @@ const Header = ({ currentUser }) => {
 
   if (!currentUser) {
     return (
-      <header className="navbar bg-glass shadow-sm animate-slide-down">
-        <div className="container">
+      <header className="modern-header">
+        <div className="header-container">
           <div
-            className="navbar-brand cursor-pointer hover-scale transition"
+            className="header-brand cursor-pointer hover-scale transition"
             onClick={() => navigate("/")}
           >
-            <Icon name="lock" className="me-2" />
-            <h1>LOTO</h1>
+            <div className="brand-logo">
+              <img 
+                src="https://logos-world.net/wp-content/uploads/2022/03/Pepsico-Symbol.png" 
+                alt="PepsiCo Logo" 
+                className="navbar-pepsico-logo"
+              />
+            </div>
+            <div className="brand-text">
+              <div className="brand-icon">
+                <Icon name="lock" />
+              </div>
+              <div className="brand-title">
+                <h1>LOTO Management</h1>
+                <span className="brand-subtitle">Lockout/Tagout System</span>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -65,93 +79,118 @@ const Header = ({ currentUser }) => {
   }
 
   return (
-    <header className="navbar bg-glass shadow-sm animate-slide-down">
-      <div className="container">
+    <header className="modern-header">
+      <div className="header-container">
         <div
-          className="navbar-brand cursor-pointer hover-scale transition"
+          className="header-brand cursor-pointer hover-scale transition"
           onClick={() => navigate("/Home")}
         >
-          <Icon name="lock" className="me-2" />
-          <h1>LOTO</h1>
+          <div className="brand-logo">
+            <img 
+              src="https://logos-world.net/wp-content/uploads/2022/03/Pepsico-Symbol.png" 
+              alt="PepsiCo Logo" 
+              className="navbar-pepsico-logo"
+            />
+          </div>
+          <div className="brand-text">
+            <div className="brand-icon">
+              <Icon name="lock" />
+            </div>
+            <div className="brand-title">
+              <h1>LOTO Management</h1>
+              <span className="brand-subtitle">Lockout/Tagout System</span>
+            </div>
+          </div>
         </div>
 
-        <div className="d-flex align-items-center gap-3">
+        <div className="header-actions">
           {/* Notifications Dropdown */}
-          <div className="dropdown position-relative" ref={notificationRef}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="position-relative hover-glow"
+          <div className="header-dropdown" ref={notificationRef}>
+            <button
+              className="notification-btn"
               onClick={() =>
                 setNotificationDropdownOpen(!notificationDropdownOpen)
               }
-              icon={<Icon name="notification" />}
             >
+              <Icon name="notification" />
               <NotificationBadge />
-            </Button>
+            </button>
 
             <div
-              className={`dropdown-menu ${
+              className={`modern-dropdown ${
                 notificationDropdownOpen ? "show" : ""
               }`}
             >
-              <div className="dropdown-item-text fw-semibold text-muted px-4 py-2">
-                Notifications
+              <div className="dropdown-header">
+                <Icon name="notification" />
+                <span>Notifications</span>
               </div>
               <div className="dropdown-divider"></div>
               <button
-                className="dropdown-item d-flex align-items-center"
+                className="dropdown-item"
                 onClick={() => {
                   navigate("/notifications");
                   setNotificationDropdownOpen(false);
                 }}
               >
-                <Icon name="list" className="me-2" />
-                View All Notifications
+                <Icon name="list" />
+                <span>View All Notifications</span>
               </button>
             </div>
           </div>
 
           {/* User Dropdown */}
-          <div className="dropdown position-relative" ref={userRef}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hover-glow"
+          <div className="header-dropdown" ref={userRef}>
+            <button
+              className="user-btn"
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              icon={<Icon name="user" />}
             >
-              <span className="d-none d-md-inline">
-                {currentUser.firstName} {currentUser.lastName}
-              </span>
-            </Button>
+              <div className="user-avatar">
+                <Icon name="user" />
+              </div>
+              <div className="user-info">
+                <span className="user-name">
+                  {currentUser.firstName} {currentUser.lastName}
+                </span>
+                <span className="user-role">{currentUser.role}</span>
+              </div>
+              <Icon name="chevron-down" className="chevron" />
+            </button>
 
-            <div className={`dropdown-menu ${userDropdownOpen ? "show" : ""}`}>
-              <div className="dropdown-item-text fw-semibold text-muted px-4 py-2">
-                {currentUser.firstName} {currentUser.lastName}
+            <div className={`modern-dropdown ${userDropdownOpen ? "show" : ""}`}>
+              <div className="dropdown-header">
+                <div className="user-avatar">
+                  <Icon name="user" />
+                </div>
+                <div className="user-details">
+                  <span className="user-name">
+                    {currentUser.firstName} {currentUser.lastName}
+                  </span>
+                  <span className="user-role">{currentUser.role}</span>
+                </div>
               </div>
               <div className="dropdown-divider"></div>
 
               <button
-                className="dropdown-item d-flex align-items-center"
+                className="dropdown-item"
                 onClick={() => {
                   navigate("/Home");
                   setUserDropdownOpen(false);
                 }}
               >
-                <Icon name="Home" className="me-2" />
-                Home
+                <Icon name="Home" />
+                <span>Home</span>
               </button>
 
               <button
-                className="dropdown-item d-flex align-items-center"
+                className="dropdown-item"
                 onClick={() => {
                   navigate("/loto-list");
                   setUserDropdownOpen(false);
                 }}
               >
-                <Icon name="list" className="me-2" />
-                My LOTOs
+                <Icon name="list" />
+                <span>My LOTOs</span>
               </button>
 
               {/* Admin Page Link */}
@@ -159,33 +198,26 @@ const Header = ({ currentUser }) => {
                 <>
                   <div className="dropdown-divider"></div>
                   <button
-                    className="dropdown-item d-flex align-items-center"
+                    className="dropdown-item"
                     onClick={() => {
                       navigate("/admin");
                       setUserDropdownOpen(false);
                     }}
                   >
-                    <Icon name="settings" className="me-2" />
-                    Admin Page
+                    <Icon name="settings" />
+                    <span>Admin Page</span>
                   </button>
                 </>
               )}
-              {currentUser &&
-                (currentUser.role === "supervisor" ||
-                  currentUser.role === "admin") && (
-                  <>
-                    <div className="dropdown-divider"></div>
-                  </>
-                )}
 
               <div className="dropdown-divider"></div>
 
               <button
-                className="dropdown-item d-flex align-items-center text-danger"
+                className="dropdown-item logout-item"
                 onClick={handleLogout}
               >
-                <Icon name="logout" className="me-2" />
-                Logout
+                <Icon name="logout" />
+                <span>Logout</span>
               </button>
             </div>
           </div>

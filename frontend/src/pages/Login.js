@@ -103,13 +103,14 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div className="row justify-content-center">
-      <div className="col-md-6 col-lg-4">
-        <div className="card shadow-lg">
-          <div className="card-header text-center">
-            <h2>🔒 LOTO Management System</h2>
-            <p className="text-muted mb-0">Secure Lockout/Tagout Management</p>
-          </div>
+    <div className="login-page-container">
+      <div className="row justify-content-center">
+        <div className="col-md-6 col-lg-4">
+          <div className="card login-card shadow-lg">
+            <div className="card-header text-center">
+              <h2>🔒 LOTO Management System</h2>
+              <p className="text-muted mb-0">Secure Lockout/Tagout Management</p>
+            </div>
           <div className="card-body">
             {error && <div className="alert alert-danger">{error}</div>}
 
@@ -164,6 +165,7 @@ const Login = ({ onLogin }) => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

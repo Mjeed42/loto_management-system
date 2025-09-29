@@ -20,6 +20,7 @@ const LOTOList = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [activeFilter, setActiveFilter] = useState(null); // Track which stat card is active
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -132,6 +133,26 @@ const LOTOList = () => {
         "Error deleting LOTO";
       alert(`Delete failed: ${errorMessage}`);
     }
+  };
+
+  // Handle stat card clicks for filtering
+  const handleStatCardClick = (filterType) => {
+    if (activeFilter === filterType) {
+      // If clicking the same card, clear the filter
+      setActiveFilter(null);
+      setFilterStatus("all");
+    } else {
+      // Set the new filter
+      setActiveFilter(filterType);
+      setFilterStatus(filterType);
+    }
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setActiveFilter(null);
+    setFilterStatus("all");
+    setSearchTerm("");
   };
 
   const handleVerify = async (lotoId) => {
@@ -341,76 +362,101 @@ const LOTOList = () => {
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="row mb-4">
-        <div className="col-md-3 col-sm-6 mb-3">
-          <div className="stats-card">
-            <div className="d-flex align-items-center">
-              <div
-                className="stats-icon-wrapper me-3"
-                style={{ background: "var(--gradient-primary)" }}
-              >
-                📊
-              </div>
-              <div>
-                <div className="stats-number">{lotos.length}</div>
-                <div className="stats-label">Total LOTOs</div>
-              </div>
+      {/* Modern Statistics Dashboard */}
+      <div className="modern-stats-grid mb-5">
+        <div 
+          className={`stat-card total-card ${activeFilter === "all" ? "active" : ""}`}
+          onClick={() => handleStatCardClick("all")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="stat-icon">
+            <div className="icon-wrapper">
+              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
           </div>
-        </div>
-        <div className="col-md-3 col-sm-6 mb-3">
-          <div className="stats-card">
-            <div className="d-flex align-items-center">
-              <div
-                className="stats-icon-wrapper me-3"
-                style={{ background: "var(--gradient-success)" }}
-              >
-                ⚡
-              </div>
-              <div>
-                <div className="stats-number">
-                  {lotos.filter((l) => l.status === "active").length}
-                </div>
-                <div className="stats-label">Active</div>
-              </div>
-            </div>
+          <div className="stat-content">
+            <div className="stat-number">{lotos.length}</div>
+            <div className="stat-label">Total LOTOs</div>
+            <div className="stat-description">All lockout procedures</div>
+          </div>
+          <div className="stat-trend">
+            <span className="trend-indicator">📈</span>
           </div>
         </div>
-        <div className="col-md-3 col-sm-6 mb-3">
-          <div className="stats-card">
-            <div className="d-flex align-items-center">
-              <div
-                className="stats-icon-wrapper me-3"
-                style={{ background: "var(--gradient-warning)" }}
-              >
-                ⏳
-              </div>
-              <div>
-                <div className="stats-number">
-                  {lotos.filter((l) => l.status === "pending").length}
-                </div>
-                <div className="stats-label">Pending</div>
-              </div>
+
+        <div 
+          className={`stat-card active-card ${activeFilter === "active" ? "active" : ""}`}
+          onClick={() => handleStatCardClick("active")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="stat-icon">
+            <div className="icon-wrapper">
+              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
           </div>
-        </div>
-        <div className="col-md-3 col-sm-6 mb-3">
-          <div className="stats-card">
-            <div className="d-flex align-items-center">
-              <div
-                className="stats-icon-wrapper me-3"
-                style={{ background: "var(--gradient-info)" }}
-              >
-                ✅
-              </div>
-              <div>
-                <div className="stats-number">
-                  {lotos.filter((l) => l.status === "completed").length}
-                </div>
-                <div className="stats-label">Completed</div>
-              </div>
+          <div className="stat-content">
+            <div className="stat-number">
+              {lotos.filter((l) => l.status === "active").length}
             </div>
+            <div className="stat-label">Active</div>
+            <div className="stat-description">Currently in progress</div>
+          </div>
+          <div className="stat-trend">
+            <span className="trend-indicator">⚡</span>
+          </div>
+        </div>
+
+        <div 
+          className={`stat-card pending-card ${activeFilter === "pending" ? "active" : ""}`}
+          onClick={() => handleStatCardClick("pending")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="stat-icon">
+            <div className="icon-wrapper">
+              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                <polyline points="12,6 12,12 16,14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">
+              {lotos.filter((l) => l.status === "pending").length}
+            </div>
+            <div className="stat-label">Pending</div>
+            <div className="stat-description">Awaiting approval</div>
+          </div>
+          <div className="stat-trend">
+            <span className="trend-indicator">⏳</span>
+          </div>
+        </div>
+
+        <div 
+          className={`stat-card completed-card ${activeFilter === "completed" ? "active" : ""}`}
+          onClick={() => handleStatCardClick("completed")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="stat-icon">
+            <div className="icon-wrapper">
+              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">
+              {lotos.filter((l) => l.status === "completed").length}
+            </div>
+            <div className="stat-label">Completed</div>
+            <div className="stat-description">Successfully finished</div>
+          </div>
+          <div className="stat-trend">
+            <span className="trend-indicator">✅</span>
           </div>
         </div>
       </div>
@@ -469,6 +515,39 @@ const LOTOList = () => {
           </select>
         </div>
       </div>
+
+      {/* Active Filter Indicator and Clear Button */}
+      {(activeFilter || searchTerm) && (
+        <div className="row mb-3">
+          <div className="col-12">
+            <div className="d-flex align-items-center gap-3 flex-wrap">
+              <div className="d-flex align-items-center gap-2">
+                <span className="text-muted">Active filters:</span>
+                {activeFilter && (
+                  <span className="badge bg-primary">
+                    {activeFilter === "all" ? "All LOTOs" : 
+                     activeFilter === "active" ? "Active" :
+                     activeFilter === "pending" ? "Pending" :
+                     activeFilter === "completed" ? "Completed" : activeFilter}
+                  </span>
+                )}
+                {searchTerm && (
+                  <span className="badge bg-info">
+                    Search: "{searchTerm}"
+                  </span>
+                )}
+              </div>
+              <button 
+                className="btn btn-outline-secondary btn-sm"
+                onClick={clearFilters}
+              >
+                <i className="fas fa-times me-1"></i>
+                Clear All Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* LOTO Table */}
       {filteredLotos.length === 0 && !loading ? (

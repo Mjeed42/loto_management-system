@@ -464,7 +464,7 @@ const AdminHome = () => {
   }
 
   return (
-    <div className="container py-4">
+    <div className="container-fluid py-4">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <h1 className="d-flex align-items-center gap-2">
           <Icon name="settings" /> Admin Page
@@ -479,6 +479,9 @@ const AdminHome = () => {
 
           <Button variant="outline-secondary" onClick={fetchHomeData}>
             <Icon name="refresh" /> Refresh
+          </Button>
+          <Button variant="outline-success" onClick={() => navigate("/data-export")}>
+            <Icon name="download" /> Data Export
           </Button>
           <Button variant="outline-primary" onClick={() => navigate("/Home")}>
             <Icon name="Home" /> Home

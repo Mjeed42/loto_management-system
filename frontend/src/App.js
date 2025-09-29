@@ -18,6 +18,7 @@ import HandoverLOTO from "./pages/HandoverLOTO";
 import CompleteLOTO from "./pages/CompleteLOTO";
 import Notifications from "./pages/Notifications";
 import AdminHome from "./pages/AdminHome";
+import DataExport from "./pages/DataExport";
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -66,6 +67,7 @@ function App() {
             <Route path="/loto/:id/handover" element={<HandoverLOTO />} />
             <Route path="/loto/:id/complete" element={<CompleteLOTO />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/data-export" element={<DataExport />} />
           </Routes>
         </main>
         <ToastContainer />
