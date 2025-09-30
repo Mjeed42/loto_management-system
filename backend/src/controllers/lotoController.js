@@ -508,10 +508,27 @@ exports.handoverLOTO = async (req, res) => {
     loto.handoverTo = handoverTo;
     if (handoverNotes) loto.handoverNotes = handoverNotes;
 
-    await loto.save();
-    console.log("LOTO updated for handover");
+    // Add handover to history
+    const handoverHistoryEntry = {
+      fromUser: req.user.id,
+      fromUserName: `${req.user.firstName} ${req.user.lastName}`,
+      toUser: handoverTo,
+      toUserName: `${recipient.firstName} ${recipient.lastName}`,
+      handoverNotes: handoverNotes,
+      status: "pending",
+      handoverDate: new Date(),
+    };
 
-    // Try to create handover notification (if HandoverNotification model exists)
+    // Add to handover history
+    if (!loto.handoverHistory) {
+      loto.handoverHistory = [];
+    }
+    loto.handoverHistory.push(handoverHistoryEntry);
+
+    await loto.save();
+    console.log("✅ LOTO updated for handover with history recorded");
+
+    // Create handover notification and link to history
     try {
       const HandoverNotification = require("../models/HandoverNotification");
       const notification = await HandoverNotification.create({
@@ -526,13 +543,24 @@ exports.handoverLOTO = async (req, res) => {
         },
         handoverNotes: handoverNotes,
       });
-      console.log("Handover notification created:", notification._id);
+      
+      // Update the handover history entry with notification ID
+      const lastHistoryEntry = loto.handoverHistory[loto.handoverHistory.length - 1];
+      lastHistoryEntry.notificationId = notification._id;
+      await loto.save();
+      
+      console.log("✅ Handover notification created successfully:", notification._id);
+      console.log("✅ Handover history updated with notification ID");
     } catch (notificationError) {
-      console.log(
-        "Could not create handover notification (model may not exist yet):",
-        notificationError.message
-      );
-      // Continue without notification if model doesn't exist yet
+      console.error("❌ Failed to create handover notification:", notificationError);
+      // Don't fail the entire handover process, but log the error for debugging
+      console.error("Notification creation error details:", {
+        lotoId: loto._id,
+        fromUser: req.user.id,
+        toUser: handoverTo,
+        error: notificationError.message,
+        stack: notificationError.stack
+      });
     }
 
     // Populate the updated LOTO
@@ -712,6 +740,47 @@ exports.rejectHandover = async (req, res) => {
     });
   } catch (error) {
     console.error("Reject handover error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get handover history for a LOTO
+// @route   GET /api/loto/:id/handover-history
+// @access  Private
+exports.getHandoverHistory = async (req, res) => {
+  try {
+    console.log("🔍 Fetching handover history for LOTO:", req.params.id);
+
+    const loto = await LOTO.findById(req.params.id)
+      .populate("handoverHistory.fromUser", "firstName lastName username")
+      .populate("handoverHistory.toUser", "firstName lastName username")
+      .select("serialNumber handoverHistory");
+
+    if (!loto) {
+      console.log("❌ LOTO not found:", req.params.id);
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    console.log("📊 Found handover history entries:", loto.handoverHistory?.length || 0);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        lotoId: loto._id,
+        serialNumber: loto.serialNumber,
+        handoverHistory: loto.handoverHistory || [],
+        totalHandovers: loto.handoverHistory?.length || 0,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Get handover history error:", error);
     res.status(500).json({
       success: false,
       message: "Server Error",

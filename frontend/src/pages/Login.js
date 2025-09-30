@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_ENDPOINTS } from "../config/api";
 
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
@@ -30,7 +31,7 @@ const Login = ({ onLogin }) => {
       };
 
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        API_ENDPOINTS.ME,
         config
       );
 
@@ -67,7 +68,7 @@ const Login = ({ onLogin }) => {
 
     try {
       const res = await axios.post(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/login",
+        API_ENDPOINTS.LOGIN,
         {
           username,
           password,

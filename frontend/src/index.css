@@ -11,3 +11,288 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+/* Handover History Styles */
+.handover-history-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.section-icon {
+  margin-right: 16px;
+}
+
+.section-svg {
+  width: 24px;
+  height: 24px;
+  color: #6366f1;
+}
+
+.section-title h4 {
+  margin: 0 0 4px 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.section-title p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.history-count {
+  margin-left: auto;
+}
+
+.count-badge {
+  background: #6366f1;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.history-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.history-timeline {
+  position: relative;
+}
+
+.history-item {
+  display: flex;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.history-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 40px;
+  bottom: -24px;
+  width: 2px;
+  background: #e5e7eb;
+}
+
+.history-indicator {
+  margin-right: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.status-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  color: white;
+}
+
+.status-dot.accepted {
+  background: #10b981;
+}
+
+.status-dot.rejected {
+  background: #ef4444;
+}
+
+.status-dot.pending {
+  background: #f59e0b;
+}
+
+.history-content {
+  flex: 1;
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 4px solid #e5e7eb;
+}
+
+.history-item.accepted .history-content {
+  border-left-color: #10b981;
+}
+
+.history-item.rejected .history-content {
+  border-left-color: #ef4444;
+}
+
+.history-item.pending .history-content {
+  border-left-color: #f59e0b;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.handover-parties {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.from-user, .to-user {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.arrow-icon {
+  width: 16px;
+  height: 16px;
+  color: #6b7280;
+}
+
+.history-status .status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.history-status .status-badge.accepted {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.history-status .status-badge.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.history-status .status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.history-details {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.history-dates {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 8px;
+}
+
+.handover-date, .response-date {
+  display: flex;
+  align-items: center;
+}
+
+.history-notes {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  margin-top: 8px;
+}
+
+.no-history {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+.no-history-icon {
+  margin-bottom: 16px;
+}
+
+.no-history-icon svg {
+  width: 48px;
+  height: 48px;
+  color: #d1d5db;
+}
+
+.no-history h5 {
+  margin: 0 0 8px 0;
+  color: #374151;
+  font-size: 1.125rem;
+}
+
+.no-history p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* Notification Card Styles */
+.notification-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.notification-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #17a2b8, #6366f1);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.notification-card:hover::before {
+  opacity: 1;
+}
+
+.notification-card:hover {
+  border-left-color: #6366f1 !important;
+}
+
+/* Notification click indicator animation */
+.notification-card .click-indicator {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}

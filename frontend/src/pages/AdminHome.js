@@ -480,6 +480,9 @@ const AdminHome = () => {
           <Button variant="outline-secondary" onClick={fetchHomeData}>
             <Icon name="refresh" /> Refresh
           </Button>
+          <Button variant="outline-info" onClick={() => navigate("/monitoring")}>
+            <Icon name="chart" /> Monitoring Dashboard
+          </Button>
           <Button variant="outline-success" onClick={() => navigate("/data-export")}>
             <Icon name="download" /> Data Export
           </Button>

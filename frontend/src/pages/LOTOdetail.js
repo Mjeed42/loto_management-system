@@ -9,12 +9,15 @@ const LOTOdetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
+  const [handoverHistory, setHandoverHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchLOTO();
     fetchCurrentUser();
+    fetchHandoverHistory();
   }, [id]);
 
   const fetchCurrentUser = async () => {
@@ -55,6 +58,30 @@ const LOTOdetail = () => {
     } catch (err) {
       setError(err.response?.data?.message || "Error fetching LOTO");
       setLoading(false);
+    }
+  };
+
+  const fetchHandoverHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/handover-history`,
+        config
+      );
+
+      setHandoverHistory(res.data.data.handoverHistory || []);
+    } catch (err) {
+      console.error("Error fetching handover history:", err);
+      setHandoverHistory([]);
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -118,6 +145,7 @@ const LOTOdetail = () => {
         "Handover accepted successfully! The LOTO has been reset to pending status and requires re-verification."
       );
       fetchLOTO();
+      fetchHandoverHistory();
     } catch (err) {
       alert(err.response?.data?.message || "Error accepting handover");
     }
@@ -144,6 +172,7 @@ const LOTOdetail = () => {
       setLoto(res.data.data);
       alert("Handover rejected successfully!");
       fetchLOTO();
+      fetchHandoverHistory();
     } catch (err) {
       alert(err.response?.data?.message || "Error rejecting handover");
     }
@@ -495,6 +524,90 @@ const LOTOdetail = () => {
                     <span className="finish-date">{new Date(loto.actualFinishDate).toLocaleDateString()}</span>
                   </div>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Handover History Section */}
+          <div className="handover-history-section">
+            <div className="section-header">
+              <div className="section-icon">
+                <svg className="section-svg" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="section-title">
+                <h4>Handover History</h4>
+                <p>Complete record of all handover activities</p>
+              </div>
+              <div className="history-count">
+                <span className="count-badge">{handoverHistory.length} handover{handoverHistory.length !== 1 ? 's' : ''}</span>
+              </div>
+            </div>
+
+            {historyLoading ? (
+              <div className="history-loading">
+                <div className="loading-spinner"></div>
+                <span>Loading handover history...</span>
+              </div>
+            ) : handoverHistory.length > 0 ? (
+              <div className="history-timeline">
+                {handoverHistory.map((handover, index) => (
+                  <div key={index} className={`history-item ${handover.status}`}>
+                    <div className="history-indicator">
+                      <div className={`status-dot ${handover.status}`}>
+                        {handover.status === 'accepted' && '✓'}
+                        {handover.status === 'rejected' && '✗'}
+                        {handover.status === 'pending' && '⏳'}
+                      </div>
+                    </div>
+                    <div className="history-content">
+                      <div className="history-header">
+                        <div className="handover-parties">
+                          <span className="from-user">{handover.fromUserName}</span>
+                          <svg className="arrow-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <span className="to-user">{handover.toUserName}</span>
+                        </div>
+                        <div className="history-status">
+                          <span className={`status-badge ${handover.status}`}>
+                            {handover.status === 'accepted' && 'Accepted'}
+                            {handover.status === 'rejected' && 'Rejected'}
+                            {handover.status === 'pending' && 'Pending'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="history-details">
+                        <div className="history-dates">
+                          <span className="handover-date">
+                            <strong>Handover:</strong> {new Date(handover.handoverDate).toLocaleString()}
+                          </span>
+                          {handover.responseDate && (
+                            <span className="response-date">
+                              <strong>Response:</strong> {new Date(handover.responseDate).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                        {handover.handoverNotes && (
+                          <div className="history-notes">
+                            <strong>Notes:</strong> {handover.handoverNotes}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-history">
+                <div className="no-history-icon">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h5>No Handover History</h5>
+                <p>This LOTO has not been handed over yet.</p>
               </div>
             )}
           </div>

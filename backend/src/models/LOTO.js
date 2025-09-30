@@ -89,6 +89,43 @@ const lotoSchema = new mongoose.Schema(
     handoverNotes: {
       type: String,
     },
+    handoverHistory: [
+      {
+        fromUser: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        fromUserName: {
+          type: String,
+          required: true,
+        },
+        toUser: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        toUserName: {
+          type: String,
+          required: true,
+        },
+        handoverNotes: String,
+        status: {
+          type: String,
+          enum: ["pending", "accepted", "rejected"],
+          default: "pending",
+        },
+        handoverDate: {
+          type: Date,
+          default: Date.now,
+        },
+        responseDate: Date,
+        notificationId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "HandoverNotification",
+        },
+      },
+    ],
     completionNotes: {
       type: String,
     },

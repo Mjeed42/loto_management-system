@@ -19,6 +19,8 @@ import CompleteLOTO from "./pages/CompleteLOTO";
 import Notifications from "./pages/Notifications";
 import AdminHome from "./pages/AdminHome";
 import DataExport from "./pages/DataExport";
+import MonitoringDashboard from "./pages/MonitoringDashboard";
+
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -68,6 +70,7 @@ function App() {
             <Route path="/loto/:id/complete" element={<CompleteLOTO />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/data-export" element={<DataExport />} />
+            <Route path="/monitoring" element={<MonitoringDashboard />} />
           </Routes>
         </main>
         <ToastContainer />

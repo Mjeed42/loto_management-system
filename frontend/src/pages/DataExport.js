@@ -172,11 +172,49 @@ const DataExport = () => {
       // Add handover information
       if (loto.handoverTo) {
         const handoverUser = users.find((user) => user._id === loto.handoverTo._id);
-        formattedLoto["Handover To"] = handoverUser 
+        formattedLoto["Current Handover To"] = handoverUser 
           ? `${handoverUser.firstName} ${handoverUser.lastName}` 
           : `${loto.handoverTo.firstName} ${loto.handoverTo.lastName}`;
       } else {
-        formattedLoto["Handover To"] = "N/A";
+        formattedLoto["Current Handover To"] = "N/A";
+      }
+
+      // Add handover history if available
+      if (loto.handoverHistory && loto.handoverHistory.length > 0) {
+        formattedLoto["Total Handovers"] = loto.handoverHistory.length;
+        
+        // Create handover history summary
+        const handoverSummary = loto.handoverHistory.map((handover, index) => {
+          const status = handover.status || "unknown";
+          const fromName = handover.fromUserName || "Unknown";
+          const toName = handover.toUserName || "Unknown";
+          const date = handover.handoverDate ? new Date(handover.handoverDate).toLocaleDateString() : "Unknown";
+          const responseDate = handover.responseDate ? new Date(handover.responseDate).toLocaleDateString() : "";
+          
+          let summary = `${index + 1}. ${fromName} → ${toName} (${status}) on ${date}`;
+          if (responseDate && status !== "pending") {
+            summary += ` - responded ${responseDate}`;
+          }
+          return summary;
+        }).join(" | ");
+        
+        formattedLoto["Handover History"] = handoverSummary;
+        
+        // Add individual handover details
+        loto.handoverHistory.forEach((handover, index) => {
+          const prefix = `Handover ${index + 1}`;
+          formattedLoto[`${prefix} - From`] = handover.fromUserName || "Unknown";
+          formattedLoto[`${prefix} - To`] = handover.toUserName || "Unknown";
+          formattedLoto[`${prefix} - Status`] = handover.status || "unknown";
+          formattedLoto[`${prefix} - Date`] = handover.handoverDate ? new Date(handover.handoverDate).toLocaleDateString() : "Unknown";
+          formattedLoto[`${prefix} - Response Date`] = handover.responseDate ? new Date(handover.responseDate).toLocaleDateString() : "N/A";
+          if (handover.handoverNotes) {
+            formattedLoto[`${prefix} - Notes`] = handover.handoverNotes;
+          }
+        });
+      } else {
+        formattedLoto["Total Handovers"] = 0;
+        formattedLoto["Handover History"] = "No handovers recorded";
       }
 
       // Add energy types if requested
@@ -211,8 +249,9 @@ const DataExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     
-    // Set column widths
-    const columnWidths = [
+    // Set column widths - dynamically adjust based on data
+    const maxHandovers = Math.max(...data.map(row => row["Total Handovers"] || 0));
+    const baseColumns = [
       { wch: 20 }, // Serial Number
       { wch: 12 }, // Date Created
       { wch: 12 }, // Time Created
@@ -229,12 +268,30 @@ const DataExport = () => {
       { wch: 20 }, // Authorized Supervisor
       { wch: 20 }, // Verified By
       { wch: 20 }, // Verified At
-      { wch: 20 }, // Handover To
+      { wch: 20 }, // Current Handover To
+      { wch: 8 },  // Total Handovers
+      { wch: 50 }, // Handover History Summary
+    ];
+    
+    // Add dynamic columns for individual handovers (up to 5 handovers max)
+    const handoverColumns = [];
+    for (let i = 1; i <= Math.min(maxHandovers, 5); i++) {
+      handoverColumns.push(
+        { wch: 15 }, // Handover X - From
+        { wch: 15 }, // Handover X - To
+        { wch: 12 }, // Handover X - Status
+        { wch: 12 }, // Handover X - Date
+        { wch: 12 }, // Handover X - Response Date
+        { wch: 20 }  // Handover X - Notes
+      );
+    }
+    
+    const columnWidths = [...baseColumns, ...handoverColumns, 
       { wch: 30 }, // Energy Types
       { wch: 30 }, // Handover Notes
       { wch: 30 }, // Completion Notes
       { wch: 15 }, // Actual Finish Time
-      { wch: 15 }, // Actual Finish Date
+      { wch: 15 }  // Actual Finish Date
     ];
     
     worksheet["!cols"] = columnWidths;

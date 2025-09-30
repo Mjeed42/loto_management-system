@@ -3856,7 +3856,7 @@ const GlobalStyles = () => (
       gap: 1.5rem;
     }
     
-    .form-group {
+      .form-group {
       display: flex;
       flex-direction: column;
     }
@@ -4437,8 +4437,8 @@ const GlobalStyles = () => (
     }
     
     .action-header {
-      margin-bottom: 1rem;
-    }
+        margin-bottom: 1rem;
+      }
     
     .action-header h5 {
       font-size: 1rem;
@@ -4448,7 +4448,7 @@ const GlobalStyles = () => (
     }
     
     .action-header p {
-      font-size: 0.875rem;
+        font-size: 0.875rem;
       color: #6b7280;
       margin: 0;
     }
@@ -5133,6 +5133,476 @@ const GlobalStyles = () => (
       
       .date-input-group label {
         color: #e5e7eb;
+      }
+    }
+
+    /* ============ Modern Monitoring Dashboard Styles ============ */
+    
+    .monitoring-dashboard-container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    .dashboard-header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .loading-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .spinner-border-lg {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(99, 102, 241, 0.1);
+      border-top: 4px solid #6366f1;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 2rem;
+    }
+    
+    .loading-state h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 0.5rem 0;
+    }
+    
+    .loading-state p {
+      color: #6b7280;
+      margin: 0;
+    }
+    
+    .last-updated {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+    }
+    
+    .update-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    
+    .update-time {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .metric-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metric-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+    }
+    
+    .metric-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metric-card.total-card::before {
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    }
+    
+    .metric-card.active-card::before {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+    
+    .metric-card.users-card::before {
+      background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+    }
+    
+    .metric-card.safety-card::before {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+    
+    .metric-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(99, 102, 241, 0.1);
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    
+    .metric-svg {
+      width: 30px;
+      height: 30px;
+      color: #6366f1;
+    }
+    
+    .metric-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .metric-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #1f2937 0%, #4b5563 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    
+    .metric-label {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .metric-description {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .chart-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .chart-header {
+      margin-bottom: 1.5rem;
+    }
+    
+    .chart-header h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 0.5rem 0;
+    }
+    
+    .chart-header p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    
+    .chart-container {
+      width: 100%;
+      height: 300px;
+    }
+    
+    .alerts-health-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .alerts-card,
+    .health-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+      margin-bottom: 1.5rem;
+    }
+    
+    .card-header h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 0.5rem 0;
+    }
+    
+    .card-header p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    
+    .alerts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .alert-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(249, 250, 251, 0.8);
+      border-radius: 0.75rem;
+      border: 1px solid rgba(229, 231, 235, 0.5);
+    }
+    
+    .alert-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    
+    .alert-content {
+      flex: 1;
+    }
+    
+    .alert-title {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.25rem;
+    }
+    
+    .alert-message {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    
+    .alert-count {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    
+    .no-alerts {
+      text-align: center;
+      padding: 2rem;
+    }
+    
+    .no-alerts-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    
+    .no-alerts-text {
+      color: #6b7280;
+      font-weight: 500;
+    }
+    
+    .health-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .health-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: rgba(249, 250, 251, 0.8);
+      border-radius: 0.75rem;
+      border: 1px solid rgba(229, 231, 235, 0.5);
+    }
+    
+    .health-label {
+      font-weight: 500;
+      color: #374151;
+    }
+    
+    .health-value {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+    
+    .status-healthy .status-indicator {
+      background: #10b981;
+    }
+    
+    .performance-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    
+    .performance-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .performance-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    
+    .performance-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem;
+      background: rgba(249, 250, 251, 0.8);
+      border-radius: 0.75rem;
+      border: 1px solid rgba(229, 231, 235, 0.5);
+      text-align: center;
+    }
+    
+    .performance-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+    }
+    
+    .performance-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .monitoring-dashboard-container {
+        padding: 1rem;
+      }
+      
+      .dashboard-header,
+      .chart-card,
+      .alerts-card,
+      .health-card,
+      .performance-card {
+        padding: 1.5rem;
+      }
+      
+      .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      
+      .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      
+      .alerts-health-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      
+      .performance-metrics {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+      
+      .metric-number {
+        font-size: 2rem;
+      }
+      
+      .chart-container {
+        height: 250px;
+      }
+    }
+    
+    /* Dark mode adjustments */
+    @media (prefers-color-scheme: dark) {
+      .dashboard-header,
+      .loading-state,
+      .chart-card,
+      .alerts-card,
+      .health-card,
+      .performance-card,
+      .metric-card {
+        background: rgba(26, 26, 26, 0.95);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+      
+      .loading-state h3,
+      .chart-header h3,
+      .card-header h3,
+      .metric-label,
+      .alert-title,
+      .health-label,
+      .performance-value,
+      .update-time {
+        color: #f9fafb;
+      }
+      
+      .loading-state p,
+      .chart-header p,
+      .card-header p,
+      .metric-description,
+      .alert-message,
+      .update-label {
+        color: #9ca3af;
+      }
+      
+      .metric-number {
+        background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .alert-item,
+      .health-item,
+      .performance-item {
+        background: rgba(55, 65, 81, 0.5);
+        border-color: rgba(75, 85, 99, 0.5);
+      }
+      
+      .alert-count,
+      .health-value {
+        color: #f9fafb;
       }
     }
 
