@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
+import RejectLOTOModal from "../components/RejectLOTOModal";
+import StatusChangeModal from "../components/StatusChangeModal";
+import HandoverModal from "../components/HandoverModal";
 
 // Helper: Format energy type for display (e.g., "electrical" → "Electrical")
 const formatEnergyType = (type) => {
@@ -21,6 +24,12 @@ const LOTOList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [activeFilter, setActiveFilter] = useState(null); // Track which stat card is active
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [selectedLotoForRejection, setSelectedLotoForRejection] = useState(null);
+  const [statusChangeModalOpen, setStatusChangeModalOpen] = useState(false);
+  const [selectedLotoForStatusChange, setSelectedLotoForStatusChange] = useState(null);
+  const [handoverModalOpen, setHandoverModalOpen] = useState(false);
+  const [selectedLotoForHandover, setSelectedLotoForHandover] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -191,16 +200,131 @@ const LOTOList = () => {
     }
   };
 
+  const handleReject = (loto) => {
+    setSelectedLotoForRejection(loto);
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectConfirm = async (rejectionData) => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.put(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${selectedLotoForRejection._id}/reject`,
+        rejectionData,
+        config
+      );
+
+      if (window.LOTOUtils) {
+        window.LOTOUtils.showNotification(
+          "LOTO rejected successfully! ❌",
+          "success"
+        );
+      }
+      fetchLOTOs();
+      setRejectModalOpen(false);
+      setSelectedLotoForRejection(null);
+    } catch (err) {
+      if (window.LOTOUtils) {
+        window.LOTOUtils.showNotification(
+          err.response?.data?.message || "Error rejecting LOTO",
+          "error"
+        );
+      }
+    }
+  };
+
+  const handleRejectModalClose = () => {
+    setRejectModalOpen(false);
+    setSelectedLotoForRejection(null);
+  };
+
   const handleUpdate = (lotoId) => {
     navigate(`/loto/${lotoId}/update`);
   };
 
-  const handleHandover = (lotoId) => {
-    navigate(`/loto/${lotoId}/handover`);
-  };
-
   const handleComplete = (lotoId) => {
     navigate(`/loto/${lotoId}/complete`);
+  };
+
+  const handleStatusChange = (loto) => {
+    setSelectedLotoForStatusChange(loto);
+    setStatusChangeModalOpen(true);
+  };
+
+  const handleStatusChangeConfirm = async (statusData) => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.put(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${selectedLotoForStatusChange._id}/status`,
+        statusData,
+        config
+      );
+
+      if (res.data.success) {
+        alert(`LOTO status changed successfully: ${res.data.message}`);
+        setStatusChangeModalOpen(false);
+        setSelectedLotoForStatusChange(null);
+        // Refresh the LOTOs list
+        fetchLOTOs();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Error changing LOTO status");
+    }
+  };
+
+  const handleStatusChangeModalClose = () => {
+    setStatusChangeModalOpen(false);
+    setSelectedLotoForStatusChange(null);
+  };
+
+  const handleHandover = (loto) => {
+    setSelectedLotoForHandover(loto);
+    setHandoverModalOpen(true);
+  };
+
+  const handleHandoverConfirm = async (handoverData) => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      };
+
+      const res = await axios.post(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${selectedLotoForHandover._id}/handover`,
+        handoverData,
+        config
+      );
+
+      if (res.data.success) {
+        alert(res.data.message);
+        fetchLOTOs(); // Refresh the list
+        setHandoverModalOpen(false);
+        setSelectedLotoForHandover(null);
+      }
+    } catch (err) {
+      console.error("Error creating handover:", err);
+      alert(err.response?.data?.message || "Error creating handover");
+    }
+  };
+
+  const handleHandoverModalClose = () => {
+    setHandoverModalOpen(false);
+    setSelectedLotoForHandover(null);
   };
 
   const getStatusBadge = (status) => {
@@ -234,6 +358,12 @@ const LOTOList = () => {
         variant: "info",
         icon: "🔄",
         color: "#0ea5e9",
+      },
+      rejected: {
+        text: "Rejected",
+        variant: "danger",
+        icon: "❌",
+        color: "#ef4444",
       },
     };
     const config = statusConfig[status] || {
@@ -306,6 +436,7 @@ const LOTOList = () => {
   const canVerify =
     currentUser &&
     (currentUser.role === "admin" || currentUser.role === "supervisor");
+  const isAdmin = currentUser && currentUser.role === "admin";
   const isTechnician = currentUser && currentUser.role === "technician";
   const isSupervisor = currentUser && currentUser.role === "supervisor";
 
@@ -621,31 +752,159 @@ const LOTOList = () => {
                   <td>{getStatusBadge(loto.status)}</td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center gap-2">
-                      {canVerify && loto.status === "pending" && (
-                        <Button
-                          variant="success"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleVerify(loto._id);
-                          }}
-                          className="hover-scale"
-                        >
-                          ✅ Verify
-                        </Button>
+                      {/* Admin Full Control */}
+                      {isAdmin && (
+                        <>
+                          {loto.status === "pending" && (
+                            <>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleVerify(loto._id);
+                                }}
+                                className="hover-scale"
+                              >
+                                ✅ Verify
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReject(loto);
+                                }}
+                                className="hover-scale"
+                              >
+                                ❌ Reject
+                              </Button>
+                            </>
+                          )}
+                          {loto.status === "rejected" && (
+                            <Button
+                              variant="warning"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdate(loto._id);
+                              }}
+                              className="hover-scale"
+                            >
+                              ✏️ Edit
+                            </Button>
+                          )}
+                          {loto.status === "active" && (
+                            <>
+                              <Button
+                                variant="info"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleHandover(loto);
+                                }}
+                                className="hover-scale"
+                              >
+                                🤝 Handover
+                              </Button>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleComplete(loto._id);
+                                }}
+                                className="hover-scale"
+                              >
+                                ✅ Complete
+                              </Button>
+                            </>
+                          )}
+                          
+                          {/* Status Change Button - Always Available for Admins */}
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStatusChange(loto);
+                            }}
+                            className="hover-scale"
+                          >
+                            ⭐ Change Status
+                          </Button>
+                        </>
                       )}
-                      {isTechnician && loto.status === "active" && (
-                        <Button
-                          variant="info"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleHandover(loto._id);
-                          }}
-                          className="hover-scale"
-                        >
-                          🤝 Handover
-                        </Button>
+                      
+                      {/* Regular User Actions */}
+                      {!isAdmin && (
+                        <>
+                          {canVerify && loto.status === "pending" && (
+                            <>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleVerify(loto._id);
+                                }}
+                                className="hover-scale"
+                              >
+                                ✅ Verify
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReject(loto);
+                                }}
+                                className="hover-scale"
+                              >
+                                ❌ Reject
+                              </Button>
+                            </>
+                          )}
+                          {isTechnician && loto.status === "rejected" && loto.isolator?._id === currentUser?.id && (
+                            <Button
+                              variant="warning"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdate(loto._id);
+                              }}
+                              className="hover-scale"
+                            >
+                              ✏️ Edit
+                            </Button>
+                          )}
+                          {isTechnician && loto.status === "active" && (
+                            <>
+                              <Button
+                                variant="info"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleHandover(loto);
+                                }}
+                                className="hover-scale"
+                              >
+                                🤝 Handover
+                              </Button>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleComplete(loto._id);
+                                }}
+                                className="hover-scale"
+                              >
+                                ✅ Complete
+                              </Button>
+                            </>
+                          )}
+                        </>
                       )}
                     </div>
                   </td>
@@ -655,6 +914,32 @@ const LOTOList = () => {
           </table>
         </div>
       )}
+
+      {/* Rejection Modal */}
+      <RejectLOTOModal
+        isOpen={rejectModalOpen}
+        onClose={handleRejectModalClose}
+        onConfirm={handleRejectConfirm}
+        lotoData={selectedLotoForRejection}
+      />
+
+      {/* Status Change Modal */}
+      <StatusChangeModal
+        isOpen={statusChangeModalOpen}
+        onClose={handleStatusChangeModalClose}
+        onConfirm={handleStatusChangeConfirm}
+        lotoData={selectedLotoForStatusChange}
+        currentStatus={selectedLotoForStatusChange?.status}
+      />
+
+      {/* Handover Modal */}
+      <HandoverModal
+        isOpen={handoverModalOpen}
+        onClose={handleHandoverModalClose}
+        onConfirm={handleHandoverConfirm}
+        lotoData={selectedLotoForHandover}
+        currentUser={currentUser}
+      />
     </div>
   );
 };

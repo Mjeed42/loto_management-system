@@ -6,11 +6,16 @@ import Icon from "../components/Icon";
 
 const UpdateLOTO = () => {
   const [formData, setFormData] = useState({
+    shift: "",
+    location: "",
+    line: "",
+    machine: "",
     expectedDuration: "",
     reason: "",
     ptwNumber: "N/A",
     isolatedPart: "",
     supervisor: "",
+    energyTypes: [],
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -20,6 +25,7 @@ const UpdateLOTO = () => {
   const [fetchingSupervisors, setFetchingSupervisors] = useState(true);
   const [showCustomReason, setShowCustomReason] = useState(false); // 👈 For "Other" reason
   const [customReason, setCustomReason] = useState(""); // 👈 Custom reason text
+  const [allowedFields, setAllowedFields] = useState([]); // Fields that can be updated
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -44,13 +50,31 @@ const UpdateLOTO = () => {
 
       setLoto(res.data.data);
 
+      // Determine which fields can be updated based on LOTO status
+      let fieldsToAllow = [];
+      if (res.data.data.status === "pending") {
+        // Normal pending LOTOs: only expectedDuration and supervisor
+        fieldsToAllow = ["expectedDuration", "supervisor"];
+      } else if (res.data.data.status === "rejected") {
+        // Rejected LOTOs: only the fields that were rejected
+        fieldsToAllow = res.data.data.rejectedFields || [];
+      }
+      setAllowedFields(fieldsToAllow);
+
       // Prefill form
       setFormData({
+        shift: res.data.data.shift || "",
+        location: res.data.data.location || "",
+        line: res.data.data.line || "",
+        machine: res.data.data.machine || "",
         expectedDuration: res.data.data.expectedDuration,
         reason: res.data.data.reason,
         ptwNumber: res.data.data.ptwNumber,
         isolatedPart: res.data.data.isolatedPart,
         supervisor: res.data.data.supervisor?._id || "",
+        energyTypes: res.data.data.energyTypes && res.data.data.energyTypes.length > 0 
+          ? res.data.data.energyTypes 
+          : [{ type: "", isolationPoint: "" }],
       });
 
       // Check if reason is "Other" → show custom input
@@ -121,6 +145,33 @@ const UpdateLOTO = () => {
 
   const handleCustomReasonChange = (e) => {
     setCustomReason(e.target.value);
+  };
+
+  // Energy Types handlers
+  const handleEnergyTypeChange = (index, field, value) => {
+    const updatedEnergyTypes = [...formData.energyTypes];
+    updatedEnergyTypes[index][field] = value;
+    setFormData({ ...formData, energyTypes: updatedEnergyTypes });
+  };
+
+  const addEnergyType = () => {
+    setFormData({
+      ...formData,
+      energyTypes: [...formData.energyTypes, { type: "", isolationPoint: "" }],
+    });
+  };
+
+  const removeEnergyType = (index) => {
+    if (formData.energyTypes.length <= 1) return; // Prevent removing the last one
+    const updatedEnergyTypes = formData.energyTypes.filter(
+      (_, i) => i !== index
+    );
+    setFormData({ ...formData, energyTypes: updatedEnergyTypes });
+  };
+
+  // Helper function to check if a field should be shown
+  const isFieldAllowed = (fieldName) => {
+    return allowedFields.includes(fieldName);
   };
 
   const onSubmit = async (e) => {
@@ -266,10 +317,53 @@ const UpdateLOTO = () => {
         <div className="col-12">
           <div className="card bg-glass border-0 shadow-lg">
             <div className="card-body">
+              {/* Field Update Information */}
+              {loto.status === "rejected" && (
+                <div className="alert alert-warning mb-4">
+                  <div className="d-flex align-items-center">
+                    <span className="me-3" style={{ fontSize: "1.5rem" }}>⚠️</span>
+                    <div>
+                      <strong>Selective Update Mode:</strong> You can only modify the fields that were marked as requiring correction during rejection.
+                      {allowedFields.length > 0 && (
+                        <div className="mt-2">
+                          <strong>Fields you can update:</strong> {allowedFields.map(field => {
+                            const fieldLabels = {
+                              shift: 'Shift',
+                              location: 'Location',
+                              line: 'Line',
+                              machine: 'Machine',
+                              isolatedPart: 'Isolated Part',
+                              reason: 'Reason',
+                              ptwNumber: 'PTW Number',
+                              expectedDuration: 'Expected Duration',
+                              supervisor: 'Supervisor Assignment',
+                              energyTypes: 'Energy Types'
+                            };
+                            return fieldLabels[field] || field;
+                          }).join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {loto.status === "pending" && (
+                <div className="alert alert-info mb-4">
+                  <div className="d-flex align-items-center">
+                    <span className="me-3" style={{ fontSize: "1.5rem" }}>ℹ️</span>
+                    <div>
+                      <strong>Limited Update Mode:</strong> You can only modify the Expected Duration and Supervisor Assignment for pending LOTOs.
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <form onSubmit={onSubmit}>
                 <div className="row">
                   {/* Expected Duration */}
-                  <div className="col-md-6 mb-4">
+                  {isFieldAllowed("expectedDuration") && (
+                    <div className="col-md-6 mb-4">
                     <div className="form-group">
                       <label className="form-label fw-medium">
                         Expected Duration (hours)
@@ -293,9 +387,11 @@ const UpdateLOTO = () => {
                       />
                     </div>
                   </div>
+                  )}
 
                   {/* PTW Number */}
-                  <div className="col-md-6 mb-4">
+                  {isFieldAllowed("ptwNumber") && (
+                    <div className="col-md-6 mb-4">
                     <div className="form-group">
                       <label className="form-label fw-medium">PTW Number</label>
                       <input
@@ -314,9 +410,11 @@ const UpdateLOTO = () => {
                       />
                     </div>
                   </div>
+                  )}
 
                   {/* Isolated Part */}
-                  <div className="col-12 mb-4">
+                  {isFieldAllowed("isolatedPart") && (
+                    <div className="col-12 mb-4">
                     <div className="form-group">
                       <label className="form-label fw-medium">
                         Isolated Part
@@ -338,9 +436,11 @@ const UpdateLOTO = () => {
                       />
                     </div>
                   </div>
+                  )}
 
-                  {/* Reason Dropdown — NOW LIKE CREATELOTO */}
-                  <div className="col-12 mb-4">
+                  {/* Reason Dropdown */}
+                  {isFieldAllowed("reason") && (
+                    <div className="col-12 mb-4">
                     <label className="form-label fw-medium">Reason</label>
                     <select
                       name="reason"
@@ -357,9 +457,10 @@ const UpdateLOTO = () => {
                       ))}
                     </select>
                   </div>
+                  )}
 
                   {/* Custom Reason Input */}
-                  {showCustomReason && (
+                  {showCustomReason && isFieldAllowed("reason") && (
                     <div className="col-12 mb-4">
                       <label className="form-label fw-medium">
                         Specify Custom Reason
@@ -382,46 +483,237 @@ const UpdateLOTO = () => {
                     </div>
                   )}
 
-                  {/* Supervisor Assignment */}
-                  <div className="col-12 mb-4">
-                    <div className="form-group">
-                      <label className="form-label fw-medium">
-                        Assign Supervisor for Verification (Optional)
-                      </label>
-                      {fetchingSupervisors ? (
-                        <div className="d-flex align-items-center">
-                          <span
-                            className="spinner-border spinner-border-sm me-2"
-                            role="status"
-                            aria-hidden="true"
-                          ></span>
-                          <span>Loading supervisors...</span>
-                        </div>
-                      ) : (
+                  {/* Shift */}
+                  {isFieldAllowed("shift") && (
+                    <div className="col-md-6 mb-4">
+                      <div className="form-group">
+                        <label className="form-label fw-medium">Shift</label>
                         <select
-                          name="supervisor"
-                          value={supervisor}
+                          name="shift"
+                          value={formData.shift}
                           onChange={onChange}
                           className="form-control"
+                          required
                         >
-                          <option value="">
-                            None - Any supervisor can verify
-                          </option>
-                          {supervisors
-                            .filter((sup) => sup.role === "supervisor") // only supervisors
-                            .map((sup) => (
-                              <option key={sup._id} value={sup._id}>
-                                {sup.firstName} {sup.lastName}
-                              </option>
-                            ))}
+                          <option value="">Select shift</option>
+                          <option value="A">Shift A</option>
+                          <option value="B">Shift B</option>
+                          <option value="C">Shift C</option>
                         </select>
-                      )}
-                      <div className="form-text mt-2">
-                        Select a specific supervisor who will verify this LOTO
-                        request. If none selected, any supervisor can verify.
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Location */}
+                  {isFieldAllowed("location") && (
+                    <div className="col-md-6 mb-4">
+                      <div className="form-group">
+                        <label className="form-label fw-medium">Location</label>
+                        <select
+                          name="location"
+                          value={formData.location}
+                          onChange={onChange}
+                          className="form-control"
+                          required
+                        >
+                          <option value="">Select location</option>
+                          <option value="Processing">Processing</option>
+                          <option value="PKG">PKG</option>
+                          <option value="Process">Process</option>
+                          <option value="Utility">Utility</option>
+                          <option value="WH-FG">WH-FG</option>
+                          <option value="WH-RM">WH-RM</option>
+                          <option value="Project">Project</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Line */}
+                  {isFieldAllowed("line") && (
+                    <div className="col-md-6 mb-4">
+                      <div className="form-group">
+                        <label className="form-label fw-medium">Line</label>
+                        <input
+                          type="text"
+                          name="line"
+                          value={formData.line}
+                          onChange={onChange}
+                          placeholder="Enter line number"
+                          className="form-control"
+                          style={{
+                            borderRadius: "0.75rem",
+                            border: "2px solid #e2e8f0",
+                            background: "rgba(255, 255, 255, 0.9)",
+                            backdropFilter: "blur(10px)",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Machine */}
+                  {isFieldAllowed("machine") && (
+                    <div className="col-md-6 mb-4">
+                      <div className="form-group">
+                        <label className="form-label fw-medium">Machine</label>
+                        <input
+                          type="text"
+                          name="machine"
+                          value={formData.machine}
+                          onChange={onChange}
+                          placeholder="Enter machine name/number"
+                          className="form-control"
+                          style={{
+                            borderRadius: "0.75rem",
+                            border: "2px solid #e2e8f0",
+                            background: "rgba(255, 255, 255, 0.9)",
+                            backdropFilter: "blur(10px)",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Supervisor Assignment */}
+                  {isFieldAllowed("supervisor") && (
+                    <div className="col-12 mb-4">
+                      <div className="form-group">
+                        <label className="form-label fw-medium">
+                          Assign Supervisor for Verification (Optional)
+                        </label>
+                        {fetchingSupervisors ? (
+                          <div className="d-flex align-items-center">
+                            <span
+                              className="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"
+                            ></span>
+                            <span>Loading supervisors...</span>
+                          </div>
+                        ) : (
+                          <select
+                            name="supervisor"
+                            value={supervisor}
+                            onChange={onChange}
+                            className="form-control"
+                          >
+                            <option value="">
+                              None - Any supervisor can verify
+                            </option>
+                            {supervisors
+                              .filter((sup) => sup.role === "supervisor") // only supervisors
+                              .map((sup) => (
+                                <option key={sup._id} value={sup._id}>
+                                  {sup.firstName} {sup.lastName}
+                                </option>
+                              ))}
+                          </select>
+                        )}
+                        <div className="form-text mt-2">
+                          Select a specific supervisor who will verify this LOTO
+                          request. If none selected, any supervisor can verify.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Energy Types Section */}
+                  {isFieldAllowed("energyTypes") && (
+                    <div className="col-12 mb-4">
+                      <div className="form-group">
+                        <h5 className="mb-3 fw-medium">
+                          <span className="me-2">⚡</span> Energy Types to Isolate
+                        </h5>
+                        <p className="text-muted mb-3">
+                          Select the energy types that need to be isolated for
+                          this LOTO procedure.
+                        </p>
+
+                        {formData.energyTypes.map((energy, index) => (
+                          <div
+                            key={index}
+                            className="border rounded p-3 mb-3 bg-light"
+                          >
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                              <h6 className="mb-0">Energy Type {index + 1}</h6>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-danger"
+                                onClick={() => removeEnergyType(index)}
+                                disabled={formData.energyTypes.length <= 1}
+                              >
+                                <span className="me-1">🗑️</span> Remove
+                              </button>
+                            </div>
+
+                            <div className="row">
+                              <div className="col-md-6">
+                                <label className="form-label fw-medium">
+                                  Energy Type
+                                </label>
+                                <select
+                                  value={energy.type}
+                                  onChange={(e) =>
+                                    handleEnergyTypeChange(
+                                      index,
+                                      "type",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="form-control"
+                                  required
+                                >
+                                  <option value="">Select energy type</option>
+                                  <option value="Electrical">Electrical</option>
+                                  <option value="Water">Water</option>
+                                  <option value="Air">Air</option>
+                                  <option value="Gas">Gas</option>
+                                  <option value="Chemical">Chemical</option>
+                                  <option value="Rotating Machine">
+                                    Rotating Machine
+                                  </option>
+                                  <option value="Mechanical">Mechanical</option>
+                                  <option value="Nitrogen">Nitrogen</option>
+                                  <option value="Hydraulic Oil">
+                                    Hydraulic Oil
+                                  </option>
+                                </select>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label fw-medium">
+                                  Isolation Point Reference
+                                </label>
+                                <input
+                                  type="text"
+                                  value={energy.isolationPoint}
+                                  onChange={(e) =>
+                                    handleEnergyTypeChange(
+                                      index,
+                                      "isolationPoint",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="e.g., Valve V-101, Switch SW-205"
+                                  className="form-control"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary"
+                          onClick={addEnergyType}
+                        >
+                          <span className="me-2">➕</span> Add Energy Type
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div className="col-12">

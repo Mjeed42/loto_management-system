@@ -15,6 +15,7 @@ const DataExport = () => {
     includeUsers: true,
     includeEnergyTypes: true,
     includeNotes: true,
+    includeAdminActions: false,
   });
   const [customDateRange, setCustomDateRange] = useState({
     startDate: "",
@@ -183,38 +184,104 @@ const DataExport = () => {
       if (loto.handoverHistory && loto.handoverHistory.length > 0) {
         formattedLoto["Total Handovers"] = loto.handoverHistory.length;
         
-        // Create handover history summary
+        // Create handover chain
+        const handoverChain = [`${loto.isolator.firstName} ${loto.isolator.lastName}`];
+        loto.handoverHistory.forEach(handover => {
+          handoverChain.push(`${handover.toUserName}`);
+        });
+        formattedLoto["Handover Chain"] = handoverChain.join(" → ");
+        
+        // Create handover history summary with verification details
         const handoverSummary = loto.handoverHistory.map((handover, index) => {
           const status = handover.status || "unknown";
           const fromName = handover.fromUserName || "Unknown";
           const toName = handover.toUserName || "Unknown";
-          const date = handover.handoverDate ? new Date(handover.handoverDate).toLocaleDateString() : "Unknown";
-          const responseDate = handover.responseDate ? new Date(handover.responseDate).toLocaleDateString() : "";
+          const date = handover.handoverDate ? new Date(handover.handoverDate).toLocaleString() : "Unknown";
+          const handoverType = handover.handoverType || "other";
+          const createdBy = handover.createdByName || "Unknown";
           
-          let summary = `${index + 1}. ${fromName} → ${toName} (${status}) on ${date}`;
-          if (responseDate && status !== "pending") {
-            summary += ` - responded ${responseDate}`;
+          let summary = `${index + 1}. ${fromName} → ${toName} | ${date} | Type: ${handoverType.replace('_', ' ').toUpperCase()} | Created by: ${createdBy}`;
+          if (handover.handoverNotes) {
+            summary += ` | Notes: ${handover.handoverNotes}`;
           }
+          
+          // Add recipient decision details
+          const recipientStatus = handover.recipientStatus || "pending";
+          if (recipientStatus === "accepted") {
+            summary += `\n  Recipient Decision: ✅ Accepted on ${handover.recipientDecisionDate ? new Date(handover.recipientDecisionDate).toLocaleString() : "Unknown"}`;
+            if (handover.recipientDecisionNotes) {
+              summary += ` | Decision Notes: ${handover.recipientDecisionNotes}`;
+            }
+          } else if (recipientStatus === "rejected") {
+            summary += `\n  Recipient Decision: ❌ Rejected on ${handover.recipientDecisionDate ? new Date(handover.recipientDecisionDate).toLocaleString() : "Unknown"}`;
+            if (handover.recipientDecisionNotes) {
+              summary += ` | Rejection Notes: ${handover.recipientDecisionNotes}`;
+            }
+          } else {
+            summary += `\n  Recipient Decision: ⏳ Pending`;
+          }
+          
+          // Add verification details
+          const verificationStatus = handover.verificationStatus || "pending";
+          if (verificationStatus === "approved") {
+            summary += `\n  Supervisor Verification: ✅ Approved by ${handover.verifiedByName || "Unknown"} at ${handover.verificationDate ? new Date(handover.verificationDate).toLocaleString() : "Unknown"}`;
+            if (handover.verificationNotes) {
+              summary += ` | Verification Notes: ${handover.verificationNotes}`;
+            }
+          } else if (verificationStatus === "rejected") {
+            summary += `\n  Supervisor Verification: ❌ Rejected by ${handover.verifiedByName || "Unknown"} at ${handover.verificationDate ? new Date(handover.verificationDate).toLocaleString() : "Unknown"}`;
+            if (handover.rejectionReason) {
+              summary += ` | Rejection Reason: ${handover.rejectionReason}`;
+            }
+            if (handover.verificationNotes) {
+              summary += ` | Verification Notes: ${handover.verificationNotes}`;
+            }
+          } else {
+            if (recipientStatus === "accepted") {
+              summary += `\n  Supervisor Verification: ⏳ Pending Verification`;
+              if (handover.assignedVerifierName) {
+                summary += ` | Assigned to: ${handover.assignedVerifierName}`;
+              }
+            } else {
+              summary += `\n  Supervisor Verification: ⏸️ Waiting for Recipient Decision`;
+            }
+          }
+          
           return summary;
-        }).join(" | ");
+        }).join("\n");
         
-        formattedLoto["Handover History"] = handoverSummary;
+        formattedLoto["Detailed Handover History"] = handoverSummary;
         
-        // Add individual handover details
+        // Add individual handover details with verification
         loto.handoverHistory.forEach((handover, index) => {
           const prefix = `Handover ${index + 1}`;
           formattedLoto[`${prefix} - From`] = handover.fromUserName || "Unknown";
           formattedLoto[`${prefix} - To`] = handover.toUserName || "Unknown";
           formattedLoto[`${prefix} - Status`] = handover.status || "unknown";
-          formattedLoto[`${prefix} - Date`] = handover.handoverDate ? new Date(handover.handoverDate).toLocaleDateString() : "Unknown";
+          formattedLoto[`${prefix} - Date`] = handover.handoverDate ? new Date(handover.handoverDate).toLocaleString() : "Unknown";
+          formattedLoto[`${prefix} - Type`] = handover.handoverType ? handover.handoverType.replace('_', ' ').toUpperCase() : "OTHER";
+          formattedLoto[`${prefix} - Created By`] = handover.createdByName || "Unknown";
           formattedLoto[`${prefix} - Response Date`] = handover.responseDate ? new Date(handover.responseDate).toLocaleDateString() : "N/A";
+          
+          // Add verification fields
+          formattedLoto[`${prefix} - Recipient Status`] = handover.recipientStatus || "pending";
+          formattedLoto[`${prefix} - Recipient Decision Date`] = handover.recipientDecisionDate ? new Date(handover.recipientDecisionDate).toLocaleString() : "N/A";
+          formattedLoto[`${prefix} - Recipient Decision Notes`] = handover.recipientDecisionNotes || "N/A";
+          formattedLoto[`${prefix} - Verification Status`] = handover.verificationStatus || "pending";
+          formattedLoto[`${prefix} - Verified By`] = handover.verifiedByName || "N/A";
+          formattedLoto[`${prefix} - Verification Date`] = handover.verificationDate ? new Date(handover.verificationDate).toLocaleString() : "N/A";
+          formattedLoto[`${prefix} - Verification Notes`] = handover.verificationNotes || "N/A";
+          formattedLoto[`${prefix} - Rejection Reason`] = handover.rejectionReason || "N/A";
+          formattedLoto[`${prefix} - Assigned Verifier`] = handover.assignedVerifierName || "N/A";
+          
           if (handover.handoverNotes) {
             formattedLoto[`${prefix} - Notes`] = handover.handoverNotes;
           }
         });
       } else {
         formattedLoto["Total Handovers"] = 0;
-        formattedLoto["Handover History"] = "No handovers recorded";
+        formattedLoto["Handover Chain"] = `${loto.isolator.firstName} ${loto.isolator.lastName}`;
+        formattedLoto["Detailed Handover History"] = "No handovers recorded";
       }
 
       // Add energy types if requested
@@ -337,6 +404,107 @@ const DataExport = () => {
     }
   };
 
+  const exportToExcelWithMultipleSheets = (lotoData, adminActionsData) => {
+    const workbook = XLSX.utils.book_new();
+    
+    // Create LOTO sheet
+    const lotoSheet = XLSX.utils.json_to_sheet(lotoData);
+    XLSX.utils.book_append_sheet(workbook, lotoSheet, "LOTO Records");
+    
+    // Create Admin Actions sheet
+    const adminActionsSheet = XLSX.utils.json_to_sheet(adminActionsData);
+    XLSX.utils.book_append_sheet(workbook, adminActionsSheet, "Admin Actions");
+    
+    // Export
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `LOTO_Export_${timestamp}.xlsx`;
+    XLSX.writeFile(workbook, filename);
+  };
+
+  const exportToCSVWithMultipleSheets = (lotoData, adminActionsData) => {
+    // Create combined CSV with headers
+    const lotoCSV = convertToCSV(lotoData);
+    const adminActionsCSV = convertToCSV(adminActionsData);
+    
+    const combinedCSV = [
+      "=== LOTO RECORDS ===",
+      lotoCSV,
+      "",
+      "=== ADMIN ACTIONS ===",
+      adminActionsCSV
+    ].join("\n");
+
+    const blob = new Blob([combinedCSV], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `LOTO_Export_${timestamp}.csv`;
+      link.setAttribute("download", filename);
+      
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const formatAdminActionsData = (adminActions) => {
+    return adminActions.map((action) => ({
+      "LOTO Serial Number": action.serialNumber,
+      "Isolated Part": action.isolatedPart,
+      "Action Type": action.actionType,
+      "Action Description": action.actionDescription,
+      "Performed By": action.performedBy,
+      "Performed At": new Date(action.performedAt).toLocaleString(),
+      "Notes": action.notes || "N/A",
+      "Additional Data": JSON.stringify(action.additionalData || {}),
+      "Isolator": action.lotoDetails.isolator,
+      "Supervisor": action.lotoDetails.supervisor,
+      "Location": action.lotoDetails.location,
+      "Reason": action.lotoDetails.reason,
+      "Energy Types": action.lotoDetails.energyTypes,
+    }));
+  };
+
+  const fetchAdminActions = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      let url = "https://loto-backend-643788243736.europe-west1.run.app/api/loto/admin-actions";
+      const params = new URLSearchParams();
+
+      // Add date filter if custom date range is selected
+      if (exportOptions.dateRange === "custom" && customDateRange.startDate && customDateRange.endDate) {
+        params.append("startDate", customDateRange.startDate);
+        params.append("endDate", customDateRange.endDate);
+      }
+
+      // Add action type filter if specific status is selected
+      if (exportOptions.status !== "all") {
+        params.append("actionType", exportOptions.status);
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const res = await axios.get(url, config);
+      return res.data.data || [];
+    } catch (err) {
+      console.error("Error fetching admin actions:", err);
+      return [];
+    }
+  };
+
   const handleExport = async () => {
     setLoading(true);
     setError("");
@@ -344,10 +512,19 @@ const DataExport = () => {
 
     try {
       // Fetch data
-      const [lotos, users] = await Promise.all([
+      const fetchPromises = [
         fetchAllLOTOs(),
         exportOptions.includeUsers ? fetchAllUsers() : Promise.resolve([])
-      ]);
+      ];
+
+      // Add admin actions fetch if enabled and user is admin
+      if (exportOptions.includeAdminActions && currentUser?.role === "admin") {
+        fetchPromises.push(fetchAdminActions());
+      } else {
+        fetchPromises.push(Promise.resolve([]));
+      }
+
+      const [lotos, users, adminActions] = await Promise.all(fetchPromises);
 
       // Filter data
       const filteredLOTOs = filterLOTOs(lotos);
@@ -360,15 +537,31 @@ const DataExport = () => {
 
       // Format data
       const formattedData = formatLOTOData(filteredLOTOs, users);
+      const formattedAdminActions = exportOptions.includeAdminActions && currentUser?.role === "admin" 
+        ? formatAdminActionsData(adminActions) 
+        : [];
 
       // Export based on format
       if (exportOptions.format === "excel") {
-        exportToExcel(formattedData);
+        if (formattedAdminActions.length > 0) {
+          exportToExcelWithMultipleSheets(formattedData, formattedAdminActions);
+        } else {
+          exportToExcel(formattedData);
+        }
       } else {
-        exportToCSV(formattedData);
+        if (formattedAdminActions.length > 0) {
+          exportToCSVWithMultipleSheets(formattedData, formattedAdminActions);
+        } else {
+          exportToCSV(formattedData);
+        }
       }
 
-      setSuccess(`Successfully exported ${filteredLOTOs.length} LOTO records to ${exportOptions.format.toUpperCase()} format.`);
+      const adminActionsCount = formattedAdminActions.length;
+      const successMessage = adminActionsCount > 0 
+        ? `Successfully exported ${filteredLOTOs.length} LOTO records and ${adminActionsCount} admin actions to ${exportOptions.format.toUpperCase()} format.`
+        : `Successfully exported ${filteredLOTOs.length} LOTO records to ${exportOptions.format.toUpperCase()} format.`;
+      
+      setSuccess(successMessage);
     } catch (err) {
       setError(err.message || "Export failed. Please try again.");
     } finally {
@@ -683,6 +876,17 @@ const DataExport = () => {
                 />
                 <span>Include Notes</span>
               </label>
+              
+              {currentUser?.role === "admin" && (
+                <label className="checkbox-option">
+                  <input
+                    type="checkbox"
+                    checked={exportOptions.includeAdminActions}
+                    onChange={(e) => handleOptionChange("includeAdminActions", e.target.checked)}
+                  />
+                  <span>Include Admin Actions</span>
+                </label>
+              )}
             </div>
           </div>
         </div>

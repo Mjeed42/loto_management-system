@@ -1,0 +1,106 @@
+const mongoose = require('mongoose');
+const LOTO = require('../models/LOTO');
+const User = require('../models/User');
+
+// Connect to MongoDB
+const MONGO_URI = "mongodb+srv://loto_app_user:6hsMKn4SwqFKpPtV@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
+
+mongoose.connect(MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+async function fixHandoverData() {
+  try {
+    console.log('🔧 Starting handover data fix...');
+    
+    // Find all LOTOs with handover history
+    const lotos = await LOTO.find({ handoverHistory: { $exists: true, $ne: [] } })
+      .populate('isolator', 'firstName lastName')
+      .populate('handoverHistory.fromUser', 'firstName lastName')
+      .populate('handoverHistory.toUser', 'firstName lastName')
+      .populate('handoverHistory.createdBy', 'firstName lastName');
+
+    console.log(`📊 Found ${lotos.length} LOTOs with handover history`);
+
+    let fixedCount = 0;
+    let errorCount = 0;
+
+    for (const loto of lotos) {
+      try {
+        let needsUpdate = false;
+        const updatedHandoverHistory = [];
+
+        for (let i = 0; i < loto.handoverHistory.length; i++) {
+          const handover = loto.handoverHistory[i];
+          const updatedHandover = { ...handover.toObject() };
+
+          // Fix fromUserName if it contains "undefined"
+          if (!handover.fromUserName || handover.fromUserName.includes('undefined')) {
+            if (handover.fromUser && handover.fromUser.firstName && handover.fromUser.lastName) {
+              updatedHandover.fromUserName = `${handover.fromUser.firstName} ${handover.fromUser.lastName}`;
+              needsUpdate = true;
+              console.log(`✅ Fixed fromUserName for LOTO ${loto.serialNumber}, handover ${i + 1}: ${updatedHandover.fromUserName}`);
+            } else if (i === 0 && loto.isolator) {
+              // For first handover, use isolator as fromUser
+              updatedHandover.fromUserName = `${loto.isolator.firstName} ${loto.isolator.lastName}`;
+              needsUpdate = true;
+              console.log(`✅ Fixed fromUserName using isolator for LOTO ${loto.serialNumber}, handover ${i + 1}: ${updatedHandover.fromUserName}`);
+            } else {
+              console.log(`⚠️  Could not fix fromUserName for LOTO ${loto.serialNumber}, handover ${i + 1}`);
+            }
+          }
+
+          // Fix toUserName if it contains "undefined"
+          if (!handover.toUserName || handover.toUserName.includes('undefined')) {
+            if (handover.toUser && handover.toUser.firstName && handover.toUser.lastName) {
+              updatedHandover.toUserName = `${handover.toUser.firstName} ${handover.toUser.lastName}`;
+              needsUpdate = true;
+              console.log(`✅ Fixed toUserName for LOTO ${loto.serialNumber}, handover ${i + 1}: ${updatedHandover.toUserName}`);
+            } else {
+              console.log(`⚠️  Could not fix toUserName for LOTO ${loto.serialNumber}, handover ${i + 1}`);
+            }
+          }
+
+          // Fix createdByName if it's "Unknown" or contains "undefined"
+          if (!handover.createdByName || handover.createdByName === 'Unknown' || handover.createdByName.includes('undefined')) {
+            if (handover.createdBy && handover.createdBy.firstName && handover.createdBy.lastName) {
+              updatedHandover.createdByName = `${handover.createdBy.firstName} ${handover.createdBy.lastName}`;
+              needsUpdate = true;
+              console.log(`✅ Fixed createdByName for LOTO ${loto.serialNumber}, handover ${i + 1}: ${updatedHandover.createdByName}`);
+            } else {
+              console.log(`⚠️  Could not fix createdByName for LOTO ${loto.serialNumber}, handover ${i + 1}`);
+            }
+          }
+
+          updatedHandoverHistory.push(updatedHandover);
+        }
+
+        // Update the LOTO if changes were made
+        if (needsUpdate) {
+          await LOTO.findByIdAndUpdate(loto._id, {
+            handoverHistory: updatedHandoverHistory
+          });
+          fixedCount++;
+          console.log(`✅ Updated LOTO ${loto.serialNumber}`);
+        }
+
+      } catch (error) {
+        errorCount++;
+        console.error(`❌ Error processing LOTO ${loto.serialNumber}:`, error.message);
+      }
+    }
+
+    console.log(`\n🎉 Migration completed!`);
+    console.log(`✅ Fixed: ${fixedCount} LOTOs`);
+    console.log(`❌ Errors: ${errorCount} LOTOs`);
+    
+  } catch (error) {
+    console.error('❌ Migration failed:', error);
+  } finally {
+    mongoose.connection.close();
+  }
+}
+
+// Run the migration
+fixHandoverData();

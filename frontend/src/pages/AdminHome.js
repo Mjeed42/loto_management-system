@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
+import RejectLOTOModal from "../components/RejectLOTOModal";
 
 const AdminHome = () => {
   const [users, setUsers] = useState([]);
@@ -31,6 +32,8 @@ const AdminHome = () => {
     supervisor: "",
   });
   const [userSearchTerm, setUserSearchTerm] = useState(""); // New search state
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [selectedLotoForRejection, setSelectedLotoForRejection] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -328,6 +331,40 @@ const AdminHome = () => {
     }
   };
 
+  const handleRejectLoto = (loto) => {
+    setSelectedLotoForRejection(loto);
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectConfirm = async (rejectionData) => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.put(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${selectedLotoForRejection._id}/reject`,
+        rejectionData,
+        config
+      );
+
+      alert("LOTO rejected successfully!");
+      fetchHomeData();
+      setRejectModalOpen(false);
+      setSelectedLotoForRejection(null);
+    } catch (err) {
+      alert(err.response?.data?.message || "Error rejecting LOTO");
+    }
+  };
+
+  const handleRejectModalClose = () => {
+    setRejectModalOpen(false);
+    setSelectedLotoForRejection(null);
+  };
+
   const handleCompleteLoto = async (lotoId, serialNumber) => {
     if (
       !window.confirm(`Are you sure you want to complete LOTO ${serialNumber}?`)
@@ -438,6 +475,7 @@ const AdminHome = () => {
       completed: { text: "Completed", variant: "secondary" },
       pending_handover: { text: "Pending Handover", variant: "info" },
       handover: { text: "Handover", variant: "info" },
+      rejected: { text: "Rejected", variant: "danger" },
     };
 
     const config = statusConfig[status] || {
@@ -800,16 +838,28 @@ const AdminHome = () => {
                       <td>
                         <div className="d-flex flex-wrap gap-1">
                           {loto.status === "pending" && (
-                            <Button
-                              variant="success"
-                              size="sm"
-                              onClick={() =>
-                                handleVerifyLoto(loto._id, loto.serialNumber)
-                              }
-                              title="Verify LOTO"
-                            >
-                              <Icon name="check" />
-                            </Button>
+                            <>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={() =>
+                                  handleVerifyLoto(loto._id, loto.serialNumber)
+                                }
+                                title="Verify LOTO"
+                              >
+                                <Icon name="check" />
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() =>
+                                  handleRejectLoto(loto)
+                                }
+                                title="Reject LOTO"
+                              >
+                                <Icon name="x" />
+                              </Button>
+                            </>
                           )}
                           {(loto.status === "active" ||
                             loto.status === "handover") && (
@@ -868,6 +918,14 @@ const AdminHome = () => {
           </div>
         </div>
       </div>
+
+      {/* Rejection Modal */}
+      <RejectLOTOModal
+        isOpen={rejectModalOpen}
+        onClose={handleRejectModalClose}
+        onConfirm={handleRejectConfirm}
+        lotoData={selectedLotoForRejection}
+      />
     </div>
   );
 };

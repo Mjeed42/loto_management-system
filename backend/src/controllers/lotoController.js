@@ -136,6 +136,7 @@ exports.getLOTOs = async (req, res) => {
     const lotos = await LOTO.find(query)
       .populate("isolator", "firstName lastName username")
       .populate("verifiedBy", "firstName lastName username")
+      .populate("rejectedBy", "firstName lastName username")
       .populate("handoverTo", "firstName lastName username")
       .sort({ createdAt: -1 });
 
@@ -161,6 +162,7 @@ exports.getLOTO = async (req, res) => {
     const loto = await LOTO.findById(req.params.id)
       .populate("isolator", "firstName lastName username")
       .populate("verifiedBy", "firstName lastName username")
+      .populate("rejectedBy", "firstName lastName username")
       .populate("handoverTo", "firstName lastName username");
 
     if (!loto) {
@@ -290,36 +292,95 @@ exports.updateLOTO = async (req, res) => {
       });
     }
 
-    // Only the isolator or handover recipient can update
-    if (
-      loto.isolator.toString() !== req.user.id &&
-      loto.handoverTo?.toString() !== req.user.id &&
-      req.user.role !== "admin"
-    ) {
+    // Only the isolator, handover recipient, or admin can update
+    // Also allow updates if LOTO is rejected and user is the original isolator
+    const canUpdate = 
+      loto.isolator.toString() === req.user.id ||
+      loto.handoverTo?.toString() === req.user.id ||
+      req.user.role === "admin" ||
+      (loto.status === "rejected" && loto.isolator.toString() === req.user.id);
+
+    if (!canUpdate) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to update this LOTO",
       });
     }
 
-    // Only allow updates to certain fields
+    // Determine what fields can be updated based on LOTO status
+    let allowedFields = [];
+    
+    if (loto.status === "pending") {
+      // Normal pending LOTOs: only expectedDuration and supervisor
+      allowedFields = ["expectedDuration", "supervisor"];
+    } else if (loto.status === "rejected") {
+      // Rejected LOTOs: only the fields that were rejected
+      allowedFields = loto.rejectedFields || [];
+    }
+
+    // Extract all possible fields from request body
     const {
-      expectedDuration,
+      shift,
+      location,
+      line,
+      machine,
+      isolatedPart,
       reason,
       ptwNumber,
-      supervisor, // NEW FIELD - Allow supervisor updates
-      isolatedPart, // NEW FIELD - Allow isolated part updates
+      expectedDuration,
+      supervisor,
+      energyTypes,
     } = req.body;
 
-    // Update fields if provided
-    if (expectedDuration !== undefined)
-      loto.expectedDuration = parseFloat(expectedDuration);
-    if (reason) loto.reason = reason;
-    if (ptwNumber !== undefined) loto.ptwNumber = ptwNumber;
-    if (isolatedPart) loto.isolatedPart = isolatedPart; // NEW FIELD
+    // Validate that only allowed fields are being updated
+    const requestedFields = Object.keys(req.body).filter(key => req.body[key] !== undefined);
+    const unauthorizedFields = requestedFields.filter(field => !allowedFields.includes(field));
+    
+    if (unauthorizedFields.length > 0) {
+      return res.status(403).json({
+        success: false,
+        message: `You can only update the following fields: ${allowedFields.join(", ")}. Attempted to update: ${unauthorizedFields.join(", ")}`,
+      });
+    }
 
-    // NEW: Handle supervisor assignment updates
-    if (supervisor !== undefined) {
+    // Update allowed fields
+    if (allowedFields.includes("shift") && shift !== undefined) {
+      loto.shift = shift;
+    }
+    if (allowedFields.includes("location") && location !== undefined) {
+      loto.location = location;
+    }
+    if (allowedFields.includes("line") && line !== undefined) {
+      loto.line = line;
+    }
+    if (allowedFields.includes("machine") && machine !== undefined) {
+      loto.machine = machine;
+    }
+    if (allowedFields.includes("isolatedPart") && isolatedPart !== undefined) {
+      loto.isolatedPart = isolatedPart;
+    }
+    if (allowedFields.includes("reason") && reason !== undefined) {
+      loto.reason = reason;
+    }
+    if (allowedFields.includes("ptwNumber") && ptwNumber !== undefined) {
+      loto.ptwNumber = ptwNumber;
+    }
+    if (allowedFields.includes("expectedDuration") && expectedDuration !== undefined) {
+      loto.expectedDuration = parseFloat(expectedDuration);
+    }
+    if (allowedFields.includes("energyTypes") && energyTypes !== undefined) {
+      if (energyTypes && Array.isArray(energyTypes)) {
+        const filteredEnergyTypes = energyTypes.filter(
+          (et) => et.type && et.isolationPoint
+        );
+        if (filteredEnergyTypes.length > 0) {
+          loto.energyTypes = filteredEnergyTypes;
+        }
+      }
+    }
+
+    // Handle supervisor assignment updates
+    if (allowedFields.includes("supervisor") && supervisor !== undefined) {
       if (supervisor === "") {
         // Clear supervisor assignment
         loto.supervisor = null;
@@ -347,6 +408,21 @@ exports.updateLOTO = async (req, res) => {
 
         loto.supervisor = supervisor;
         loto.supervisorName = `${supervisorUser.firstName} ${supervisorUser.lastName}`;
+      }
+    }
+
+    // If LOTO was rejected and is being updated, reset status to pending
+    if (loto.status === "rejected") {
+      loto.status = "pending";
+      loto.rejectedBy = null;
+      loto.rejectedAt = null;
+      loto.rejectionNotes = null;
+      loto.rejectedFields = [];
+      
+      // Mark the latest rejection as resolved
+      if (loto.rejectionHistory && loto.rejectionHistory.length > 0) {
+        const latestRejection = loto.rejectionHistory[loto.rejectionHistory.length - 1];
+        latestRejection.resolvedAt = Date.now();
       }
     }
 
@@ -480,7 +556,7 @@ exports.handoverLOTO = async (req, res) => {
     console.log("LOTO Isolator:", loto.isolator.toString());
 
     // Only the isolator can initiate handover
-    if (loto.isolator.toString() !== req.user.id) {
+    if (loto.isolator.toString() !== req.user.id && req.user.role !== "admin") {
       console.log("Unauthorized handover attempt");
       return res.status(403).json({
         success: false,
@@ -748,6 +824,129 @@ exports.rejectHandover = async (req, res) => {
   }
 };
 
+// @desc    Reject LOTO with notes
+// @route   PUT /api/loto/:id/reject
+// @access  Private (supervisors/admins)
+exports.rejectLOTO = async (req, res) => {
+  try {
+    const loto = await LOTO.findById(req.params.id);
+
+    if (!loto) {
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    // Check if this LOTO has a specific supervisor assigned
+    if (loto.supervisor) {
+      // Prevent supervisor from rejecting their own LOTO
+      if (loto.supervisor.toString() === loto.isolator.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: "Supervisor cannot reject their own LOTO",
+        });
+      }
+      // Only the assigned supervisor or admin can reject
+      if (
+        loto.supervisor.toString() !== req.user.id &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Not authorized to reject this LOTO - assigned to different supervisor",
+        });
+      }
+    } else {
+      // If no supervisor assigned, only supervisors and admins can reject
+      if (req.user.role !== "supervisor" && req.user.role !== "admin") {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to reject LOTO",
+        });
+      }
+      // Prevent supervisor from rejecting their own LOTO
+      if (
+        req.user.role === "supervisor" &&
+        loto.isolator.toString() === req.user.id
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Supervisor cannot reject their own LOTO",
+        });
+      }
+    }
+
+    const { rejectionNotes, rejectedFields } = req.body;
+
+    if (!rejectionNotes || rejectionNotes.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Rejection notes are required",
+      });
+    }
+
+    // Validate rejected fields if provided
+    const validFields = [
+      "shift", "location", "line", "machine", "isolatedPart", 
+      "reason", "ptwNumber", "expectedDuration", "supervisor", "energyTypes"
+    ];
+    
+    if (rejectedFields && Array.isArray(rejectedFields)) {
+      const invalidFields = rejectedFields.filter(field => !validFields.includes(field));
+      if (invalidFields.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid rejected fields: ${invalidFields.join(", ")}`,
+        });
+      }
+    }
+
+    // Update LOTO
+    loto.status = "rejected";
+    loto.rejectedBy = req.user.id;
+    loto.rejectedAt = Date.now();
+    loto.rejectionNotes = rejectionNotes;
+    loto.rejectedFields = rejectedFields || [];
+
+    // Add to rejection history
+    const rejectionHistoryEntry = {
+      rejectedBy: req.user.id,
+      rejectedByName: `${req.user.firstName} ${req.user.lastName}`,
+      rejectionNotes: rejectionNotes,
+      rejectedFields: rejectedFields || [],
+      rejectedAt: Date.now(),
+    };
+
+    if (!loto.rejectionHistory) {
+      loto.rejectionHistory = [];
+    }
+    loto.rejectionHistory.push(rejectionHistoryEntry);
+
+    await loto.save();
+
+    // Populate the updated LOTO
+    const updatedLOTO = await LOTO.findById(loto._id)
+      .populate("isolator", "firstName lastName username")
+      .populate("supervisor", "firstName lastName username")
+      .populate("verifiedBy", "firstName lastName username")
+      .populate("rejectedBy", "firstName lastName username")
+      .populate("handoverTo", "firstName lastName username");
+
+    res.status(200).json({
+      success: true,
+      updatedLOTO,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
 // @desc    Get handover history for a LOTO
 // @route   GET /api/loto/:id/handover-history
 // @access  Private
@@ -777,6 +976,538 @@ exports.getHandoverHistory = async (req, res) => {
         serialNumber: loto.serialNumber,
         handoverHistory: loto.handoverHistory || [],
         totalHandovers: loto.handoverHistory?.length || 0,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Get handover history error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Change LOTO status (Admin only)
+// @route   PUT /api/loto/:id/status
+// @access  Private (admin only)
+exports.changeLOTOStatus = async (req, res) => {
+  try {
+    // Only admins can change status
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Only administrators can change LOTO status",
+      });
+    }
+
+    const loto = await LOTO.findById(req.params.id);
+
+    if (!loto) {
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    const { status, notes, additionalData } = req.body;
+
+    // Validate status
+    const validStatuses = ["pending", "active", "completed", "pending_handover", "rejected"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+      });
+    }
+
+    const oldStatus = loto.status;
+    loto.status = status;
+    loto.updatedAt = Date.now();
+
+    // Update LOTO with additional data based on status
+    if (additionalData) {
+      switch (status) {
+        case 'active':
+          if (additionalData.assignedTechnician) loto.assignedTechnician = additionalData.assignedTechnician;
+          if (additionalData.workStartTime) loto.workStartTime = new Date(additionalData.workStartTime);
+          if (additionalData.estimatedCompletion) loto.estimatedCompletion = new Date(additionalData.estimatedCompletion);
+          break;
+        case 'completed':
+          if (additionalData.completionTime) loto.completionTime = new Date(additionalData.completionTime);
+          if (additionalData.completedBy) loto.completedBy = additionalData.completedBy;
+          if (additionalData.workSummary) loto.workSummary = additionalData.workSummary;
+          break;
+        case 'pending_handover':
+          if (additionalData.handoverTo) loto.handoverTo = additionalData.handoverTo;
+          if (additionalData.handoverReason) loto.handoverReason = additionalData.handoverReason;
+          break;
+        case 'rejected':
+          if (additionalData.rejectionReason) loto.rejectionReason = additionalData.rejectionReason;
+          if (additionalData.rejectedFields) loto.rejectedFields = additionalData.rejectedFields;
+          loto.rejectedBy = req.user.id;
+          loto.rejectedAt = Date.now();
+          loto.rejectionNotes = additionalData.rejectionReason;
+          break;
+      }
+    }
+
+    // Always add status change to history
+    if (!loto.statusHistory) {
+      loto.statusHistory = [];
+    }
+    loto.statusHistory.push({
+      changedBy: req.user.id,
+      changedByName: `${req.user.firstName} ${req.user.lastName}`,
+      oldStatus: oldStatus,
+      newStatus: status,
+      notes: notes ? notes.trim() : '',
+      additionalData: additionalData || {},
+      changedAt: Date.now(),
+    });
+
+    await loto.save();
+
+    // Populate the updated LOTO
+    const updatedLOTO = await LOTO.findById(req.params.id)
+      .populate("isolator", "firstName lastName email")
+      .populate("supervisor", "firstName lastName email")
+      .populate("handoverTo", "firstName lastName email")
+      .populate("verifiedBy", "firstName lastName email")
+      .populate("rejectedBy", "firstName lastName email");
+
+    res.json({
+      success: true,
+      message: `LOTO status changed from ${oldStatus} to ${status}`,
+      data: updatedLOTO,
+    });
+  } catch (error) {
+    console.error("❌ Change LOTO status error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get admin actions for data export
+// @route   GET /api/loto/admin-actions
+// @access  Private (admin only)
+exports.getAdminActions = async (req, res) => {
+  try {
+    // Only admins can access this data
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Only administrators can access admin actions data",
+      });
+    }
+
+    const { startDate, endDate, actionType } = req.query;
+
+    // Build query for LOTOs with status history
+    let query = {
+      statusHistory: { $exists: true, $ne: [] }
+    };
+
+    // Add date filter if provided
+    if (startDate && endDate) {
+      query["statusHistory.changedAt"] = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const lotos = await LOTO.find(query)
+      .populate("isolator", "firstName lastName email")
+      .populate("supervisor", "firstName lastName email")
+      .populate("handoverTo", "firstName lastName email")
+      .populate("verifiedBy", "firstName lastName email")
+      .populate("rejectedBy", "firstName lastName email")
+      .sort({ updatedAt: -1 });
+
+    // Extract admin actions from status history
+    const adminActions = [];
+    
+    lotos.forEach(loto => {
+      if (loto.statusHistory && loto.statusHistory.length > 0) {
+        loto.statusHistory.forEach(action => {
+          // Filter by action type if specified
+          if (actionType && action.newStatus !== actionType) {
+            return;
+          }
+
+          adminActions.push({
+            lotoId: loto._id,
+            serialNumber: loto.serialNumber,
+            isolatedPart: loto.isolatedPart,
+            actionType: action.newStatus,
+            actionDescription: `Status changed from ${action.oldStatus} to ${action.newStatus}`,
+            performedBy: action.changedByName,
+            performedAt: action.changedAt,
+            notes: action.notes,
+            additionalData: action.additionalData,
+            lotoDetails: {
+              isolator: loto.isolator ? `${loto.isolator.firstName} ${loto.isolator.lastName}` : 'N/A',
+              supervisor: loto.supervisor ? `${loto.supervisor.firstName} ${loto.supervisor.lastName}` : 'N/A',
+              location: loto.location,
+              reason: loto.reason,
+              energyTypes: loto.energyTypes?.map(et => et.type).join(', ') || 'N/A'
+            }
+          });
+        });
+      }
+    });
+
+    // Sort by performed date (newest first)
+    adminActions.sort((a, b) => new Date(b.performedAt) - new Date(a.performedAt));
+
+    res.json({
+      success: true,
+      count: adminActions.length,
+      data: adminActions,
+    });
+  } catch (error) {
+    console.error("❌ Get admin actions error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Add new handover to LOTO
+// @route   POST /api/loto/:id/handover
+// @access  Private
+exports.addHandover = async (req, res) => {
+  try {
+    const loto = await LOTO.findById(req.params.id).populate("isolator", "firstName lastName email");
+
+    if (!loto) {
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    const { toUser, handoverNotes, handoverType } = req.body;
+
+    // Validate required fields
+    if (!toUser) {
+      return res.status(400).json({
+        success: false,
+        message: "To User is required",
+      });
+    }
+
+    // Check if toUser exists
+    const toUserDoc = await User.findById(toUser);
+    if (!toUserDoc) {
+      return res.status(400).json({
+        success: false,
+        message: "Target user not found",
+      });
+    }
+
+    // Determine the current responsible user
+    let fromUser, fromUserName;
+    if (loto.handoverHistory && loto.handoverHistory.length > 0) {
+      // Get the last handover's "toUser" as the current responsible
+      const lastHandover = loto.handoverHistory[loto.handoverHistory.length - 1];
+      fromUser = lastHandover.toUser;
+      fromUserName = lastHandover.toUserName;
+      console.log("Debug - Using last handover:", { fromUser, fromUserName });
+    } else {
+      // If no handover history, the isolator is the current responsible
+      if (!loto.isolator || !loto.isolator._id) {
+        return res.status(400).json({
+          success: false,
+          message: "LOTO isolator information is missing",
+        });
+      }
+      
+      fromUser = loto.isolator._id;
+      fromUserName = `${loto.isolator.firstName || 'Unknown'} ${loto.isolator.lastName || 'User'}`;
+      console.log("Debug - Using isolator:", { 
+        fromUser, 
+        fromUserName, 
+        isolator: loto.isolator,
+        firstName: loto.isolator.firstName,
+        lastName: loto.isolator.lastName
+      });
+    }
+
+    // Validate fromUserName is not undefined
+    if (!fromUserName || fromUserName.includes('undefined')) {
+      console.error("Debug - Invalid fromUserName:", fromUserName);
+      return res.status(500).json({
+        success: false,
+        message: "Unable to determine current responsible user name",
+        error: `Invalid fromUserName: ${fromUserName}`,
+      });
+    }
+
+    // Validate that the handover is initiated by the current responsible user
+    if (fromUser.toString() !== req.user.id && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Only the current responsible user or admin can initiate handovers",
+      });
+    }
+
+    // Prevent self-handover
+    if (fromUser.toString() === toUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot handover to yourself",
+      });
+    }
+
+    // Ensure we have the creator's name
+    console.log("Debug - req.user:", {
+      id: req.user.id,
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
+      email: req.user.email,
+      username: req.user.username
+    });
+    
+    let creatorName;
+    if (req.user.firstName && req.user.lastName) {
+      creatorName = `${req.user.firstName} ${req.user.lastName}`;
+    } else {
+      // Fetch user details from database if not available in req.user
+      try {
+        const userDoc = await User.findById(req.user.id);
+        if (userDoc) {
+          creatorName = `${userDoc.firstName} ${userDoc.lastName}`;
+        } else {
+          creatorName = req.user.email || req.user.username || 'Unknown User';
+        }
+      } catch (userError) {
+        console.error("Debug - Error fetching user:", userError);
+        creatorName = req.user.email || req.user.username || 'Unknown User';
+      }
+    }
+
+    console.log("Debug - Final creatorName:", creatorName);
+
+    // Validate required fields
+    if (!req.user.id) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is missing from request",
+      });
+    }
+
+    if (!creatorName || creatorName === 'Unknown User') {
+      return res.status(400).json({
+        success: false,
+        message: "Unable to determine creator name",
+      });
+    }
+
+    // Assign a verifier for the handover
+    let assignedVerifier = null;
+    let assignedVerifierName = null;
+    
+    try {
+      // Find a supervisor or admin to assign as verifier
+      const User = require("../models/User");
+      const verifier = await User.findOne({
+        role: { $in: ["supervisor", "admin"] }
+      }).select("_id firstName lastName");
+      
+      if (verifier) {
+        assignedVerifier = verifier._id;
+        assignedVerifierName = `${verifier.firstName} ${verifier.lastName}`;
+        console.log("Debug - Assigned verifier:", assignedVerifierName);
+      } else {
+        console.log("Debug - No supervisor/admin found to assign as verifier");
+      }
+    } catch (verifierError) {
+      console.error("Debug - Error finding verifier:", verifierError);
+    }
+
+    // Create new handover record
+    const newHandover = {
+      fromUser: fromUser,
+      fromUserName: fromUserName,
+      toUser: toUser,
+      toUserName: `${toUserDoc.firstName} ${toUserDoc.lastName}`,
+      handoverNotes: handoverNotes || "",
+      handoverType: handoverType || "other",
+      createdBy: req.user.id,
+      createdByName: creatorName,
+      handoverDate: Date.now(),
+      status: "pending",
+      recipientStatus: "pending", // Recipient needs to decide
+      verificationStatus: "pending", // Will be verified after recipient accepts
+      assignedVerifier: assignedVerifier,
+      assignedVerifierName: assignedVerifierName,
+    };
+
+    console.log("Debug - newHandover:", newHandover);
+
+    // Validate the newHandover object before adding to history
+    console.log("Debug - createdBy type:", typeof newHandover.createdBy, "value:", newHandover.createdBy);
+    console.log("Debug - createdByName type:", typeof newHandover.createdByName, "value:", newHandover.createdByName);
+    
+    if (!newHandover.createdBy || !newHandover.createdByName) {
+      console.error("Debug - Invalid newHandover object:", newHandover);
+      return res.status(500).json({
+        success: false,
+        message: "Invalid handover data",
+        error: "Missing required fields: createdBy or createdByName",
+        debug: newHandover
+      });
+    }
+
+    // Add to handover history
+    if (!loto.handoverHistory) {
+      loto.handoverHistory = [];
+    }
+    console.log("Debug - Existing handoverHistory length:", loto.handoverHistory.length);
+    console.log("Debug - Existing handoverHistory:", loto.handoverHistory);
+    loto.handoverHistory.push(newHandover);
+
+    // Update current responsible
+    loto.currentResponsible = toUser;
+    loto.currentResponsibleName = `${toUserDoc.firstName} ${toUserDoc.lastName}`;
+    loto.handoverTo = toUser;
+    loto.handoverNotes = handoverNotes || "";
+
+    // Update status to pending_handover if not already
+    if (loto.status === "active") {
+      loto.status = "pending_handover";
+    }
+
+    loto.updatedAt = Date.now();
+    
+    console.log("Debug - LOTO handoverHistory before save:", loto.handoverHistory);
+    console.log("Debug - First handover in history:", loto.handoverHistory[0]);
+    
+    try {
+      await loto.save();
+      console.log("Debug - LOTO saved successfully");
+    } catch (saveError) {
+      console.error("Debug - Save error:", saveError);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to save handover",
+        error: saveError.message,
+        details: saveError.errors
+      });
+    }
+
+    // Create handover notification (same as handoverLOTO function)
+    try {
+      const HandoverNotification = require("../models/HandoverNotification");
+      const notification = await HandoverNotification.create({
+        lotoId: loto._id,
+        fromUser: fromUser,
+        toUser: toUser,
+        lotoDetails: {
+          isolatedPart: loto.isolatedPart,
+          reason: loto.reason,
+          shift: loto.shift,
+          line: loto.line,
+        },
+        handoverNotes: handoverNotes,
+      });
+      
+      // Update the handover history entry with notification ID
+      const lastHistoryEntry = loto.handoverHistory[loto.handoverHistory.length - 1];
+      lastHistoryEntry.notificationId = notification._id;
+      await loto.save();
+      
+      console.log("✅ Handover notification created successfully:", notification._id);
+      console.log("✅ Handover history updated with notification ID");
+    } catch (notificationError) {
+      console.error("❌ Failed to create handover notification:", notificationError);
+      // Don't fail the entire handover process, but log the error for debugging
+      console.error("Notification creation error details:", {
+        lotoId: loto._id,
+        fromUser: fromUser,
+        toUser: toUser,
+        error: notificationError.message,
+        stack: notificationError.stack
+      });
+    }
+
+    // Populate the updated LOTO
+    const updatedLOTO = await LOTO.findById(req.params.id)
+      .populate("isolator", "firstName lastName email")
+      .populate("supervisor", "firstName lastName email")
+      .populate("handoverTo", "firstName lastName email")
+      .populate("currentResponsible", "firstName lastName email")
+      .populate("verifiedBy", "firstName lastName email")
+      .populate("rejectedBy", "firstName lastName email")
+      .populate("handoverHistory.fromUser", "firstName lastName email")
+      .populate("handoverHistory.toUser", "firstName lastName email")
+      .populate("handoverHistory.createdBy", "firstName lastName email");
+
+    res.json({
+      success: true,
+      message: `Handover from ${fromUserName} to ${toUserDoc.firstName} ${toUserDoc.lastName} created successfully`,
+      data: updatedLOTO,
+    });
+  } catch (error) {
+    console.error("❌ Add handover error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get handover history for a LOTO
+// @route   GET /api/loto/:id/handover-history
+// @access  Private
+exports.getHandoverHistory = async (req, res) => {
+  try {
+    const loto = await LOTO.findById(req.params.id)
+      .populate("handoverHistory.fromUser", "firstName lastName email")
+      .populate("handoverHistory.toUser", "firstName lastName email")
+      .populate("handoverHistory.createdBy", "firstName lastName email")
+      .populate("isolator", "firstName lastName email")
+      .populate("currentResponsible", "firstName lastName email");
+
+    if (!loto) {
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    // Build handover chain
+    const handoverChain = [];
+    if (loto.handoverHistory && loto.handoverHistory.length > 0) {
+      // Start with isolator
+      handoverChain.push(`${loto.isolator.firstName} ${loto.isolator.lastName}`);
+      
+      // Add each handover
+      loto.handoverHistory.forEach(handover => {
+        handoverChain.push(`${handover.toUser.firstName} ${handover.toUser.lastName}`);
+      });
+    } else {
+      // No handovers, just isolator
+      handoverChain.push(`${loto.isolator.firstName} ${loto.isolator.lastName}`);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        lotoId: loto._id,
+        serialNumber: loto.serialNumber,
+        isolatedPart: loto.isolatedPart,
+        handoverChain: handoverChain.join(" → "),
+        currentResponsible: loto.currentResponsibleName,
+        handoverHistory: loto.handoverHistory || [],
+        totalHandovers: loto.handoverHistory ? loto.handoverHistory.length : 0,
       },
     });
   } catch (error) {
