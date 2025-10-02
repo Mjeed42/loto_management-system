@@ -7224,6 +7224,9 @@ const GlobalStyles = () => (
         left: 0;
         transform: translateX(-100%);
         z-index: 1000;
+    
+        
+        overflow-y: auto;
       }
 
       .sidebar.mobile-open {
@@ -7314,6 +7317,11 @@ const GlobalStyles = () => (
         width: 20px;
         height: 20px;
       }
+
+      .sidebar {
+        height: auto;
+        max-height: 100vh;
+      }
     }
 
     /* Back Button Component */
@@ -7391,8 +7399,10 @@ const GlobalStyles = () => (
     .header-content {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
 
     .header-main {
@@ -7456,6 +7466,8 @@ const GlobalStyles = () => (
       align-items: center;
       justify-content: center;
       gap: 1rem;
+      flex-wrap: wrap;
+      padding: 1rem 0;
     }
 
     .progress-step {
@@ -7621,23 +7633,59 @@ const GlobalStyles = () => (
 
     .section-content {
       padding: 2rem;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     /* Form Grid and Fields */
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 1.5rem;
+      align-items: start;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
     .form-field {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
+      min-height: auto;
+      visibility: visible;
+      opacity: 1;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      align-items: stretch;
     }
 
     .form-field.full-width {
       grid-column: 1 / -1;
+      width: 100%;
+      min-width: 0;
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      margin: 0;
+      padding: 0;
+      align-self: stretch;
+      justify-self: stretch;
+    }
+
+    /* Specific rule for PTW field */
+    input[name="ptwNumber"] {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      padding: 1rem 1.25rem !important;
+      text-align: left !important;
     }
 
     .field-label {
@@ -7659,6 +7707,8 @@ const GlobalStyles = () => (
       border-radius: 12px;
       background: var(--white);
       color: var(--gray-900);
+      width: 100%;
+      box-sizing: border-box;
       font-size: 1rem;
       transition: all 0.2s ease;
       backdrop-filter: blur(10px);
@@ -8138,6 +8188,174 @@ const GlobalStyles = () => (
 
       .review-value {
         text-align: left;
+      }
+    }
+
+    /* Create LOTO Responsive Styles */
+    @media (max-width: 768px) {
+      .create-loto-container {
+        padding: 1rem;
+      }
+
+      .create-loto-header {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .header-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5rem;
+      }
+
+      .header-main {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1rem;
+      }
+
+      .header-text h1 {
+        font-size: 2rem;
+      }
+
+      .header-actions {
+        align-self: center;
+      }
+
+      .progress-indicator {
+        gap: 0.5rem;
+        justify-content: flex-start;
+        overflow-x: auto;
+        padding: 1rem 0.5rem;
+      }
+
+      .progress-step {
+        flex-shrink: 0;
+        min-width: 60px;
+      }
+
+      .progress-step span {
+        font-size: 0.75rem;
+        white-space: nowrap;
+      }
+
+      .progress-line {
+        width: 40px;
+        flex-shrink: 0;
+      }
+
+      .section-header {
+        padding: 1rem 1.5rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+
+      .section-content {
+        padding: 1.5rem;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .form-field.full-width {
+        grid-column: 1;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
+        align-items: stretch;
+        justify-self: stretch;
+      }
+
+      .field-input {
+        padding: 0.875rem 1rem;
+        width: 100%;
+        box-sizing: border-box;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .create-loto-container {
+        padding: 0.75rem;
+      }
+
+      .create-loto-header {
+        padding: 1rem;
+        border-radius: 16px;
+      }
+
+      .header-text h1 {
+        font-size: 1.75rem;
+      }
+
+      .header-text p {
+        font-size: 1rem;
+      }
+
+      .progress-indicator {
+        padding: 0.75rem 0.25rem;
+      }
+
+      .progress-step {
+        min-width: 50px;
+      }
+
+      .step-number {
+        width: 32px;
+        height: 32px;
+        font-size: 0.875rem;
+      }
+
+      .progress-step span {
+        font-size: 0.7rem;
+      }
+
+      .progress-line {
+        width: 30px;
+      }
+
+      .section-header {
+        padding: 1rem;
+      }
+
+      .section-icon {
+        width: 40px;
+        height: 40px;
+      }
+
+      .section-title h3 {
+        font-size: 1.25rem;
+      }
+
+      .section-content {
+        padding: 1rem;
+      }
+
+      .field-label {
+        font-size: 0.9rem;
+      }
+
+      .form-field.full-width {
+        grid-column: 1;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
+        align-items: stretch;
+        justify-self: stretch;
+      }
+
+      .field-input {
+        padding: 0.75rem;
+        font-size: 0.95rem;
+        width: 100%;
+        box-sizing: border-box;
       }
     }
   `}</style>
