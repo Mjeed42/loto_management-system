@@ -67,7 +67,7 @@ exports.createLOTO = async (req, res) => {
       reason,
       ptwNumber: ptwNumber || "N/A",
       expectedDuration: parseFloat(expectedDuration),
-      status: "pending",
+      status: "pending_verification_new",
     };
     // --- ADD ENERGY TYPES TO LOTO DATA ---
     if (energyTypes && Array.isArray(energyTypes)) {
@@ -251,10 +251,24 @@ exports.verifyLOTO = async (req, res) => {
       }
     }
 
-    // Update LOTO
-    loto.status = "active";
-    loto.verifiedBy = req.user.id;
-    loto.verifiedAt = Date.now();
+    // Check if this is initial verification or handover verification
+    if (loto.status === "pending_verification_new") {
+      // Initial verification of new LOTO
+      loto.status = "active";
+      loto.verifiedBy = req.user.id;
+      loto.verifiedAt = Date.now();
+    } else if (loto.status === "pending_handover_verification") {
+      // Handover verification - this should be handled by handover verification controller
+      return res.status(400).json({
+        success: false,
+        message: "Use handover verification endpoint for handover approvals",
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot verify LOTO with status: ${loto.status}`,
+      });
+    }
 
     await loto.save();
 
@@ -310,8 +324,20 @@ exports.updateLOTO = async (req, res) => {
     // Determine what fields can be updated based on LOTO status
     let allowedFields = [];
     
-    if (loto.status === "pending") {
-      // Normal pending LOTOs: only expectedDuration and supervisor
+    // ADMIN OVERRIDE: Admins can update ANY field in ANY condition
+    if (req.user.role === "admin") {
+      allowedFields = [
+        "shift", "location", "line", "machine", "isolatedPart", 
+        "reason", "ptwNumber", "expectedDuration", "supervisor", "energyTypes"
+      ];
+    } else if (loto.status === "pending_verification_new") {
+      // New LOTO pending verification: can update ALL fields
+      allowedFields = [
+        "shift", "location", "line", "machine", "isolatedPart", 
+        "reason", "ptwNumber", "expectedDuration", "supervisor", "energyTypes"
+      ];
+    } else if (loto.status === "pending_handover_verification") {
+      // LOTO under handover verification: only expectedDuration and supervisor
       allowedFields = ["expectedDuration", "supervisor"];
     } else if (loto.status === "rejected") {
       // Rejected LOTOs: only the fields that were rejected
@@ -411,9 +437,9 @@ exports.updateLOTO = async (req, res) => {
       }
     }
 
-    // If LOTO was rejected and is being updated, reset status to pending
+    // If LOTO was rejected and is being updated, reset status to pending verification
     if (loto.status === "rejected") {
-      loto.status = "pending";
+      loto.status = "pending_verification_new";
       loto.rejectedBy = null;
       loto.rejectedAt = null;
       loto.rejectionNotes = null;
@@ -686,7 +712,7 @@ exports.acceptHandover = async (req, res) => {
     }
 
     // Update LOTO - Reset to pending status for re-verification
-    loto.status = "pending"; // Changed from 'active' to 'pending'
+    loto.status = "pending_verification_new"; // Changed from 'active' to 'pending_verification_new'
     loto.isolator = req.user.id;
     loto.isolatorName = `${req.user.firstName} ${req.user.lastName}`;
     loto.verifiedBy = null; // Clear previous verification
@@ -1013,7 +1039,7 @@ exports.changeLOTOStatus = async (req, res) => {
     const { status, notes, additionalData } = req.body;
 
     // Validate status
-    const validStatuses = ["pending", "active", "completed", "pending_handover", "rejected"];
+    const validStatuses = ["pending_verification_new", "active", "completed", "pending_handover_verification", "rejected"];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
@@ -1379,10 +1405,10 @@ exports.addHandover = async (req, res) => {
     loto.handoverTo = toUser;
     loto.handoverNotes = handoverNotes || "";
 
-    // Update status to pending_handover if not already
-    if (loto.status === "active") {
-      loto.status = "pending_handover";
-    }
+        // Update status to pending_handover_verification when handover is created
+        if (loto.status === "active") {
+          loto.status = "pending_handover_verification";
+        }
 
     loto.updatedAt = Date.now();
     

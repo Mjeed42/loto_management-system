@@ -8,6 +8,9 @@ import "./styles/cloudflare-Home.css";
 // Components
 import GlobalStyles from "./components/GlobalStyles";
 import Header from "./components/Header";
+import Sidebar from "./components/Sidebar";
+import Breadcrumb from "./components/Breadcrumb";
+import QuickActions from "./components/QuickActions";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import CreateLOTO from "./pages/CreateLOTO";
@@ -55,24 +58,33 @@ function App() {
   return (
     <Router>
       <GlobalStyles />
-      <div className="container">
-        <Header currentUser={currentUser} />
-        <main className="container py-4">
-          <Routes>
-            <Route path="/" element={<Login onLogin={fetchCurrentUser} />} />
-            <Route path="/Home" element={<Home />} />
-            <Route path="/create-loto" element={<CreateLOTO />} />
-            <Route path="/loto-list" element={<LOTOList />} />
-            <Route path="/admin" element={<AdminHome />} />
-            <Route path="/loto/:id" element={<LOTOdetail />} />
-            <Route path="/loto/:id/update" element={<UpdateLOTO />} />
-            <Route path="/loto/:id/handover" element={<HandoverLOTO />} />
-            <Route path="/loto/:id/complete" element={<CompleteLOTO />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/data-export" element={<DataExport />} />
-            <Route path="/monitoring" element={<MonitoringDashboard />} />
-          </Routes>
-        </main>
+      <div className="app-layout">
+        {/* Sidebar Navigation */}
+        <Sidebar currentUser={currentUser} />
+        
+        {/* Main Content Area */}
+        <div className="main-content">
+          <Header currentUser={currentUser} />
+          <Breadcrumb />
+          <main className="content-area">
+            <Routes>
+              <Route path="/" element={<Login onLogin={fetchCurrentUser} />} />
+              <Route path="/Home" element={<Home />} />
+              <Route path="/create-loto" element={<CreateLOTO />} />
+              <Route path="/loto-list" element={<LOTOList />} />
+              <Route path="/admin" element={<AdminHome />} />
+              <Route path="/loto/:id" element={<LOTOdetail />} />
+              <Route path="/loto/:id/update" element={<UpdateLOTO />} />
+              <Route path="/loto/:id/handover" element={<HandoverLOTO />} />
+              <Route path="/loto/:id/complete" element={<CompleteLOTO />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/data-export" element={<DataExport />} />
+              <Route path="/monitoring" element={<MonitoringDashboard />} />
+            </Routes>
+          </main>
+        </div>
+        
+        <QuickActions currentUser={currentUser} />
         <ToastContainer />
       </div>
     </Router>

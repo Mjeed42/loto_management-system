@@ -25,11 +25,26 @@ async function fixHandoverData() {
 
     let fixedCount = 0;
     let errorCount = 0;
+    let statusUpdatedCount = 0;
 
     for (const loto of lotos) {
       try {
         let needsUpdate = false;
+        let statusNeedsUpdate = false;
         const updatedHandoverHistory = [];
+
+        // Fix status if it's using old enum values
+        if (loto.status === "pending") {
+          loto.status = "pending_verification_new";
+          statusNeedsUpdate = true;
+          needsUpdate = true;
+          console.log(`✅ Updated status for LOTO ${loto.serialNumber}: pending → pending_verification_new`);
+        } else if (loto.status === "pending_handover") {
+          loto.status = "pending_handover_verification";
+          statusNeedsUpdate = true;
+          needsUpdate = true;
+          console.log(`✅ Updated status for LOTO ${loto.serialNumber}: pending_handover → pending_handover_verification`);
+        }
 
         for (let i = 0; i < loto.handoverHistory.length; i++) {
           const handover = loto.handoverHistory[i];
@@ -44,6 +59,7 @@ async function fixHandoverData() {
             } else if (i === 0 && loto.isolator) {
               // For first handover, use isolator as fromUser
               updatedHandover.fromUserName = `${loto.isolator.firstName} ${loto.isolator.lastName}`;
+              updatedHandover.fromUser = loto.isolator._id;
               needsUpdate = true;
               console.log(`✅ Fixed fromUserName using isolator for LOTO ${loto.serialNumber}, handover ${i + 1}: ${updatedHandover.fromUserName}`);
             } else {
@@ -73,14 +89,28 @@ async function fixHandoverData() {
             }
           }
 
+          // Add missing recipient status fields for new two-step workflow
+          if (!updatedHandover.recipientStatus) {
+            updatedHandover.recipientStatus = "pending";
+            needsUpdate = true;
+            console.log(`✅ Added recipientStatus for LOTO ${loto.serialNumber}, handover ${i + 1}`);
+          }
+
           updatedHandoverHistory.push(updatedHandover);
         }
 
         // Update the LOTO if changes were made
         if (needsUpdate) {
-          await LOTO.findByIdAndUpdate(loto._id, {
+          const updateData = {
             handoverHistory: updatedHandoverHistory
-          });
+          };
+          
+          if (statusNeedsUpdate) {
+            updateData.status = loto.status;
+            statusUpdatedCount++;
+          }
+
+          await LOTO.findByIdAndUpdate(loto._id, updateData);
           fixedCount++;
           console.log(`✅ Updated LOTO ${loto.serialNumber}`);
         }
@@ -93,6 +123,7 @@ async function fixHandoverData() {
 
     console.log(`\n🎉 Migration completed!`);
     console.log(`✅ Fixed: ${fixedCount} LOTOs`);
+    console.log(`📊 Status updated: ${statusUpdatedCount} LOTOs`);
     console.log(`❌ Errors: ${errorCount} LOTOs`);
     
   } catch (error) {

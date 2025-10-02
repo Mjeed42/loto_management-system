@@ -1,16 +1,41 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Button from "./Button";
 import Icon from "./Icon";
 import NotificationBadge from "./NotificationBadge";
 
 const Header = ({ currentUser }) => {
   const navigate = useNavigate();
-  const [notificationDropdownOpen, setNotificationDropdownOpen] =
-    useState(false);
+  const location = useLocation();
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const notificationRef = useRef(null);
   const userRef = useRef(null);
+
+  // Get page title based on current route
+  const getPageTitle = () => {
+    const path = location.pathname;
+    const titleMap = {
+      "/Home": "Home",
+      "/loto-list": "My LOTOs",
+      "/create-loto": "Create LOTO",
+      "/admin": "Admin Panel",
+      "/data-export": "Data Export",
+      "/monitoring": "Monitoring",
+      "/notifications": "Notifications"
+    };
+
+    // Handle LOTO detail pages
+    if (path.startsWith("/loto/")) {
+      if (path.includes("/update")) return "Update LOTO";
+      if (path.includes("/handover")) return "Handover LOTO";
+      if (path.includes("/complete")) return "Complete LOTO";
+      return "LOTO Details";
+    }
+
+    return titleMap[path] || "LOTO Management";
+  };
 
   const handleLogout = () => {
     // Clear tokens and storage
@@ -102,6 +127,13 @@ const Header = ({ currentUser }) => {
             </div>
           </div>
         </div>
+
+        {/* Page Title */}
+        {currentUser && (
+          <div className="page-title">
+            <h2>{getPageTitle()}</h2>
+          </div>
+        )}
 
         <div className="header-actions">
           {/* Notifications Dropdown */}

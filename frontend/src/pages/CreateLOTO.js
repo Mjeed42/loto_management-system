@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
+import BackButton from "../components/BackButton";
 
 const CreateLOTO = () => {
   const [formData, setFormData] = useState({
@@ -293,6 +294,8 @@ const CreateLOTO = () => {
 
   return (
     <div className="animate-fade-in">
+      <BackButton to="/Home" label="Back to Home" />
+      
       {/* Header Section */}
       <div className="row mb-4">
         <div className="col-12">

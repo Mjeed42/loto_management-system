@@ -135,8 +135,15 @@ const lotoSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ["pending", "active", "completed", "pending_handover", "rejected"],
-      default: "pending",
+      enum: [
+        "pending_verification_new",      // New LOTO awaiting initial verification
+        "active",                        // LOTO is active and operational
+        "pending_handover_verification", // LOTO under handover verification
+        "handed_over",                   // LOTO successfully handed over
+        "completed",                     // LOTO work completed
+        "rejected",                      // LOTO rejected by supervisor
+      ],
+      default: "pending_verification_new",
     },
     actualFinishTime: {
       type: Date,

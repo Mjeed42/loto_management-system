@@ -55,9 +55,18 @@ exports.recipientDecision = async (req, res) => {
     handover.recipientDecisionDate = new Date();
     handover.recipientDecisionNotes = decisionNotes || "";
 
-    // If accepted, change LOTO status to pending_verification
+    // If accepted, keep status as pending_handover_verification for supervisor approval
     if (action === "accept") {
-      loto.status = "pending_verification";
+      // Status remains pending_handover_verification until supervisor approves
+      // No status change needed here
+    } else {
+      // If rejected by recipient, return to active status with the person who initiated this handover
+      loto.status = "active";
+      // Return LOTO to the person who initiated this handover (fromUser)
+      loto.currentResponsible = handover.fromUser;
+      loto.currentResponsibleName = handover.fromUserName;
+      
+      console.log(`🔄 Handover rejected by ${handover.toUserName}, returning LOTO to ${handover.fromUserName}`);
     }
 
     await loto.save();
@@ -102,19 +111,27 @@ exports.verifyHandover = async (req, res) => {
       });
     }
 
-    // Check if user is authorized (supervisor or admin)
-    if (req.user.role !== "supervisor" && req.user.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Only supervisors and admins can verify handovers",
-      });
-    }
-
-    const loto = await LOTO.findById(id).populate("isolator", "firstName lastName email");
+    const loto = await LOTO.findById(id)
+      .populate("isolator", "firstName lastName email")
+      .populate("supervisor", "firstName lastName email");
+    
     if (!loto) {
       return res.status(404).json({
         success: false,
         message: "LOTO not found",
+      });
+    }
+
+    // Check if user is authorized (admin or the authorized supervisor for this LOTO)
+    const isAdmin = req.user.role === "admin";
+    const isAuthorizedSupervisor = req.user.role === "supervisor" && 
+                                   loto.supervisor && 
+                                   loto.supervisor._id.toString() === req.user.id;
+
+    if (!isAdmin && !isAuthorizedSupervisor) {
+      return res.status(403).json({
+        success: false,
+        message: "Only admins and the authorized supervisor can verify handovers",
       });
     }
 
@@ -153,10 +170,15 @@ exports.verifyHandover = async (req, res) => {
 
     if (action === "reject") {
       handover.rejectionReason = rejectionReason || "";
-      // If rejected, the handover doesn't change the current responsible
-      // The LOTO remains with the previous owner
+      // If rejected by supervisor, return LOTO to the person who initiated this handover
+      loto.status = "active";
+      loto.currentResponsible = handover.fromUser;
+      loto.currentResponsibleName = handover.fromUserName;
+      
+      console.log(`🔄 Handover rejected by supervisor, returning LOTO to ${handover.fromUserName}`);
     } else {
-      // If approved, update current responsible
+      // If approved, handover is complete - update status and responsible
+      loto.status = "active"; // Return to active status with new owner
       loto.currentResponsible = handover.toUser;
       loto.currentResponsibleName = handover.toUserName;
     }

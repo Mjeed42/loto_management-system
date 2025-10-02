@@ -3,6 +3,7 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
+import BackButton from "../components/BackButton";
 
 const UpdateLOTO = () => {
   const [formData, setFormData] = useState({
@@ -26,13 +27,22 @@ const UpdateLOTO = () => {
   const [showCustomReason, setShowCustomReason] = useState(false); // 👈 For "Other" reason
   const [customReason, setCustomReason] = useState(""); // 👈 Custom reason text
   const [allowedFields, setAllowedFields] = useState([]); // Fields that can be updated
+  const [currentUser, setCurrentUser] = useState(null); // Current user info
   const { id } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchLOTO();
     fetchSupervisors();
+    fetchCurrentUser();
   }, [id]);
+
+  // Update field permissions when both loto and currentUser are available
+  useEffect(() => {
+    if (loto && currentUser) {
+      updateFieldPermissions();
+    }
+  }, [loto, currentUser]);
 
   const fetchLOTO = async () => {
     try {
@@ -50,16 +60,7 @@ const UpdateLOTO = () => {
 
       setLoto(res.data.data);
 
-      // Determine which fields can be updated based on LOTO status
-      let fieldsToAllow = [];
-      if (res.data.data.status === "pending") {
-        // Normal pending LOTOs: only expectedDuration and supervisor
-        fieldsToAllow = ["expectedDuration", "supervisor"];
-      } else if (res.data.data.status === "rejected") {
-        // Rejected LOTOs: only the fields that were rejected
-        fieldsToAllow = res.data.data.rejectedFields || [];
-      }
-      setAllowedFields(fieldsToAllow);
+      // Field permissions will be set after currentUser is loaded
 
       // Prefill form
       setFormData({
@@ -130,6 +131,76 @@ const UpdateLOTO = () => {
     }
   };
 
+  const fetchCurrentUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        config
+      );
+
+      // Use the same structure as LOTOList.js
+      setCurrentUser(res.data.user);
+    } catch (err) {
+      console.log("❌ Error fetching current user:", err);
+      setCurrentUser(null);
+    }
+  };
+
+  const updateFieldPermissions = () => {
+    if (!loto || !currentUser) return;
+
+    let fieldsToAllow = [];
+    
+    // Check status-based permissions first (regardless of role)
+    if (loto.status === "pending_verification_new") {
+      // New LOTO pending verification: can update ALL fields
+      fieldsToAllow = [
+        "shift", "location", "line", "machine", "isolatedPart", 
+        "reason", "ptwNumber", "expectedDuration", "supervisor", "energyTypes"
+      ];
+    } else if (loto.status === "pending_handover_verification") {
+      // LOTO under handover verification: ONLY expectedDuration and supervisor
+      fieldsToAllow = ["expectedDuration", "supervisor"];
+    } else if (loto.status === "rejected") {
+      // Rejected LOTOs: only the fields that were rejected
+      fieldsToAllow = loto.rejectedFields || [];
+    } else if (loto.status === "pending" || loto.status.includes("pending")) {
+      // Fallback for any pending status - allow all fields
+      fieldsToAllow = [
+        "shift", "location", "line", "machine", "isolatedPart", 
+        "reason", "ptwNumber", "expectedDuration", "supervisor", "energyTypes"
+      ];
+    } else {
+      // Default fallback - allow basic fields
+      fieldsToAllow = ["expectedDuration", "supervisor"];
+    }
+
+    // ADMIN OVERRIDE: Admins can update ANY field in ANY condition
+    if (currentUser.role === "admin") {
+      fieldsToAllow = [
+        "shift", "location", "line", "machine", "isolatedPart", 
+        "reason", "ptwNumber", "expectedDuration", "supervisor", "energyTypes"
+      ];
+    }
+
+    // FALLBACK: If no fields are allowed but user is authenticated and LOTO is editable, allow all fields
+    if (fieldsToAllow.length === 0 && currentUser && (loto.status === "pending_verification_new" || loto.status.includes("pending"))) {
+      fieldsToAllow = [
+        "shift", "location", "line", "machine", "isolatedPart", 
+        "reason", "ptwNumber", "expectedDuration", "supervisor", "energyTypes"
+      ];
+    }
+    
+    setAllowedFields(fieldsToAllow);
+  };
+
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -194,10 +265,19 @@ const UpdateLOTO = () => {
           ? customReason
           : formData.reason;
 
-      const dataToSend = {
+      // Create base data with all form fields
+      const allFormData = {
         ...formData,
         reason: finalReason,
       };
+
+      // Filter to only include allowed fields
+      const dataToSend = {};
+      allowedFields.forEach(fieldName => {
+        if (allFormData.hasOwnProperty(fieldName)) {
+          dataToSend[fieldName] = allFormData[fieldName];
+        }
+      });
 
       const res = await axios.put(
         `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
@@ -253,6 +333,8 @@ const UpdateLOTO = () => {
 
   return (
     <div className="animate-fade-in">
+      <BackButton to={`/loto/${id}`} label="Back to LOTO Details" />
+      
       {/* Header Section */}
       <div className="row mb-4">
         <div className="col-12">
@@ -318,7 +400,44 @@ const UpdateLOTO = () => {
           <div className="card bg-glass border-0 shadow-lg">
             <div className="card-body">
               {/* Field Update Information */}
-              {loto.status === "rejected" && (
+
+              {currentUser && currentUser.role === "admin" && (
+                <div className="alert alert-success mb-4">
+                  <div className="d-flex align-items-center">
+                    <span className="me-3" style={{ fontSize: "1.5rem" }}>👑</span>
+                    <div>
+                      <strong>Admin Full Access:</strong> You can modify all LOTO fields regardless of status or restrictions.
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {currentUser && currentUser.role !== "admin" && loto.status === "pending_verification_new" && (
+                <div className="alert alert-info mb-4">
+                  <div className="d-flex align-items-center">
+                    <span className="me-3" style={{ fontSize: "1.5rem" }}>📝</span>
+                    <div>
+                      <strong>Full Update Mode:</strong> You can modify all LOTO details since this is a new LOTO pending verification.
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {loto.status === "pending_handover_verification" && (
+                <div className="alert alert-warning mb-4">
+                  <div className="d-flex align-items-center">
+                    <span className="me-3" style={{ fontSize: "1.5rem" }}>🤝</span>
+                    <div>
+                      <strong>Handover Verification Mode:</strong> While the handover is being verified, you can only update Expected Duration and Assigned Supervisor.
+                      <div className="mt-2">
+                        <strong>Only these fields will be saved:</strong> Expected Duration, Assigned Supervisor
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {currentUser && currentUser.role !== "admin" && loto.status === "rejected" && (
                 <div className="alert alert-warning mb-4">
                   <div className="d-flex align-items-center">
                     <span className="me-3" style={{ fontSize: "1.5rem" }}>⚠️</span>

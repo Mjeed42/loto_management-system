@@ -327,10 +327,153 @@ const LOTOList = () => {
     setSelectedLotoForHandover(null);
   };
 
+  const handleApproveHandover = async (lotoId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      };
+
+      // Get the latest handover index (last one in the array)
+      const loto = lotos.find(l => l._id === lotoId);
+      if (!loto || !loto.handoverHistory || loto.handoverHistory.length === 0) {
+        throw new Error("No handover found to approve");
+      }
+      
+      const handoverIndex = loto.handoverHistory.length - 1;
+      const verificationNotes = prompt("Enter verification notes (optional):");
+
+      const res = await axios.put(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/handover/${handoverIndex}/verify`,
+        {
+          action: "approve",
+          verificationNotes: verificationNotes || "",
+        },
+        config
+      );
+
+      if (res.data.success) {
+        fetchLOTOs(); // Refresh the list
+        if (window.LOTOUtils) {
+          window.LOTOUtils.showNotification(
+            "Handover approved successfully! ✅",
+            "success"
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Error approving handover:", err);
+      if (window.LOTOUtils) {
+        window.LOTOUtils.showNotification(
+          err.response?.data?.message || "Error approving handover",
+          "error"
+        );
+      }
+    }
+  };
+
+  const handleRejectHandover = async (lotoId) => {
+    try {
+      const rejectionReason = prompt("Enter rejection reason:");
+      if (!rejectionReason) {
+        return; // User cancelled
+      }
+
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      };
+
+      // Get the latest handover index (last one in the array)
+      const loto = lotos.find(l => l._id === lotoId);
+      if (!loto || !loto.handoverHistory || loto.handoverHistory.length === 0) {
+        throw new Error("No handover found to reject");
+      }
+      
+      const handoverIndex = loto.handoverHistory.length - 1;
+      const verificationNotes = prompt("Enter verification notes (optional):");
+
+      const res = await axios.put(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/handover/${handoverIndex}/verify`,
+        {
+          action: "reject",
+          rejectionReason: rejectionReason,
+          verificationNotes: verificationNotes || "",
+        },
+        config
+      );
+
+      if (res.data.success) {
+        fetchLOTOs(); // Refresh the list
+        if (window.LOTOUtils) {
+          window.LOTOUtils.showNotification(
+            "Handover rejected successfully! ❌",
+            "success"
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Error rejecting handover:", err);
+      if (window.LOTOUtils) {
+        window.LOTOUtils.showNotification(
+          err.response?.data?.message || "Error rejecting handover",
+          "error"
+        );
+      }
+    }
+  };
+
+  const handleRecipientDecision = async (lotoId, handoverIndex, action) => {
+    try {
+      const decisionNotes = prompt(`Enter notes for ${action}ing the handover:`);
+      
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      };
+
+      const res = await axios.put(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/handover/${handoverIndex}/recipient-decision`,
+        {
+          action,
+          decisionNotes,
+        },
+        config
+      );
+
+      if (res.data.success) {
+        fetchLOTOs(); // Refresh the list
+        if (window.LOTOUtils) {
+          window.LOTOUtils.showNotification(
+            `Handover ${action}ed successfully! ${action === 'accept' ? '✅' : '❌'}`,
+            "success"
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Error making recipient decision:", err);
+      if (window.LOTOUtils) {
+        window.LOTOUtils.showNotification(
+          err.response?.data?.message || "Error making decision",
+          "error"
+        );
+      }
+    }
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: {
-        text: "Pending",
+      pending_verification_new: {
+        text: "Pending Verification (New)",
         variant: "warning",
         icon: "⏳",
         color: "#f59e0b",
@@ -341,23 +484,23 @@ const LOTOList = () => {
         icon: "⚡",
         color: "#22c55e",
       },
+      pending_handover_verification: {
+        text: "Pending Handover Verification",
+        variant: "info",
+        icon: "🔄",
+        color: "#0ea5e9",
+      },
+      handed_over: {
+        text: "Handed Over",
+        variant: "primary",
+        icon: "📋",
+        color: "#3b82f6",
+      },
       completed: {
         text: "Completed",
         variant: "secondary",
         icon: "✅",
         color: "#6b7280",
-      },
-      pending_handover: {
-        text: "Pending Handover",
-        variant: "info",
-        icon: "🔄",
-        color: "#0ea5e9",
-      },
-      handover: {
-        text: "Handover",
-        variant: "info",
-        icon: "🔄",
-        color: "#0ea5e9",
       },
       rejected: {
         text: "Rejected",
@@ -433,9 +576,21 @@ const LOTOList = () => {
     );
   }
 
-  const canVerify =
-    currentUser &&
-    (currentUser.role === "admin" || currentUser.role === "supervisor");
+  // Function to check if current user can verify a specific LOTO
+  const canVerifyLOTO = (loto) => {
+    if (!currentUser) return false;
+    
+    // Admins can verify any LOTO
+    if (currentUser.role === "admin") return true;
+    
+    // Supervisors can only verify LOTOs they are assigned to
+    if (currentUser.role === "supervisor" && loto.supervisor && loto.supervisor._id === currentUser.id) {
+      return true;
+    }
+    
+    return false;
+  };
+
   const isAdmin = currentUser && currentUser.role === "admin";
   const isTechnician = currentUser && currentUser.role === "technician";
   const isSupervisor = currentUser && currentUser.role === "supervisor";
@@ -755,7 +910,7 @@ const LOTOList = () => {
                       {/* Admin Full Control */}
                       {isAdmin && (
                         <>
-                          {loto.status === "pending" && (
+                          {loto.status === "pending_verification_new" && (
                             <>
                               <Button
                                 variant="success"
@@ -820,6 +975,32 @@ const LOTOList = () => {
                               </Button>
                             </>
                           )}
+                          {loto.status === "pending_handover_verification" && (
+                            <>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleApproveHandover(loto._id);
+                                }}
+                                className="hover-scale"
+                              >
+                                ✅ Approve Handover
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRejectHandover(loto._id);
+                                }}
+                                className="hover-scale"
+                              >
+                                ❌ Reject Handover
+                              </Button>
+                            </>
+                          )}
                           
                           {/* Status Change Button - Always Available for Admins */}
                           <Button
@@ -839,7 +1020,7 @@ const LOTOList = () => {
                       {/* Regular User Actions */}
                       {!isAdmin && (
                         <>
-                          {canVerify && loto.status === "pending" && (
+                          {canVerifyLOTO(loto) && loto.status === "pending_verification_new" && (
                             <>
                               <Button
                                 variant="success"
@@ -862,6 +1043,32 @@ const LOTOList = () => {
                                 className="hover-scale"
                               >
                                 ❌ Reject
+                              </Button>
+                            </>
+                          )}
+                          {canVerifyLOTO(loto) && loto.status === "pending_handover_verification" && (
+                            <>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleApproveHandover(loto._id);
+                                }}
+                                className="hover-scale"
+                              >
+                                ✅ Approve Handover
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRejectHandover(loto._id);
+                                }}
+                                className="hover-scale"
+                              >
+                                ❌ Reject Handover
                               </Button>
                             </>
                           )}
@@ -901,6 +1108,37 @@ const LOTOList = () => {
                                 className="hover-scale"
                               >
                                 ✅ Complete
+                              </Button>
+                            </>
+                          )}
+                          
+                          {/* Handover Recipient Decision Buttons */}
+                          {loto.status === "pending_handover_verification" && 
+                           loto.handoverHistory && loto.handoverHistory.length > 0 && 
+                           loto.handoverHistory[loto.handoverHistory.length - 1].recipientStatus === 'pending' &&
+                           currentUser?.id === loto.handoverHistory[loto.handoverHistory.length - 1].toUser && (
+                            <>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRecipientDecision(loto._id, loto.handoverHistory.length - 1, 'accept');
+                                }}
+                                className="hover-scale"
+                              >
+                                ✅ Accept Handover
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRecipientDecision(loto._id, loto.handoverHistory.length - 1, 'reject');
+                                }}
+                                className="hover-scale"
+                              >
+                                ❌ Reject Handover
                               </Button>
                             </>
                           )}

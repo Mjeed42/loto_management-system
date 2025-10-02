@@ -3,6 +3,7 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
+import BackButton from "../components/BackButton";
 import RejectLOTOModal from "../components/RejectLOTOModal";
 import StatusChangeModal from "../components/StatusChangeModal";
 import HandoverModal from "../components/HandoverModal";
@@ -127,65 +128,6 @@ const LOTOdetail = () => {
     }
   };
 
-  const handleAcceptHandover = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to accept this handover? The LOTO will be reset to pending status and require re-verification."
-      )
-    )
-      return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/accept-handover`,
-        {},
-        config
-      );
-
-      setLoto(res.data.data);
-      alert(
-        "Handover accepted successfully! The LOTO has been reset to pending status and requires re-verification."
-      );
-      fetchLOTO();
-      fetchHandoverHistory();
-    } catch (err) {
-      alert(err.response?.data?.message || "Error accepting handover");
-    }
-  };
-
-  const handleRejectHandover = async () => {
-    if (!window.confirm("Are you sure you want to reject this handover?"))
-      return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/reject-handover`,
-        {},
-        config
-      );
-
-      setLoto(res.data.data);
-      alert("Handover rejected successfully!");
-      fetchLOTO();
-      fetchHandoverHistory();
-    } catch (err) {
-      alert(err.response?.data?.message || "Error rejecting handover");
-    }
-  };
 
   const handleVerify = async () => {
     if (!window.confirm("Are you sure you want to verify this LOTO?")) return;
@@ -397,6 +339,38 @@ const LOTOdetail = () => {
     }
   };
 
+  const handleApproveHandover = async () => {
+    try {
+      // Get the latest handover index (last one in the array)
+      if (!handoverHistory || handoverHistory.length === 0) {
+        alert("No handover found to approve");
+        return;
+      }
+      
+      const handoverIndex = handoverHistory.length - 1;
+      await handleVerifyHandover(handoverIndex, 'approve');
+    } catch (err) {
+      console.error("Error approving handover:", err);
+      alert("Error approving handover");
+    }
+  };
+
+  const handleRejectHandover = async () => {
+    try {
+      // Get the latest handover index (last one in the array)
+      if (!handoverHistory || handoverHistory.length === 0) {
+        alert("No handover found to reject");
+        return;
+      }
+      
+      const handoverIndex = handoverHistory.length - 1;
+      await handleVerifyHandover(handoverIndex, 'reject');
+    } catch (err) {
+      console.error("Error rejecting handover:", err);
+      alert("Error rejecting handover");
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center py-5">
@@ -449,10 +423,11 @@ const LOTOdetail = () => {
   // 👇 Status Badge with Emoji — styled like CreateLOTO
   const getStatusBadge = (status) => {
     const config = {
-      pending: { text: "⏳ Pending", variant: "warning" },
+      pending_verification_new: { text: "⏳ Pending Verification (New)", variant: "warning" },
       active: { text: "✅ Active", variant: "success" },
+      pending_handover_verification: { text: "🤝 Pending Handover Verification", variant: "info" },
+      handed_over: { text: "📋 Handed Over", variant: "primary" },
       completed: { text: "🏁 Completed", variant: "secondary" },
-      pending_handover: { text: "🤝 Pending Handover", variant: "info" },
       rejected: { text: "❌ Rejected", variant: "danger" },
     }[status] || { text: status, variant: "secondary" };
 
@@ -471,13 +446,16 @@ const LOTOdetail = () => {
     currentUser && loto.isolator && loto.isolator._id === currentUser.id;
   const canVerify =
     currentUser &&
-    (currentUser.role === "supervisor" || currentUser.role === "admin");
+    (currentUser.role === "admin" || 
+     (currentUser.role === "supervisor" && loto.supervisor && loto.supervisor._id === currentUser.id));
   const isAdmin = currentUser && currentUser.role === "admin";
   const isTechnician = currentUser && currentUser.role === "technician";
   const isSupervisor = currentUser && currentUser.role === "supervisor";
 
   return (
     <div className="loto-details-container animate-fade-in">
+      <BackButton to="/loto-list" label="Back to My LOTOs" />
+      
       {/* Modern Header Section */}
       <div className="loto-details-header">
         <div className="header-content">
@@ -1033,33 +1011,50 @@ const LOTOdetail = () => {
           </div>
 
           <div className="actions-content">
-            {/* Handover Acceptance */}
-            {loto.status === "pending_handover" && isHandoverRecipient && (
-              <div className="action-group handover-group">
+
+            {/* Handover Recipient Decision - Prominent Section */}
+            {loto.status === "pending_handover_verification" && 
+             loto.handoverHistory && loto.handoverHistory.length > 0 && 
+             loto.handoverHistory[loto.handoverHistory.length - 1].recipientStatus === 'pending' &&
+             currentUser?.id === loto.handoverHistory[loto.handoverHistory.length - 1].toUser && (
+              <div className="action-group handover-recipient-group">
                 <div className="action-header">
-                  <h5>Handover Requested</h5>
-                  <p>You've been asked to take over this LOTO. Accepting resets it to pending.</p>
+                  <h5>🤝 Handover Decision Required</h5>
+                  <p>You have been assigned a handover. Please accept or reject this handover request.</p>
+                  <div className="handover-details">
+                    <strong>From:</strong> {loto.handoverHistory[loto.handoverHistory.length - 1].fromUserName}<br/>
+                    <strong>Date:</strong> {new Date(loto.handoverHistory[loto.handoverHistory.length - 1].handoverDate).toLocaleString()}<br/>
+                    {loto.handoverHistory[loto.handoverHistory.length - 1].handoverNotes && (
+                      <><strong>Notes:</strong> {loto.handoverHistory[loto.handoverHistory.length - 1].handoverNotes}</>
+                    )}
+                  </div>
                 </div>
-                <div className="action-buttons">
-                  <button className="action-button success" onClick={handleAcceptHandover}>
+                <div className="action-button-container">
+                  <button 
+                    className="action-button success" 
+                    onClick={() => handleRecipientDecision(loto.handoverHistory.length - 1, 'accept')}
+                  >
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Accept</span>
+                    <span>Accept Handover</span>
                   </button>
-                  <button className="action-button danger" onClick={handleRejectHandover}>
+                  <button 
+                    className="action-button danger" 
+                    onClick={() => handleRecipientDecision(loto.handoverHistory.length - 1, 'reject')}
+                  >
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                       <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                     </svg>
-                    <span>Reject</span>
+                    <span>Reject Handover</span>
                   </button>
                 </div>
               </div>
             )}
 
             {/* Verification */}
-            {loto.status === "pending" && canVerify && (
+            {loto.status === "pending_verification_new" && canVerify && (
               <div className="action-group verification-group">
                 <div className="action-header">
                   <h5>Verification Required</h5>
@@ -1083,6 +1078,53 @@ const LOTOdetail = () => {
               </div>
             )}
 
+            {/* Current User Actions for Handover Verification */}
+            {loto.status === "pending_handover_verification" && currentUser && (
+              <div className="action-group current-user-group">
+                <div className="action-header">
+                  <h5>📝 Available Actions</h5>
+                  <p>While handover verification is pending, you can update limited LOTO details.</p>
+                </div>
+                <div className="action-button-container">
+                  <button 
+                    className="action-button primary" 
+                    onClick={() => navigate(`/loto/${id}/update`)}
+                  >
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Update LOTO Details</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Handover Verification */}
+            {loto.status === "pending_handover_verification" && canVerify && (
+              <div className="action-group handover-verification-group">
+                <div className="action-header">
+                  <h5>Handover Verification Required</h5>
+                  <p>This handover is pending supervisor verification.</p>
+                </div>
+                <div className="action-button-container">
+                  <button className="action-button success" onClick={handleApproveHandover}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Approve Handover</span>
+                  </button>
+                  <button className="action-button danger" onClick={handleRejectHandover}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    <span>Reject Handover</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Admin Full Control */}
             {isAdmin && (
               <div className="action-group admin-group">
@@ -1091,7 +1133,7 @@ const LOTOdetail = () => {
                   <p>Full administrative control over this LOTO.</p>
                 </div>
                 <div className="action-button-container">
-                  {loto.status === "pending" && (
+                  {loto.status === "pending_verification_new" && (
                     <>
                       <button className="action-button success" onClick={handleVerify}>
                         <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
@@ -1105,6 +1147,23 @@ const LOTOdetail = () => {
                           <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                         </svg>
                         <span>Reject LOTO</span>
+                      </button>
+                    </>
+                  )}
+                  {loto.status === "pending_handover_verification" && (
+                    <>
+                      <button className="action-button success" onClick={handleApproveHandover}>
+                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                          <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span>Approve Handover</span>
+                      </button>
+                      <button className="action-button danger" onClick={handleRejectHandover}>
+                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                          <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        <span>Reject Handover</span>
                       </button>
                     </>
                   )}
@@ -1201,7 +1260,7 @@ const LOTOdetail = () => {
             )}
 
             {/* Update Button for Isolator (Pending) */}
-            {loto.status === "pending" && isIsolator && (
+            {loto.status === "pending_verification_new" && isIsolator && (
               <div className="action-group update-group">
                 <div className="action-header">
                   <h5>Update Required</h5>
@@ -1258,8 +1317,8 @@ const LOTOdetail = () => {
                 <div className="status-badge-large">{getStatusBadge(loto.status)}</div>
               </div>
               <div className="status-description">
-                {loto.status === "pending" && "⏳ Awaiting supervisor verification"}
-                {loto.status === "pending_handover" && "🤝 Waiting for handover acceptance"}
+                {loto.status === "pending_verification_new" && "⏳ Awaiting supervisor verification"}
+                {loto.status === "pending_handover_verification" && "🤝 Waiting for handover verification"}
                 {loto.status === "active" && "✅ Maintenance in progress"}
                 {loto.status === "completed" && "🏁 Work completed and LOTO closed"}
                 {loto.status === "rejected" && "❌ LOTO rejected - requires modification"}
