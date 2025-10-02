@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Icon from "./Icon";
 
-const Sidebar = ({ currentUser }) => {
+const Sidebar = ({ currentUser, onCollapse }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed by default
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
 
   // Navigation items based on user role
   const getNavigationItems = () => {
@@ -74,7 +75,11 @@ const Sidebar = ({ currentUser }) => {
   };
 
   const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    if (onCollapse) {
+      onCollapse(newCollapsedState);
+    }
   };
 
   const toggleMobileSidebar = () => {

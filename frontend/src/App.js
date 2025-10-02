@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -24,6 +24,54 @@ import AdminHome from "./pages/AdminHome";
 import DataExport from "./pages/DataExport";
 import MonitoringDashboard from "./pages/MonitoringDashboard";
 
+
+// AppContent component that has access to useLocation
+const AppContent = ({ currentUser, fetchCurrentUser }) => {
+  const location = useLocation();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed by default
+  
+  // Check if we're on the login page
+  const isLoginPage = location.pathname === "/";
+  
+  // Check if user is logged in and not on login page
+  const showSidebar = currentUser && !isLoginPage;
+
+  return (
+    <div className={`app-layout ${!showSidebar ? 'no-sidebar' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      {/* Sidebar Navigation - Only show when logged in and not on login page */}
+      {showSidebar && <Sidebar currentUser={currentUser} onCollapse={setSidebarCollapsed} />}
+      
+      {/* Main Content Area */}
+      <div className="main-content">
+        {/* Header - Only show when not on login page */}
+        {!isLoginPage && <Header currentUser={currentUser} />}
+        
+        {/* Breadcrumb - Only show when logged in and not on login page */}
+        {showSidebar && <Breadcrumb />}
+        
+        <main className={`content-area ${isLoginPage ? 'login-content' : ''}`}>
+          <Routes>
+            <Route path="/" element={<Login onLogin={fetchCurrentUser} />} />
+            <Route path="/Home" element={<Home />} />
+            <Route path="/create-loto" element={<CreateLOTO />} />
+            <Route path="/loto-list" element={<LOTOList />} />
+            <Route path="/admin" element={<AdminHome />} />
+            <Route path="/loto/:id" element={<LOTOdetail />} />
+            <Route path="/loto/:id/update" element={<UpdateLOTO />} />
+            <Route path="/loto/:id/handover" element={<HandoverLOTO />} />
+            <Route path="/loto/:id/complete" element={<CompleteLOTO />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/data-export" element={<DataExport />} />
+            <Route path="/monitoring" element={<MonitoringDashboard />} />
+          </Routes>
+        </main>
+      </div>
+      
+      {/* Quick Actions - Only show when logged in and not on login page */}
+      {showSidebar && <QuickActions currentUser={currentUser} />}
+    </div>
+  );
+};
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -58,35 +106,8 @@ function App() {
   return (
     <Router>
       <GlobalStyles />
-      <div className="app-layout">
-        {/* Sidebar Navigation */}
-        <Sidebar currentUser={currentUser} />
-        
-        {/* Main Content Area */}
-        <div className="main-content">
-          <Header currentUser={currentUser} />
-          <Breadcrumb />
-          <main className="content-area">
-            <Routes>
-              <Route path="/" element={<Login onLogin={fetchCurrentUser} />} />
-              <Route path="/Home" element={<Home />} />
-              <Route path="/create-loto" element={<CreateLOTO />} />
-              <Route path="/loto-list" element={<LOTOList />} />
-              <Route path="/admin" element={<AdminHome />} />
-              <Route path="/loto/:id" element={<LOTOdetail />} />
-              <Route path="/loto/:id/update" element={<UpdateLOTO />} />
-              <Route path="/loto/:id/handover" element={<HandoverLOTO />} />
-              <Route path="/loto/:id/complete" element={<CompleteLOTO />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/data-export" element={<DataExport />} />
-              <Route path="/monitoring" element={<MonitoringDashboard />} />
-            </Routes>
-          </main>
-        </div>
-        
-        <QuickActions currentUser={currentUser} />
-        <ToastContainer />
-      </div>
+      <AppContent currentUser={currentUser} fetchCurrentUser={fetchCurrentUser} />
+      <ToastContainer />
     </Router>
   );
 }

@@ -3241,7 +3241,6 @@ const GlobalStyles = () => (
     .login-page-container {
       position: relative;
       min-height: 100vh;
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     }
     
     .login-page-container::before {
@@ -3251,11 +3250,7 @@ const GlobalStyles = () => (
       left: 0;
       right: 0;
       bottom: 0;
-      background-image: url('https://logos-world.net/wp-content/uploads/2022/03/Pepsico-Symbol.png');
-      background-size: 300px auto;
-      background-repeat: no-repeat;
-      background-position: center top;
-      background-attachment: fixed;
+
       opacity: 0.1;
       z-index: 0;
     }
@@ -6675,12 +6670,25 @@ const GlobalStyles = () => (
       flex: 1;
       display: flex;
       flex-direction: column;
-      margin-left: 280px;
-      transition: margin-left 0.3s ease;
+      min-width: 0; /* Prevents flex item from overflowing */
     }
 
-    .main-content.sidebar-collapsed {
-      margin-left: 80px;
+    /* No Sidebar Layout (Login Page) */
+    .app-layout.no-sidebar {
+      display: block; /* Use block layout when no sidebar */
+    }
+
+    .app-layout.no-sidebar .main-content {
+      margin-left: 0;
+    }
+
+    .login-content {
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--gray-50);
     }
 
     .content-area {
@@ -6714,10 +6722,8 @@ const GlobalStyles = () => (
 
     /* Sidebar Styles */
     .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
       width: 280px;
+      min-width: 280px; /* Prevents sidebar from shrinking */
       height: 100vh;
       background: var(--white);
       border-right: 1px solid var(--gray-200);
@@ -6726,10 +6732,12 @@ const GlobalStyles = () => (
       flex-direction: column;
       transition: all 0.3s ease;
       z-index: 1000;
+      position: relative;
     }
 
     .sidebar.collapsed {
       width: 80px;
+      min-width: 80px;
     }
 
     .sidebar-header {
@@ -6751,6 +6759,7 @@ const GlobalStyles = () => (
       width: 60px;
       height: 35px;
       border-radius: 8px;
+      margin-left: -10px;
     }
 
     .brand-text h3 {
@@ -7175,12 +7184,16 @@ const GlobalStyles = () => (
 
     /* Responsive Sidebar */
     @media (max-width: 768px) {
-      .main-content {
-        margin-left: 0;
+      .app-layout {
+        position: relative;
       }
 
       .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
         transform: translateX(-100%);
+        z-index: 1000;
       }
 
       .sidebar.mobile-open {
