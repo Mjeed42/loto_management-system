@@ -106,34 +106,10 @@ const Header = ({ currentUser }) => {
   return (
     <header className="modern-header">
       <div className="header-container">
-        <div
-          className="header-brand cursor-pointer hover-scale transition"
-          onClick={() => navigate("/Home")}
-        >
-          <div className="brand-logo">
-            <img 
-              src="https://logos-world.net/wp-content/uploads/2022/03/Pepsico-Symbol.png" 
-              alt="PepsiCo Logo" 
-              className="navbar-pepsico-logo"
-            />
-          </div>
-          <div className="brand-text">
-            <div className="brand-icon">
-              <Icon name="lock" />
-            </div>
-            <div className="brand-title">
-              <h1>LOTO Management</h1>
-              <span className="brand-subtitle">Lockout/Tagout System</span>
-            </div>
-          </div>
+        {/* Page Title - Now the main focus */}
+        <div className="page-title">
+          <h2>{getPageTitle()}</h2>
         </div>
-
-        {/* Page Title */}
-        {currentUser && (
-          <div className="page-title">
-            <h2>{getPageTitle()}</h2>
-          </div>
-        )}
 
         <div className="header-actions">
           {/* Notifications Dropdown */}

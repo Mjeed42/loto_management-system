@@ -8,7 +8,6 @@ const Sidebar = ({ currentUser, onCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed by default
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-
   // Navigation items based on user role
   const getNavigationItems = () => {
     if (!currentUser) return [];
@@ -122,8 +121,8 @@ const Sidebar = ({ currentUser, onCollapse }) => {
             </div>
             {!isCollapsed && (
               <div className="brand-text">
-                <h3>LOTO System</h3>
-                <span>Lockout/Tagout</span>
+                <h3>LOTO Management</h3>
+                <span>Lockout/Tagout System</span>
               </div>
             )}
           </div>
