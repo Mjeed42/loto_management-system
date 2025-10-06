@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Icon from "./Icon";
 
-const Sidebar = ({ currentUser, onCollapse }) => {
+const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed like GitHub
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  // Use the mobile state from parent component
+  const mobileOpen = isMobileOpen !== undefined ? isMobileOpen : false;
+  const setMobileOpen = setIsMobileOpen || (() => {});
   
   // Check if we're on mobile
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -95,7 +97,7 @@ const Sidebar = ({ currentUser, onCollapse }) => {
   };
 
   const toggleMobileSidebar = () => {
-    setIsMobileOpen(!isMobileOpen);
+    setMobileOpen(!mobileOpen);
   };
 
   if (!currentUser) return null;
@@ -104,27 +106,16 @@ const Sidebar = ({ currentUser, onCollapse }) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
-      {isMobileOpen && (
-        <div 
-          className="sidebar-overlay"
-          onClick={toggleMobileSidebar}
-        />
-      )}
+              {/* Mobile Overlay */}
+              {mobileOpen && (
+                <div
+                  className="sidebar-overlay"
+                  onClick={toggleMobileSidebar}
+                />
+              )}
 
-      {/* Hamburger Button - Only show when sidebar is closed */}
-      {!isMobileOpen && (
-        <button 
-          className="sidebar-hamburger-btn"
-          onClick={toggleMobileSidebar}
-          title="Open sidebar"
-        >
-          <Icon name="menu" />
-        </button>
-      )}
-
-      {/* GitHub-style Sidebar */}
-      <aside className={`sidebar github-style ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
+              {/* GitHub-style Sidebar */}
+              <aside className={`sidebar github-style ${isCollapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         {/* Sidebar Header */}
         <div className="sidebar-header">
           <div className="sidebar-brand">
@@ -135,10 +126,10 @@ const Sidebar = ({ currentUser, onCollapse }) => {
                 className="sidebar-logo"
               />
             </div>
-            {(!isCollapsed || isMobileOpen) && (
+            {(!isCollapsed || mobileOpen) && (
               <div className="brand-text">
                 <h3>LOTO Management</h3>
-                <span>Lockout/Tagout System</span>
+              
               </div>
             )}
           </div>
@@ -167,7 +158,7 @@ const Sidebar = ({ currentUser, onCollapse }) => {
           <div className="user-avatar">
             <Icon name="user" />
           </div>
-          {(!isCollapsed || isMobileOpen) && (
+          {(!isCollapsed || mobileOpen) && (
             <div className="user-info">
               <span className="user-name">
                 {currentUser.firstName} {currentUser.lastName}
@@ -192,7 +183,7 @@ const Sidebar = ({ currentUser, onCollapse }) => {
               <div className="nav-icon">
                 <Icon name={item.icon} />
               </div>
-              {(!isCollapsed || isMobileOpen) && (
+              {(!isCollapsed || mobileOpen) && (
                 <div className="nav-content">
                   <span className="nav-label">{item.label}</span>
                 </div>
@@ -225,7 +216,7 @@ const Sidebar = ({ currentUser, onCollapse }) => {
             <div className="nav-icon">
               <Icon name="logout" />
             </div>
-            {(!isCollapsed || isMobileOpen) && (
+            {(!isCollapsed || mobileOpen) && (
               <div className="nav-content">
                 <span className="nav-label">Logout</span>
               </div>

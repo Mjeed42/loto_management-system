@@ -3426,10 +3426,59 @@ const GlobalStyles = () => (
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
+    /* Header Hamburger Button */
+    .header-hamburger-btn {
+      display: none; /* Hidden by default */
+      width: 40px;
+      height: 40px;
+      background: #0969da;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+      flex-shrink: 0; /* Prevent shrinking */
+    }
+
+    .header-hamburger-btn:hover {
+      background: #0860ca;
+      transform: scale(1.05);
+    }
+
+    .header-hamburger-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
     /* Responsive header styles */
     @media (max-width: 768px) {
       .header-container {
-        padding: 0.75rem 1rem;
+        padding: 0.75rem 1rem; /* Restore normal padding */
+        justify-content: flex-start; /* Start from left */
+        align-items: center;
+        gap: 0; /* No gap between elements */
+      }
+      
+      /* Show hamburger button on mobile */
+      .header-hamburger-btn {
+        display: flex !important;
+        margin: 0; /* Remove all margins */
+        position: relative;
+        left: -1rem; /* Pull button to the very left edge */
+      }
+      
+      /* Adjust page title to take remaining space */
+      .page-title {
+        flex: 1;
+        margin-left: 16px; /* Add space from hamburger button */
+      }
+      
+      /* Ensure header actions stay on the right */
+      .header-actions {
+        margin-left: auto; /* Push to the right */
       }
       
       .navbar-pepsico-logo {
@@ -3847,7 +3896,7 @@ const GlobalStyles = () => (
     
     .brand-text p {
       font-size: 0.875rem;
-      color: #6b7280;
+      color:rgb(255, 255, 255);
       margin: 0;
     }
     
@@ -3882,12 +3931,12 @@ const GlobalStyles = () => (
     
     .action-btn.secondary {
       background: rgba(107, 114, 128, 0.1);
-      color: #374151;
+      color:rgb(255, 255, 255);
       border: 1px solid rgba(107, 114, 128, 0.2);
     }
     
     .action-btn.secondary:hover {
-      background: rgba(107, 114, 128, 0.2);
+      background: rgba(9, 91, 255, 0.2);
       transform: translateY(-1px);
     }
     

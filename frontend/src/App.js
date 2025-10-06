@@ -31,6 +31,7 @@ import MonitoringDashboard from "./pages/MonitoringDashboard";
 const AppContent = ({ currentUser, fetchCurrentUser, isLoading }) => {
   const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed (hidden) by default
+  const [isMobileOpen, setIsMobileOpen] = useState(false); // Mobile sidebar state
   
   // Check if we're on the login page
   const isLoginPage = location.pathname === "/";
@@ -69,12 +70,12 @@ const AppContent = ({ currentUser, fetchCurrentUser, isLoading }) => {
   return (
     <div className={`app-layout ${!showSidebar ? 'no-sidebar' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {/* Sidebar Navigation - Only show when logged in and not on login page */}
-      {showSidebar && <Sidebar currentUser={currentUser} onCollapse={setSidebarCollapsed} />}
+      {showSidebar && <Sidebar currentUser={currentUser} onCollapse={setSidebarCollapsed} isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />}
       
       {/* Main Content Area */}
       <div className="main-content">
         {/* Header - Only show when not on login page */}
-        {!isLoginPage && <Header currentUser={currentUser} />}
+        {!isLoginPage && <Header currentUser={currentUser} onToggleSidebar={() => setIsMobileOpen(!isMobileOpen)} />}
         
         {/* Breadcrumb - Only show when logged in and not on login page */}
         {showSidebar && <Breadcrumb currentUser={currentUser} />}
