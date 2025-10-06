@@ -4,7 +4,7 @@ import Button from "./Button";
 import Icon from "./Icon";
 import NotificationBadge from "./NotificationBadge";
 
-const Header = ({ currentUser, onToggleSidebar }) => {
+const Header = ({ currentUser }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
@@ -94,7 +94,7 @@ const Header = ({ currentUser, onToggleSidebar }) => {
               </div>
               <div className="brand-title">
                 <h1>LOTO Management</h1>
-                <span className="brand-subtitle">Lockout/Tagout System</span>
+                
               </div>
             </div>
           </div>
@@ -106,15 +106,6 @@ const Header = ({ currentUser, onToggleSidebar }) => {
   return (
     <header className="modern-header">
       <div className="header-container">
-        {/* Mobile Hamburger Button */}
-        <button
-          className="header-hamburger-btn"
-          onClick={onToggleSidebar}
-          title="Open sidebar"
-        >
-          <Icon name="menu" />
-        </button>
-
         {/* Page Title - Now the main focus */}
         <div className="page-title">
           <h2>{getPageTitle()}</h2>

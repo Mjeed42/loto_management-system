@@ -7409,6 +7409,7 @@ const GlobalStyles = () => (
       flex: 1;
       padding: 2rem;
       overflow-y: auto;
+      background:linear-gradient(135deg, #fff 0%, #4e77ff 50%, #fff 100%);
     }
 
     /* Header Styles */

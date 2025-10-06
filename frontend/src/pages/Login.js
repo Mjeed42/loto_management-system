@@ -121,15 +121,6 @@ const Login = ({ onLogin }) => {
           LOTO Management System
         </h2>
         
-        <p style={{
-          textAlign: 'center',
-          color: '#6b7280',
-          marginBottom: '2rem',
-          fontSize: '0.875rem',
-          margin: '0 0 2rem 0'
-        }}>
-          Secure Lockout/Tagout Management
-        </p>
 
         {error && (
           <div style={{
@@ -244,18 +235,44 @@ const Login = ({ onLogin }) => {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+          
         }
         
         .login-right {
-          width: 50%;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          background-color: #ffffff;
-          padding-left: 3rem;
-          padding-right: 3rem;
-        }
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(90deg,rgba(251, 85, 85, 0.79) 0%, rgb(255, 106, 106) 44%, rgba(255, 0, 0, 0.87) 100%);
+  padding-left: 3rem;
+  padding-right: 3rem;
+  border-radius: 20px 20px 20px  20px;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+  border-left: 1px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+
+
+          @media (max-width: 768px) {
+  .login-right {
+    width: 100% !important;
+    height: 60vh !important;
+    padding: 2rem !important;
+    background:linear-gradient(90deg,rgba(251, 85, 85, 0.79) 0%, rgb(255, 106, 106) 44%, rgba(255, 0, 0, 0.87) 100%);
+    border-radius: 1.25rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+  }
+
+  .login-right:hover {
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
         
         .login-form input {
           width: 100%;
