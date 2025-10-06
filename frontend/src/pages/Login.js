@@ -40,14 +40,12 @@ const Login = ({ onLogin }) => {
         onLogin();
       }
 
-      // Redirect based on role
-      switch (res.data.user.role) {
-        case "admin":
-          navigate("/admin");
-          break;
-        default:
-          navigate("/Home");
-          break;
+      // Redirect based on user role
+      const userRole = res.data.user?.role;
+      if (userRole === "technician") {
+        navigate("/technician-home");
+      } else {
+        navigate("/Home");
       }
     } catch (err) {
       // If token is invalid, remove it and stay on login page
@@ -81,20 +79,12 @@ const Login = ({ onLogin }) => {
         onLogin();
       }
 
-      // Redirect based on role
-      switch (res.data.user.role) {
-        case "admin":
-          navigate("/loto-list");
-          break;
-        case "supervisor":
-          navigate("/loto-list");
-          break;
-        case "technician":
-          navigate("/Home");
-          break;
-        default:
-          navigate("/Home");
-          break;
+      // Redirect based on user role
+      const userRole = res.data.user?.role;
+      if (userRole === "technician") {
+        navigate("/technician-home");
+      } else {
+        navigate("/Home");
       }
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
@@ -104,69 +94,234 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div className="login-page-container">
-      <div className="row justify-content-center">
-        <div className="col-md-6 col-lg-4">
-          <div className="card login-card shadow-lg">
-            <div className="card-header text-center">
-              <h2>🔒 LOTO Management System</h2>
-              <p className="text-muted mb-0">Secure Lockout/Tagout Management</p>
-            </div>
-          <div className="card-body">
-            {error && <div className="alert alert-danger">{error}</div>}
-
-            <form onSubmit={onSubmit}>
-              <div className="form-group mb-3">
-                <label className="form-label">Username or Email</label>
-                <input
-                  type="text"
-                  name="username"
-                  value={username}
-                  onChange={onChange}
-                  className="form-control"
-                  placeholder="Enter username or email"
-                  required
-                />
-              </div>
-
-              <div className="form-group mb-4">
-                <label className="form-label">Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={password}
-                  onChange={onChange}
-                  className="form-control"
-                  placeholder="Enter password"
-                  required
-                />
-              </div>
-
-              <div className="d-grid">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn btn-primary btn-lg"
-                >
-                  {loading ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      Logging in...
-                    </>
-                  ) : (
-                    "Login"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+    <div className="login-container">
+      {/* Left Section - PepsiCo Logo */}
+      <div className="login-left">
+        <img 
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/PepsiCo_logo.svg/1024px-PepsiCo_logo.svg.png"
+          alt="PepsiCo Logo"
+          style={{
+            width: '66.666667%',
+            maxWidth: '28rem',
+            filter: 'drop-shadow(0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04))'
+          }}
+        />
       </div>
-    </div>
+
+      {/* Right Section - Login Form */}
+      <div className="login-right">
+        <h2 style={{
+          fontSize: '1.875rem',
+          fontWeight: '700',
+          color: '#1e3a8a',
+          marginBottom: '1.5rem',
+          textAlign: 'center',
+          margin: '0 0 1.5rem 0'
+        }}>
+          LOTO Management System
+        </h2>
+        
+        <p style={{
+          textAlign: 'center',
+          color: '#6b7280',
+          marginBottom: '2rem',
+          fontSize: '0.875rem',
+          margin: '0 0 2rem 0'
+        }}>
+          Secure Lockout/Tagout Management
+        </p>
+
+        {error && (
+          <div style={{
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#b91c1c',
+            padding: '0.75rem 1rem',
+            borderRadius: '0.5rem',
+            marginBottom: '1.5rem'
+          }}>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={onSubmit} className="login-form">
+          <div>
+            <label>
+              Username or Email
+            </label>
+            <input
+              type="text"
+              name="username"
+              value={username}
+              onChange={onChange}
+              placeholder="Enter username or email"
+              required
+            />
+          </div>
+
+          <div>
+            <label>
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              value={password}
+              onChange={onChange}
+              placeholder="Enter password"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <svg 
+                  style={{
+                    animation: 'spin 1s linear infinite',
+                    marginRight: '0.75rem',
+                    width: '1.25rem',
+                    height: '1.25rem'
+                  }}
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24"
+                >
+                  <circle 
+                    style={{ opacity: 0.25 }} 
+                    cx="12" 
+                    cy="12" 
+                    r="10" 
+                    stroke="currentColor" 
+                    strokeWidth="4"
+                  />
+                  <path 
+                    style={{ opacity: 0.75 }} 
+                    fill="currentColor" 
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Logging in...
+              </div>
+            ) : (
+              "Login"
+            )}
+          </button>
+        </form>
+
+        <p style={{
+          textAlign: 'center',
+          color: '#6b7280',
+          marginTop: '1.5rem',
+          fontSize: '0.875rem',
+          margin: '1.5rem 0 0 0'
+        }}>
+          Secure access to your LOTO management portal
+        </p>
+      </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        
+        .login-container {
+          display: flex;
+          height: 100vh;
+          font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+        }
+        
+        .login-left {
+          width: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+        }
+        
+        .login-right {
+          width: 50%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          background-color: #ffffff;
+          padding-left: 3rem;
+          padding-right: 3rem;
+        }
+        
+        .login-form input {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border: 1px solid #d1d5db;
+          border-radius: 0.5rem;
+          font-size: 1rem;
+          font-family: inherit;
+          outline: none;
+          transition: all 0.2s ease-in-out;
+        }
+        
+        .login-form input:focus {
+          border-color: #1d4ed8;
+          box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.1);
+        }
+        
+        .login-form button {
+          width: 100%;
+          background-color: #1d4ed8;
+          color: #ffffff;
+          padding: 0.75rem;
+          border-radius: 0.5rem;
+          font-weight: 600;
+          font-size: 1rem;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease-in-out;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .login-form button:hover:not(:disabled) {
+          background-color: #1e40af;
+        }
+        
+        .login-form button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        
+        .login-form > div {
+          margin-bottom: 1.25rem;
+        }
+        
+        .login-form label {
+          display: block;
+          color: #374151;
+          font-weight: 500;
+          margin-bottom: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+          .login-container {
+            flex-direction: column !important;
+          }
+          .login-left {
+            width: 100% !important;
+            height: 40vh !important;
+          }
+          .login-right {
+            width: 100% !important;
+            height: 60vh !important;
+            padding: 2rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

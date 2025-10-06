@@ -4,8 +4,11 @@ import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
 import BackButton from "../components/BackButton";
+import { useLoading } from "../contexts/LoadingContext";
 
 const CreateLOTO = () => {
+  const { showLoading, hideLoading } = useLoading();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     shift: "A",
     location: "PKG", // Default location
@@ -16,10 +19,9 @@ const CreateLOTO = () => {
     ptwNumber: "N/A",
     expectedDuration: "",
     supervisor: "",
-    energyTypes: [{ type: "", isolationPoint: "" }],
+    energyTypes: [],
   });
   const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [supervisors, setSupervisors] = useState([]);
   const [fetchingSupervisors, setFetchingSupervisors] = useState(true);
@@ -38,8 +40,6 @@ const CreateLOTO = () => {
     3: false, // Work Details
     4: false, // Energy Types
   });
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchSupervisors();
@@ -79,11 +79,9 @@ const CreateLOTO = () => {
       newValidation[3] = !!(formData.reason);
     }
 
-    // Step 4: Energy Types
-    const validEnergyTypes = formData.energyTypes.filter(
-      (et) => et.type && et.isolationPoint.trim()
-    );
-    newValidation[4] = validEnergyTypes.length > 0;
+    // Step 4: Energy Types - Validate that at least one energy type is selected with valid data
+    newValidation[4] = formData.energyTypes && 
+      formData.energyTypes.some(et => et.type && et.isolationPoint.trim());
 
     setStepValidation(newValidation);
   };
@@ -179,7 +177,7 @@ const CreateLOTO = () => {
   const removeEnergyType = (index) => {
     if (formData.energyTypes.length > 1) {
       const updatedEnergyTypes = formData.energyTypes.filter((_, i) => i !== index);
-      setFormData({ ...formData, energyTypes: updatedEnergyTypes });
+    setFormData({ ...formData, energyTypes: updatedEnergyTypes });
     }
   };
 
@@ -245,7 +243,7 @@ const CreateLOTO = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
+    showLoading("Creating LOTO...");
     setError("");
 
     try {
@@ -258,35 +256,35 @@ const CreateLOTO = () => {
       };
 
       // Validate energy types
-      if (energyTypes.length === 0) {
+      if (formData.energyTypes.length === 0) {
         setError("Please select at least one energy type to isolate");
-        setSubmitting(false);
+        hideLoading();
         return;
       }
 
       // Validate that all selected energy types have isolation points
-      const hasEmptyIsolationPoints = energyTypes.some(
+      const hasEmptyIsolationPoints = formData.energyTypes.some(
         (energy) => !energy.isolationPoint.trim()
       );
       if (hasEmptyIsolationPoints) {
         setError(
           "Please provide isolation point reference for all selected energy types"
         );
-        setSubmitting(false);
+        hideLoading();
         return;
       }
 
       // Prepare data to send with energy types
       const finalLocation =
-        location === "Other" && customLocation
+        formData.location === "Other" && customLocation
           ? customLocation
-          : location || "Other";
+          : formData.location || "Other";
 
       const finalMachine =
-        machine === "Other" && customMachine ? customMachine : machine || "N/A";
+        formData.machine === "Other" && customMachine ? customMachine : formData.machine || "N/A";
 
       const dataToSend = {
-        shift,
+        shift: formData.shift,
         location: finalLocation,
         line: formData.line || "N/A",
         machine: formData.machine || "N/A",
@@ -295,9 +293,9 @@ const CreateLOTO = () => {
           formData.reason === "Other" && customReason
             ? customReason
             : formData.reason || "Other",
-        ptwNumber: ptwNumber || "N/A",
-        expectedDuration: parseFloat(expectedDuration),
-        supervisor,
+        ptwNumber: formData.ptwNumber || "N/A",
+        expectedDuration: parseFloat(formData.expectedDuration),
+        supervisor: formData.supervisor,
         // --- INCLUDE ENERGY TYPES IN DATA TO SEND ---
         energyTypes: formData.energyTypes.filter(
           (et) => et.type && et.isolationPoint
@@ -333,7 +331,7 @@ const CreateLOTO = () => {
         "Error creating LOTO";
       setError(errorMessage);
     } finally {
-      setSubmitting(false);
+      hideLoading();
     }
   };
 
@@ -363,7 +361,7 @@ const CreateLOTO = () => {
           <div className="header-main">
             <div className="header-icon">
               <Icon name="plus" size="xl" />
-            </div>
+                </div>
             <div className="header-text">
               <h1>Create New LOTO</h1>
               <p>Lockout/Tagout Safety Procedure</p>
@@ -373,7 +371,7 @@ const CreateLOTO = () => {
             <button 
               type="button"
               className="btn-secondary"
-              onClick={() => navigate("/loto-list")}
+                    onClick={() => navigate("/loto-list")}
             >
               <Icon name="list" size="sm" />
               <span>My LOTOs</span>
@@ -389,9 +387,9 @@ const CreateLOTO = () => {
           >
             <div className="step-number">
               {stepValidation[1] ? <Icon name="check" size="sm" /> : '1'}
-            </div>
+                </div>
             <span>Basic Info</span>
-          </div>
+              </div>
           <div className={`progress-line ${currentStep > 1 ? 'completed' : ''}`}></div>
           <div 
             className={`progress-step ${currentStep >= 2 ? 'active' : ''} ${stepValidation[2] ? 'completed' : ''}`}
@@ -469,42 +467,42 @@ const CreateLOTO = () => {
                   <Icon name="clock" size="sm" />
                   <span>Shift</span>
                 </label>
-                <select
-                  name="shift"
-                  value={shift}
-                  onChange={onChange}
+                      <select
+                        name="shift"
+                        value={shift}
+                        onChange={onChange}
                   className="field-input"
                   required
                 >
                   <option value="A">Shift A</option>
                   <option value="B">Shift B</option>
                   <option value="C">Shift C</option>
-                </select>
-              </div>
+                      </select>
+                  </div>
 
               <div className="form-field">
                 <label className="field-label">
                   <Icon name="clock" size="sm" />
                   <span>Expected Duration (hours)</span>
-                </label>
-                <input
-                  type="number"
-                  name="expectedDuration"
-                  value={expectedDuration}
-                  onChange={onChange}
+                      </label>
+                      <input
+                        type="number"
+                        name="expectedDuration"
+                        value={expectedDuration}
+                        onChange={onChange}
                   placeholder="e.g., 2.5"
-                  step="0.5"
-                  min="0.5"
+                        step="0.5"
+                        min="0.5"
                   className="field-input"
-                  required
-                />
-              </div>
+                        required
+                      />
+                  </div>
 
               <div className="form-field full-width">
                 <label className="field-label">
                   <Icon name="file" size="sm" />
                   <span>PTW Number (Optional)</span>
-                </label>
+                      </label>
                 <input
                   type="text"
                   name="ptwNumber"
@@ -534,163 +532,163 @@ const CreateLOTO = () => {
           
           <div className="section-content">
             <div className="location-hierarchy">
-              {/* Step 1: Main Location */}
+                      {/* Step 1: Main Location */}
               <div className="hierarchy-step">
                 <label className="field-label">
                   <Icon name="home" size="sm" />
                   <span>Primary Location</span>
                 </label>
-                <select
-                  name="location"
-                  value={location}
-                  onChange={handleLocationChange}
+                        <select
+                          name="location"
+                          value={location}
+                          onChange={handleLocationChange}
                   className="field-input location-select"
-                  required
-                >
-                  <option value="">-- Select Location --</option>
-                  <option value="PKG">PKG</option>
-                  <option value="Process">Process</option>
-                  <option value="Utility">Utility</option>
-                  <option value="WH-FG">WH-FG</option>
-                  <option value="WH-RM">WH-RM</option>
-                  <option value="Project">Project</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+                          required
+                        >
+                          <option value="">-- Select Location --</option>
+                          <option value="PKG">PKG</option>
+                          <option value="Process">Process</option>
+                          <option value="Utility">Utility</option>
+                          <option value="WH-FG">WH-FG</option>
+                          <option value="WH-RM">WH-RM</option>
+                          <option value="Project">Project</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
 
-              {/* Custom Location Input */}
-              {showCustomLocation && (
+                      {/* Custom Location Input */}
+                      {showCustomLocation && (
                 <div className="hierarchy-step">
                   <label className="field-label">
                     <Icon name="edit" size="sm" />
                     <span>Custom Location</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="customLocation"
-                    value={customLocation}
-                    onChange={handleCustomLocationChange}
+                          </label>
+                          <input
+                            type="text"
+                            name="customLocation"
+                            value={customLocation}
+                            onChange={handleCustomLocationChange}
                     placeholder="Enter custom location name"
                     className="field-input"
-                    required
-                  />
-                </div>
-              )}
+                            required
+                          />
+                        </div>
+                      )}
 
-              {/* Only show Line/Machine selectors if NOT "Other" location */}
-              {!showCustomLocation && location && (
+                      {/* Only show Line/Machine selectors if NOT "Other" location */}
+                      {!showCustomLocation && location && (
                 <div className="location-steps">
-                  {/* Step 2: Line Selection */}
+                          {/* Step 2: Line Selection */}
                   <div className="hierarchy-step">
                     <label className="field-label">
                       <Icon name="zap" size="sm" />
                       <span>
                         {["PKG", "Process"].includes(location) ? "Production Line" : "Equipment Part"}
                       </span>
-                    </label>
-                    <select
-                      name="line"
-                      value={line}
-                      onChange={handleLineChange}
+                            </label>
+                            <select
+                              name="line"
+                              value={line}
+                              onChange={handleLineChange}
                       className="field-input"
-                      required
-                    >
-                      <option value="">
+                              required
+                            >
+                              <option value="">
                         -- Select {["PKG", "Process"].includes(location) ? "Line" : "Part"} --
-                      </option>
+                              </option>
 
-                      {location === "PKG" && (
-                        <>
-                          <option value="A">A</option>
-                          <option value="B">B</option>
-                          <option value="C">C</option>
-                          <option value="D">D</option>
-                          <option value="Multi-Bag">Multi-Bag</option>
-                        </>
-                      )}
-                      {location === "Process" && (
-                        <>
-                          <option value="PC">PC</option>
-                          <option value="TC">TC</option>
-                          <option value="FCP">FCP</option>
-                          <option value="RBS">RBS</option>
-                          <option value="CKF">CKF</option>
-                        </>
-                      )}
-                      {location === "Utility" && (
-                        <>
-                          <option value="Chiller">Chiller</option>
-                          <option value="AC">AC</option>
-                          <option value="Pump">Pump</option>
-                          <option value="Gate">Gate</option>
-                          <option value="Other">Other</option>
-                        </>
-                      )}
-                      {location === "WH-FG" && (
-                        <>
-                          <option value="Gate">Gate</option>
+                              {location === "PKG" && (
+                                <>
+                                  <option value="A">A</option>
+                                  <option value="B">B</option>
+                                  <option value="C">C</option>
+                                  <option value="D">D</option>
+                                  <option value="Multi-Bag">Multi-Bag</option>
+                                </>
+                              )}
+                              {location === "Process" && (
+                                <>
+                                  <option value="PC">PC</option>
+                                  <option value="TC">TC</option>
+                                  <option value="FCP">FCP</option>
+                                  <option value="RBS">RBS</option>
+                                  <option value="CKF">CKF</option>
+                                </>
+                              )}
+                              {location === "Utility" && (
+                                <>
+                                  <option value="Chiller">Chiller</option>
+                                  <option value="AC">AC</option>
+                                  <option value="Pump">Pump</option>
+                                  <option value="Gate">Gate</option>
+                                  <option value="Other">Other</option>
+                                </>
+                              )}
+                              {location === "WH-FG" && (
+                                <>
+                                  <option value="Gate">Gate</option>
                           <option value="Dock Leveler">Dock Leveler</option>
                           <option value="Crate Dumper">Crate Dumper</option>
                           <option value="Pallet Inverter">Pallet Inverter</option>
-                          <option value="Banker">Banker</option>
-                          <option value="Other">Other</option>
-                        </>
-                      )}
-                      {location === "WH-RM" && (
-                        <>
-                          <option value="Gate">Gate</option>
+                                  <option value="Banker">Banker</option>
+                                  <option value="Other">Other</option>
+                                </>
+                              )}
+                              {location === "WH-RM" && (
+                                <>
+                                  <option value="Gate">Gate</option>
                           <option value="Dock Leveler">Dock Leveler</option>
                           <option value="Crate Dumper">Crate Dumper</option>
                           <option value="Pallet Inverter">Pallet Inverter</option>
-                          <option value="Banker">Banker</option>
-                          <option value="Other">Other</option>
-                        </>
-                      )}
-                      {location === "Project" && (
-                        <>
-                          <option value="Other">Other</option>
-                        </>
-                      )}
-                    </select>
-                  </div>
+                                  <option value="Banker">Banker</option>
+                                  <option value="Other">Other</option>
+                                </>
+                              )}
+                              {location === "Project" && (
+                                <>
+                                  <option value="Other">Other</option>
+                                </>
+                              )}
+                            </select>
+                          </div>
 
-                  {/* Step 3: Machine/Part Selection */}
-                  {line && (
+                          {/* Step 3: Machine/Part Selection */}
+                          {line && (
                     <div className="hierarchy-step">
                       <label className="field-label">
                         <Icon name="settings" size="sm" />
                         <span>Machine/Equipment</span>
-                      </label>
-                      <select
-                        name="machine"
-                        value={machine}
-                        onChange={handleMachineChange}
+                              </label>
+                              <select
+                                name="machine"
+                                value={machine}
+                                onChange={handleMachineChange}
                         className="field-input"
-                        required
-                      >
+                                required
+                              >
                         <option value="">-- Select Machine/Part --</option>
 
                         {/* PKG Line A Machines */}
-                        {location === "PKG" && line === "A" && (
-                          <>
-                            <option value="DA01">DA01</option>
-                            <option value="DA02">DA02</option>
-                            <option value="DA03">DA03</option>
-                            <option value="DA04">DA04</option>
-                            <option value="DA05">DA05</option>
-                            <option value="DA06">DA06</option>
-                            <option value="DA07">DA07</option>
-                            <option value="DA08">DA08</option>
-                            <option value="DA09">DA09</option>
-                            <option value="DA10">DA10</option>
-                            <option value="DA11">DA11</option>
-                            <option value="DA12">DA12</option>
-                            <option value="DA13">DA13</option>
-                            <option value="DA14">DA14</option>
-                            <option value="DA15">DA15</option>
-                            <option value="DA16">DA16</option>
-                            <option value="DA17">DA17</option>
-                            <option value="DA18">DA18</option>
+                                {location === "PKG" && line === "A" && (
+                                  <>
+                                    <option value="DA01">DA01</option>
+                                    <option value="DA02">DA02</option>
+                                    <option value="DA03">DA03</option>
+                                    <option value="DA04">DA04</option>
+                                    <option value="DA05">DA05</option>
+                                    <option value="DA06">DA06</option>
+                                    <option value="DA07">DA07</option>
+                                    <option value="DA08">DA08</option>
+                                    <option value="DA09">DA09</option>
+                                    <option value="DA10">DA10</option>
+                                    <option value="DA11">DA11</option>
+                                    <option value="DA12">DA12</option>
+                                    <option value="DA13">DA13</option>
+                                    <option value="DA14">DA14</option>
+                                    <option value="DA15">DA15</option>
+                                    <option value="DA16">DA16</option>
+                                    <option value="DA17">DA17</option>
+                                    <option value="DA18">DA18</option>
                             <option value="DA19">DA19</option>
                             <option value="DA20">DA20</option>
                             <option value="DA21">DA21</option>
@@ -723,31 +721,31 @@ const CreateLOTO = () => {
                             <option value="DA48">DA48</option>
                             <option value="DA49">DA49</option>
                             <option value="DA50">DA50</option>
-                            <option value="Other">Other</option>
-                          </>
-                        )}
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
 
                         {/* PKG Line B Machines */}
-                        {location === "PKG" && line === "B" && (
-                          <>
-                            <option value="DB01">DB01</option>
-                            <option value="DB02">DB02</option>
-                            <option value="DB03">DB03</option>
-                            <option value="DB04">DB04</option>
-                            <option value="DB05">DB05</option>
-                            <option value="DB06">DB06</option>
-                            <option value="DB07">DB07</option>
-                            <option value="DB08">DB08</option>
-                            <option value="DB09">DB09</option>
-                            <option value="DB10">DB10</option>
-                            <option value="DB11">DB11</option>
-                            <option value="DB12">DB12</option>
-                            <option value="DB13">DB13</option>
-                            <option value="DB14">DB14</option>
-                            <option value="DB15">DB15</option>
-                            <option value="DB16">DB16</option>
-                            <option value="DB17">DB17</option>
-                            <option value="DB18">DB18</option>
+                                {location === "PKG" && line === "B" && (
+                                  <>
+                                    <option value="DB01">DB01</option>
+                                    <option value="DB02">DB02</option>
+                                    <option value="DB03">DB03</option>
+                                    <option value="DB04">DB04</option>
+                                    <option value="DB05">DB05</option>
+                                    <option value="DB06">DB06</option>
+                                    <option value="DB07">DB07</option>
+                                    <option value="DB08">DB08</option>
+                                    <option value="DB09">DB09</option>
+                                    <option value="DB10">DB10</option>
+                                    <option value="DB11">DB11</option>
+                                    <option value="DB12">DB12</option>
+                                    <option value="DB13">DB13</option>
+                                    <option value="DB14">DB14</option>
+                                    <option value="DB15">DB15</option>
+                                    <option value="DB16">DB16</option>
+                                    <option value="DB17">DB17</option>
+                                    <option value="DB18">DB18</option>
                             <option value="DB19">DB19</option>
                             <option value="DB20">DB20</option>
                             <option value="DB21">DB21</option>
@@ -780,21 +778,21 @@ const CreateLOTO = () => {
                             <option value="DB48">DB48</option>
                             <option value="DB49">DB49</option>
                             <option value="DB50">DB50</option>
-                            <option value="Other">Other</option>
-                          </>
-                        )}
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
 
                         {/* PKG Line C Machines */}
-                        {location === "PKG" && line === "C" && (
-                          <>
-                            <option value="DC01">DC01</option>
-                            <option value="DC02">DC02</option>
-                            <option value="DC03">DC03</option>
-                            <option value="DC04">DC04</option>
-                            <option value="DC05">DC05</option>
-                            <option value="DC06">DC06</option>
-                            <option value="DC07">DC07</option>
-                            <option value="DC08">DC08</option>
+                                {location === "PKG" && line === "C" && (
+                                  <>
+                                    <option value="DC01">DC01</option>
+                                    <option value="DC02">DC02</option>
+                                    <option value="DC03">DC03</option>
+                                    <option value="DC04">DC04</option>
+                                    <option value="DC05">DC05</option>
+                                    <option value="DC06">DC06</option>
+                                    <option value="DC07">DC07</option>
+                                    <option value="DC08">DC08</option>
                             <option value="DC09">DC09</option>
                             <option value="DC10">DC10</option>
                             <option value="DC11">DC11</option>
@@ -837,17 +835,17 @@ const CreateLOTO = () => {
                             <option value="DC48">DC48</option>
                             <option value="DC49">DC49</option>
                             <option value="DC50">DC50</option>
-                            <option value="Other">Other</option>
-                          </>
-                        )}
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
 
                         {/* PKG Line D Machines */}
-                        {location === "PKG" && line === "D" && (
-                          <>
-                            <option value="DD01">DD01</option>
-                            <option value="DD02">DD02</option>
-                            <option value="DD03">DD03</option>
-                            <option value="DD04">DD04</option>
+                                {location === "PKG" && line === "D" && (
+                                  <>
+                                    <option value="DD01">DD01</option>
+                                    <option value="DD02">DD02</option>
+                                    <option value="DD03">DD03</option>
+                                    <option value="DD04">DD04</option>
                             <option value="DD05">DD05</option>
                             <option value="DD06">DD06</option>
                             <option value="DD07">DD07</option>
@@ -894,13 +892,13 @@ const CreateLOTO = () => {
                             <option value="DD48">DD48</option>
                             <option value="DD49">DD49</option>
                             <option value="DD50">DD50</option>
-                            <option value="Other">Other</option>
-                          </>
-                        )}
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
 
                         {/* PKG Multi-Bag Machines */}
-                        {location === "PKG" && line === "Multi-Bag" && (
-                          <>
+                                {location === "PKG" && line === "Multi-Bag" && (
+                                  <>
                             <option value="MB01">MB01</option>
                             <option value="MB02">MB02</option>
                             <option value="MB03">MB03</option>
@@ -911,9 +909,9 @@ const CreateLOTO = () => {
                             <option value="MB08">MB08</option>
                             <option value="MB09">MB09</option>
                             <option value="MB10">MB10</option>
-                            <option value="Other">Other</option>
-                          </>
-                        )}
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
 
                         {/* Process Lines */}
                         {location === "Process" && line === "PC" && (
@@ -923,9 +921,9 @@ const CreateLOTO = () => {
                             <option value="PC03">PC03</option>
                             <option value="PC04">PC04</option>
                             <option value="PC05">PC05</option>
-                            <option value="Other">Other</option>
-                          </>
-                        )}
+                                    <option value="Other">Other</option>
+                                  </>
+                                )}
 
                         {location === "Process" && line === "TC" && (
                           <>
@@ -934,9 +932,9 @@ const CreateLOTO = () => {
                             <option value="TC03">TC03</option>
                             <option value="TC04">TC04</option>
                             <option value="TC05">TC05</option>
-                            <option value="Other">Other</option>
-                          </>
-                        )}
+                                      <option value="Other">Other</option>
+                                    </>
+                                  )}
 
                         {location === "Process" && line === "FCP" && (
                           <>
@@ -957,8 +955,8 @@ const CreateLOTO = () => {
                             <option value="RBS04">RBS04</option>
                             <option value="RBS05">RBS05</option>
                             <option value="Other">Other</option>
-                          </>
-                        )}
+                        </>
+                      )}
 
                         {location === "Process" && line === "CKF" && (
                           <>
@@ -1028,59 +1026,59 @@ const CreateLOTO = () => {
                     </div>
                   )}
 
-                  {/* Custom Machine Input */}
-                  {showCustomMachine && (
+                      {/* Custom Machine Input */}
+                      {showCustomMachine && (
                     <div className="hierarchy-step">
                       <label className="field-label">
                         <Icon name="edit" size="sm" />
                         <span>Custom Machine</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="customMachine"
-                        value={customMachine}
-                        onChange={handleCustomMachineChange}
+                          </label>
+                          <input
+                            type="text"
+                            name="customMachine"
+                            value={customMachine}
+                            onChange={handleCustomMachineChange}
                         placeholder="Enter custom machine name"
                         className="field-input"
-                        required
-                      />
-                    </div>
-                  )}
+                            required
+                          />
+                        </div>
+                      )}
 
-                  {/* Display Selected Location Path */}
-                  {(location || line || machine) && (
+                      {/* Display Selected Location Path */}
+                      {(location || line || machine) && (
                     <div className="hierarchy-step">
                       <div className="location-path">
                         <Icon name="map-pin" size="sm" />
                         <strong>Selected Path:</strong>
                         <span>
-                          {location === "Other" && customLocation
-                            ? customLocation
-                            : location}
-                          {line && ` > ${line}`}
-                          {machine && ` > ${machine}`}
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                              {location === "Other" && customLocation
+                                ? customLocation
+                                : location}
+                              {line && ` > ${line}`}
+                              {machine && ` > ${machine}`}
+                            </span>
+                          </div>
+                        </div>
+                      )}
 
                   {/* Isolated Part Description */}
                   <div className="hierarchy-step">
                     <label className="field-label">
                       <Icon name="target" size="sm" />
                       <span>Isolated Part Description</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="isolatedPart"
+                      </label>
+                      <input
+                        type="text"
+                        name="isolatedPart"
                       value={isolatedPart}
-                      onChange={onChange}
+                        onChange={onChange}
                       placeholder="Describe the specific part to be isolated"
                       className="field-input"
-                      required
-                    />
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
               )}
             </div>
           </div>
@@ -1107,40 +1105,40 @@ const CreateLOTO = () => {
                   <Icon name="info" size="sm" />
                   <span>Reason for LOTO</span>
                 </label>
-                <select
-                  name="reason"
-                  value={reason}
-                  onChange={handleReasonChange}
+                    <select
+                      name="reason"
+                      value={reason}
+                      onChange={handleReasonChange}
                   className="field-input"
-                  required
-                >
-                  <option value="">Select a reason</option>
-                  {reasonOptions.map((option, index) => (
-                    <option key={index} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                      required
+                    >
+                      <option value="">Select a reason</option>
+                      {reasonOptions.map((option, index) => (
+                        <option key={index} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
               {/* Custom Reason Input */}
-              {showCustomReason && (
+                  {showCustomReason && (
                 <div className="form-field">
                   <label className="field-label">
                     <Icon name="edit" size="sm" />
                     <span>Custom Reason</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="customReason"
-                    value={customReason}
-                    onChange={handleCustomReasonChange}
-                    placeholder="Enter custom reason"
+                      </label>
+                      <input
+                        type="text"
+                        name="customReason"
+                        value={customReason}
+                        onChange={handleCustomReasonChange}
+                        placeholder="Enter custom reason"
                     className="field-input"
-                    required
-                  />
-                </div>
-              )}
+                        required
+                      />
+                    </div>
+                  )}
 
               <div className="form-field">
                 <label className="field-label">
@@ -1150,7 +1148,7 @@ const CreateLOTO = () => {
                 <select
                   name="supervisor"
                   value={supervisor}
-                  onChange={onChange}
+                        onChange={onChange}
                   className="field-input"
                 >
                   <option value="">-- No Supervisor Assigned --</option>
@@ -1164,8 +1162,8 @@ const CreateLOTO = () => {
                     ))
                   )}
                 </select>
-              </div>
-            </div>
+                    </div>
+                  </div>
           </div>
         </div>
         )}
@@ -1185,75 +1183,95 @@ const CreateLOTO = () => {
           
           <div className="section-content">
             <div className="energy-types-container">
-              {energyTypes.map((energy, index) => (
+              {formData.energyTypes.length === 0 ? (
+                <div className="empty-energy-types">
+                  <div className="empty-state">
+                    <Icon name="zap" size="lg" />
+                    <h4>No Energy Types Added</h4>
+                    <p>Click the button below to add energy sources that need to be locked out</p>
+                    <button
+                      type="button"
+                      className="add-first-energy-btn"
+                      onClick={addEnergyType}
+                    >
+                      <Icon name="plus" size="sm" />
+                      <span>Add Energy Type</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {formData.energyTypes.map((energy, index) => (
                 <div key={index} className="energy-type-card">
                   <div className="energy-card-header">
                     <div className="energy-card-title">
                       <Icon name="zap" size="sm" />
                       <span>Energy Source {index + 1}</span>
                     </div>
-                    <button
-                      type="button"
+                            <button
+                              type="button"
                       className="remove-energy-btn"
-                      onClick={() => removeEnergyType(index)}
-                      disabled={energyTypes.length <= 1}
+                              onClick={() => removeEnergyType(index)}
+                              disabled={energyTypes.length <= 1}
                       title="Remove energy type"
-                    >
+                            >
                       <Icon name="x" size="sm" />
-                    </button>
-                  </div>
+                            </button>
+                          </div>
 
                   <div className="energy-card-content">
                     <div className="form-field">
                       <label className="field-label">
                         <span>Energy Type</span>
-                      </label>
-                      <select
-                        value={energy.type}
-                        onChange={(e) =>
+                              </label>
+                              <select
+                                value={energy.type}
+                                onChange={(e) =>
                           handleEnergyTypeChange(index, "type", e.target.value)
                         }
                         className="field-input"
-                        required
-                      >
-                        <option value="">Select energy type</option>
-                        {energyTypeOptions.map((et) => (
-                          <option key={et.name} value={et.name}>
-                            {et.symbol} {et.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                                required
+                              >
+                                <option value="">Select energy type</option>
+                                {energyTypeOptions.map((et) => (
+                                  <option key={et.name} value={et.name}>
+                                    {et.symbol} {et.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
 
                     <div className="form-field">
                       <label className="field-label">
                         <span>Isolation Point Reference</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={energy.isolationPoint}
-                        onChange={(e) =>
+                              </label>
+                              <input
+                                type="text"
+                                value={energy.isolationPoint}
+                                onChange={(e) =>
                           handleEnergyTypeChange(index, "isolationPoint", e.target.value)
                         }
                         placeholder="e.g., Panel A-Switch 3, Valve B-12"
                         className="field-input"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
 
-              <button
-                type="button"
+                      <button
+                        type="button"
                 className="add-energy-btn"
-                onClick={addEnergyType}
-              >
+                        onClick={addEnergyType}
+                      >
                 <Icon name="plus" size="sm" />
                 <span>Add Another Energy Type</span>
-              </button>
-            </div>
-          </div>
+                      </button>
+                </>
+              )}
+                    </div>
+                  </div>
         </div>
         )}
 
@@ -1263,7 +1281,7 @@ const CreateLOTO = () => {
             <div className="section-header">
               <div className="section-icon">
                 <Icon name="eye" size="md" />
-              </div>
+                        </div>
               <div className="section-title">
                 <h3>Review Your LOTO</h3>
                 <p>Please review all information before creating the LOTO procedure</p>
@@ -1315,7 +1333,7 @@ const CreateLOTO = () => {
                   <div className="review-item">
                     <span className="review-label">Isolated Part:</span>
                     <span className="review-value">{formData.isolatedPart}</span>
-                  </div>
+                      </div>
                 </div>
 
                 {/* Work Details Review */}
@@ -1336,23 +1354,30 @@ const CreateLOTO = () => {
                         : "No supervisor assigned"
                       }
                     </span>
+                    </div>
                   </div>
-                </div>
 
                 {/* Energy Types Review */}
-                <div className="review-section full-width">
+                <div className="review-section ">
                   <h4><Icon name="zap" size="sm" /> Energy Types to Isolate</h4>
                   <div className="energy-review-grid">
-                    {formData.energyTypes.filter(et => et.type && et.isolationPoint).map((energy, index) => (
-                      <div key={index} className="energy-review-item">
-                        <div className="energy-type">
-                          {energyTypeOptions.find(eto => eto.name === energy.type)?.symbol} {energy.type}
+                    {formData.energyTypes.filter(et => et.type && et.isolationPoint.trim()).length > 0 ? (
+                      formData.energyTypes.filter(et => et.type && et.isolationPoint.trim()).map((energy, index) => (
+                        <div key={index} className="energy-review-item">
+                          <div className="energy-type">
+                            {energyTypeOptions.find(eto => eto.name === energy.type)?.symbol} {energy.type}
+                          </div>
+                          <div className="isolation-point">
+                            <strong>Isolation Point:</strong> {energy.isolationPoint}
+                          </div>
                         </div>
-                        <div className="isolation-point">
-                          <strong>Isolation Point:</strong> {energy.isolationPoint}
-                        </div>
+                      ))
+                    ) : (
+                      <div className="no-energy-types">
+                        <p>⚠️ No energy types have been configured yet.</p>
+                        <p>Please go back to Step 4 to add energy types and isolation points.</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
@@ -1391,27 +1416,18 @@ const CreateLOTO = () => {
                 type="button"
                 className="btn-primary submit-btn"
                 onClick={onSubmit}
-                disabled={submitting || !stepValidation[1] || !stepValidation[2] || !stepValidation[3] || !stepValidation[4]}
-              >
-                {submitting ? (
-                  <>
-                    <div className="loading-spinner"></div>
-                    <span>Creating LOTO...</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon name="check" size="sm" />
-                    <span>Create LOTO Procedure</span>
-                  </>
-                )}
+                disabled={!stepValidation[1] || !stepValidation[2] || !stepValidation[3] || formData.energyTypes.filter(et => et.type && et.isolationPoint.trim()).length === 0}
+                      >
+                        <Icon name="check" size="sm" />
+                        <span>Create LOTO Procedure</span>
               </button>
             )}
 
             <button
               type="button"
-              className="btn-secondary nav-btn"
+              className="btn-cancel nav-btn"
               onClick={() => navigate("/loto-list")}
-              disabled={submitting}
+              disabled={false}
             >
               <Icon name="x" size="sm" />
               <span>Cancel</span>

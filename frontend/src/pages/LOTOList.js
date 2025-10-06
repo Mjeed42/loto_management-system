@@ -5,6 +5,8 @@ import Button from "../components/Button";
 import RejectLOTOModal from "../components/RejectLOTOModal";
 import StatusChangeModal from "../components/StatusChangeModal";
 import HandoverModal from "../components/HandoverModal";
+import { useLoading } from "../contexts/LoadingContext";
+import Icon from "../components/Icon";
 
 // Helper: Format energy type for display (e.g., "electrical" → "Electrical")
 const formatEnergyType = (type) => {
@@ -17,6 +19,8 @@ const formatEnergyType = (type) => {
 };
 
 const LOTOList = () => {
+  const { showLoading, hideLoading } = useLoading();
+  const navigate = useNavigate();
   const [lotos, setLotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,7 +34,6 @@ const LOTOList = () => {
   const [selectedLotoForStatusChange, setSelectedLotoForStatusChange] = useState(null);
   const [handoverModalOpen, setHandoverModalOpen] = useState(false);
   const [selectedLotoForHandover, setSelectedLotoForHandover] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchLOTOs();
@@ -111,6 +114,8 @@ const LOTOList = () => {
     )
       return;
 
+    showLoading("Deleting LOTO...");
+
     try {
       const token = localStorage.getItem("token");
       const config = {
@@ -141,6 +146,8 @@ const LOTOList = () => {
         err.response?.data?.error ||
         "Error deleting LOTO";
       alert(`Delete failed: ${errorMessage}`);
+    } finally {
+      hideLoading();
     }
   };
 
@@ -697,8 +704,8 @@ const LOTOList = () => {
         </div>
 
         <div 
-          className={`stat-card pending-card ${activeFilter === "pending" ? "active" : ""}`}
-          onClick={() => handleStatCardClick("pending")}
+          className={`stat-card pending-verification-card ${activeFilter === "pending_verification_new" ? "active" : ""}`}
+          onClick={() => handleStatCardClick("pending_verification_new")}
           style={{ cursor: "pointer" }}
         >
           <div className="stat-icon">
@@ -711,13 +718,90 @@ const LOTOList = () => {
           </div>
           <div className="stat-content">
             <div className="stat-number">
-              {lotos.filter((l) => l.status === "pending").length}
+              {lotos.filter((l) => l.status === "pending_verification_new").length}
             </div>
-            <div className="stat-label">Pending</div>
-            <div className="stat-description">Awaiting approval</div>
+            <div className="stat-label">Pending Verification</div>
+            <div className="stat-description">New LOTOs awaiting approval</div>
           </div>
           <div className="stat-trend">
             <span className="trend-indicator">⏳</span>
+          </div>
+        </div>
+
+        <div 
+          className={`stat-card pending-handover-card ${activeFilter === "pending_handover_verification" ? "active" : ""}`}
+          onClick={() => handleStatCardClick("pending_handover_verification")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="stat-icon">
+            <div className="icon-wrapper">
+              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">
+              {lotos.filter((l) => l.status === "pending_handover_verification").length}
+            </div>
+            <div className="stat-label">Pending Handover</div>
+            <div className="stat-description">Awaiting handover verification</div>
+          </div>
+          <div className="stat-trend">
+            <span className="trend-indicator">🔄</span>
+          </div>
+        </div>
+
+        <div 
+          className={`stat-card handed-over-card ${activeFilter === "handed_over" ? "active" : ""}`}
+          onClick={() => handleStatCardClick("handed_over")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="stat-icon">
+            <div className="icon-wrapper">
+              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">
+              {lotos.filter((l) => l.status === "handed_over").length}
+            </div>
+            <div className="stat-label">Handed Over</div>
+            <div className="stat-description">Successfully transferred</div>
+          </div>
+          <div className="stat-trend">
+            <span className="trend-indicator">📋</span>
+          </div>
+        </div>
+
+        <div 
+          className={`stat-card rejected-card ${activeFilter === "rejected" ? "active" : ""}`}
+          onClick={() => handleStatCardClick("rejected")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="stat-icon">
+            <div className="icon-wrapper">
+              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">
+              {lotos.filter((l) => l.status === "rejected").length}
+            </div>
+            <div className="stat-label">Rejected</div>
+            <div className="stat-description">Requires modification</div>
+          </div>
+          <div className="stat-trend">
+            <span className="trend-indicator">❌</span>
           </div>
         </div>
 
@@ -794,10 +878,12 @@ const LOTOList = () => {
             }}
           >
             <option value="all">All Status</option>
-            <option value="pending">Pending</option>
+            <option value="pending_verification_new">Pending Verification</option>
             <option value="active">Active</option>
+            <option value="pending_handover_verification">Pending Handover</option>
+            <option value="handed_over">Handed Over</option>
+            <option value="rejected">Rejected</option>
             <option value="completed">Completed</option>
-            <option value="pending_handover">Pending Handover</option>
           </select>
         </div>
       </div>
@@ -813,7 +899,10 @@ const LOTOList = () => {
                   <span className="badge bg-primary">
                     {activeFilter === "all" ? "All LOTOs" : 
                      activeFilter === "active" ? "Active" :
-                     activeFilter === "pending" ? "Pending" :
+                     activeFilter === "pending_verification_new" ? "Pending Verification" :
+                     activeFilter === "pending_handover_verification" ? "Pending Handover" :
+                     activeFilter === "handed_over" ? "Handed Over" :
+                     activeFilter === "rejected" ? "Rejected" :
                      activeFilter === "completed" ? "Completed" : activeFilter}
                   </span>
                 )}
@@ -862,7 +951,7 @@ const LOTOList = () => {
           )}
         </div>
       ) : (
-        <div>
+        <div className="table-responsive">
           <table className="table table-hover align-middle">
             <thead className="table-light">
               <tr>
@@ -1152,6 +1241,186 @@ const LOTOList = () => {
           </table>
         </div>
       )}
+
+      {/* Mobile Card View */}
+      <div className="mobile-cards-view">
+        {filteredLotos.map((loto, index) => (
+          <div key={loto._id} className="loto-card" onClick={() => navigate(`/loto/${loto._id}`)}>
+            {/* Card Header */}
+            <div className="card-header">
+              <div className="serial-info">
+                <div className="serial-number">{loto.serialNumber || "N/A"}</div>
+                <div className="row-number">#{index + 1}</div>
+              </div>
+              <div className={`status-badge status-${loto.status}`}>
+                {loto.status?.replace(/_/g, ' ').toUpperCase() || "UNKNOWN"}
+              </div>
+            </div>
+
+            {/* Card Content */}
+            <div className="card-content">
+              <div className="info-row">
+                <div className="info-label">Isolated Part</div>
+                <div className="info-value">{loto.isolatedPart || "N/A"}</div>
+              </div>
+              
+              <div className="info-row">
+                <div className="info-label">Reason</div>
+                <div className="info-value">{loto.reason || "N/A"}</div>
+              </div>
+              
+              <div className="info-row">
+                <div className="info-label">Isolator</div>
+                <div className="info-value">
+                  {loto.isolator
+                    ? `${loto.isolator.firstName || ""} ${loto.isolator.lastName || ""}`
+                    : "N/A"}
+                </div>
+              </div>
+              
+              <div className="info-row">
+                <div className="info-label">Energy Types</div>
+                <div className="info-value">
+                  {loto.energyTypes && loto.energyTypes.length > 0 ? (
+                    <div className="energy-types">
+                      {loto.energyTypes.map((et, idx) => (
+                        <span key={idx} className="energy-tag">
+                          {formatEnergyType(et.type)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    "N/A"
+                  )}
+                </div>
+              </div>
+              
+              {/* Additional useful fields */}
+              {loto.location && (
+                <div className="info-row">
+                  <div className="info-label">Location</div>
+                  <div className="info-value">{loto.location}</div>
+                </div>
+              )}
+              
+              {loto.line && (
+                <div className="info-row">
+                  <div className="info-label">Line</div>
+                  <div className="info-value">{loto.line}</div>
+                </div>
+              )}
+              
+              {loto.machine && (
+                <div className="info-row">
+                  <div className="info-label">Machine</div>
+                  <div className="info-value">{loto.machine}</div>
+                </div>
+              )}
+              
+              {loto.createdAt && (
+                <div className="info-row">
+                  <div className="info-label">Created</div>
+                  <div className="info-value">
+                    {new Date(loto.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Card Actions */}
+            <div className="card-actions" onClick={(e) => e.stopPropagation()}>
+              {/* View Button - Always Available */}
+              <button
+                className="btn btn-primary"
+                onClick={() => navigate(`/loto/${loto._id}`)}
+              >
+                👁️ View
+              </button>
+
+              {/* Admin Full Control */}
+              {currentUser?.role === "admin" && (
+                <>
+                  <button
+                    className="btn btn-warning"
+                    onClick={() => navigate(`/loto/${loto._id}/update`)}
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => handleDelete(loto._id, loto.serialNumber)}
+                  >
+                    🗑️ Delete
+                  </button>
+                </>
+              )}
+
+              {/* Supervisor Actions */}
+              {currentUser?.role === "supervisor" && (
+                <>
+                  {loto.status === "pending_verification" && (
+                    <button
+                      className="btn btn-success"
+                      onClick={() => handleStatusChange(loto._id, "active")}
+                    >
+                      ✅ Verify
+                    </button>
+                  )}
+                  
+                  {loto.status === "active" && (
+                    <button
+                      className="btn btn-warning"
+                      onClick={() => handleHandover(loto._id)}
+                    >
+                      🤝 Handover
+                    </button>
+                  )}
+                  
+                  {loto.status === "pending_handover_verification" && (
+                    <button
+                      className="btn btn-success"
+                      onClick={() => handleStatusChange(loto._id, "handed_over")}
+                    >
+                      ✅ Complete Handover
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* Technician Actions */}
+              {currentUser?.role === "technician" && loto.status === "active" && (
+                <button
+                  className="btn btn-success"
+                  onClick={() => handleStatusChange(loto._id, "completed")}
+                >
+                  ✅ Complete
+                </button>
+              )}
+
+              {/* Handover Recipient Decision Buttons */}
+              {loto.status === "pending_handover_verification" && 
+               loto.handoverHistory && loto.handoverHistory.length > 0 && 
+               loto.handoverHistory[loto.handoverHistory.length - 1].recipientStatus === 'pending' &&
+               currentUser?.id === loto.handoverHistory[loto.handoverHistory.length - 1].toUser && (
+                <>
+                  <button
+                    className="btn btn-success"
+                    onClick={() => handleRecipientDecision(loto._id, loto.handoverHistory.length - 1, 'accept')}
+                  >
+                    ✅ Accept
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => handleRecipientDecision(loto._id, loto.handoverHistory.length - 1, 'reject')}
+                  >
+                    ❌ Reject
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* Rejection Modal */}
       <RejectLOTOModal

@@ -6,6 +6,7 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]); // Initialize as empty array
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,12 +53,104 @@ const Notifications = () => {
   };
 
   const handleNotificationClick = (notification) => {
+    // Mark notification as read when clicked
+    markNotificationAsRead(notification._id);
+    
     // Navigate to LOTO details page
     if (notification.lotoId && notification.lotoId._id) {
       navigate(`/loto/${notification.lotoId._id}`);
     } else {
       console.error("LOTO ID not found in notification:", notification);
       alert("Unable to navigate to LOTO details - LOTO ID not found");
+    }
+  };
+
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      await axios.put(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover/${notificationId}/read`,
+        {},
+        config
+      );
+
+      // Update local state to mark as read
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification._id === notificationId 
+            ? { ...notification, read: true, readAt: new Date() }
+            : notification
+        )
+      );
+    } catch (err) {
+      console.error("Error marking notification as read:", err);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.put(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover/read-all",
+        {},
+        config
+      );
+
+      // Update local state
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, read: true, readAt: new Date() }))
+      );
+
+      alert(`✅ ${res.data.modifiedCount} notifications marked as read`);
+    } catch (err) {
+      console.error("Error marking all notifications as read:", err);
+      alert("Error marking notifications as read");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const deleteAllNotifications = async () => {
+    if (!window.confirm("Are you sure you want to delete all notifications? This action cannot be undone.")) {
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.delete(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover/delete-all",
+        config
+      );
+
+      // Clear local state
+      setNotifications([]);
+
+      alert(`✅ ${res.data.deletedCount} notifications deleted`);
+    } catch (err) {
+      console.error("Error deleting all notifications:", err);
+      alert("Error deleting notifications");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -88,19 +181,55 @@ const Notifications = () => {
             Click on any notification to view the LOTO details
           </p>
         </div>
-        <button
-          onClick={() => navigate("/Home")}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#6c757d",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          Back to Home
-        </button>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          {safeNotifications.length > 0 && (
+            <>
+              <button
+                onClick={markAllAsRead}
+                disabled={actionLoading}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#28a745",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: actionLoading ? "not-allowed" : "pointer",
+                  opacity: actionLoading ? 0.6 : 1,
+                }}
+              >
+                {actionLoading ? "Processing..." : "Mark All Read"}
+              </button>
+              <button
+                onClick={deleteAllNotifications}
+                disabled={actionLoading}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#dc3545",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: actionLoading ? "not-allowed" : "pointer",
+                  opacity: actionLoading ? 0.6 : 1,
+                }}
+              >
+                {actionLoading ? "Processing..." : "Delete All"}
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => navigate("/Home")}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#6c757d",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            Back to Home
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -136,15 +265,16 @@ const Notifications = () => {
               key={notification._id}
               className="notification-card"
               style={{
-                backgroundColor: "#fff",
+                backgroundColor: notification.read ? "#f8f9fa" : "#fff",
                 padding: "20px",
                 marginBottom: "15px",
                 borderRadius: "8px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                borderLeft: "4px solid #17a2b8",
+                borderLeft: notification.read ? "4px solid #6c757d" : "4px solid #17a2b8",
                 cursor: "pointer",
                 transition: "all 0.2s ease",
                 position: "relative",
+                opacity: notification.read ? 0.8 : 1,
               }}
               onClick={() => handleNotificationClick(notification)}
               onMouseEnter={(e) => {
@@ -156,6 +286,18 @@ const Notifications = () => {
                 e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
               }}
             >
+              {/* Read/Unread indicator */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  left: "10px",
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  backgroundColor: notification.read ? "#6c757d" : "#17a2b8",
+                }}
+              />
               {/* Click indicator */}
               <div
                 className="click-indicator"
@@ -179,6 +321,16 @@ const Notifications = () => {
               <h3 style={{ margin: "0 0 10px 0", color: "#1f2937" }}>
                 Handover Request from {notification.fromUser?.firstName}{" "}
                 {notification.fromUser?.lastName}
+                {notification.read && (
+                  <span style={{ 
+                    fontSize: "12px", 
+                    color: "#6c757d", 
+                    marginLeft: "10px",
+                    fontWeight: "normal"
+                  }}>
+                    (Read)
+                  </span>
+                )}
               </h3>
 
               <div style={{ marginBottom: "15px" }}>

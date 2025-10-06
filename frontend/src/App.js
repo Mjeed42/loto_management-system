@@ -4,6 +4,7 @@ import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./styles/cloudflare-Home.css";
+import { LoadingProvider } from "./contexts/LoadingContext";
 
 // Components
 import GlobalStyles from "./components/GlobalStyles";
@@ -13,6 +14,7 @@ import Breadcrumb from "./components/Breadcrumb";
 import QuickActions from "./components/QuickActions";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
+import TechnicianHome from "./pages/TechnicianHome";
 import CreateLOTO from "./pages/CreateLOTO";
 import LOTOList from "./pages/LOTOList";
 import LOTOdetail from "./pages/LOTOdetail";
@@ -26,15 +28,43 @@ import MonitoringDashboard from "./pages/MonitoringDashboard";
 
 
 // AppContent component that has access to useLocation
-const AppContent = ({ currentUser, fetchCurrentUser }) => {
+const AppContent = ({ currentUser, fetchCurrentUser, isLoading }) => {
   const location = useLocation();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed by default
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed (hidden) by default
   
   // Check if we're on the login page
   const isLoginPage = location.pathname === "/";
   
-  // Check if user is logged in and not on login page
-  const showSidebar = currentUser && !isLoginPage;
+  // Check if user is logged in and not on login page - also check loading state
+  const showSidebar = currentUser && !isLoginPage && !isLoading;
+
+  // Redirect logged-in users from root path to appropriate home
+  useEffect(() => {
+    if (currentUser && location.pathname === "/") {
+      if (currentUser.role === "technician") {
+        window.location.href = "/technician-home";
+      } else {
+        window.location.href = "/Home";
+      }
+    }
+  }, [currentUser, location.pathname]);
+
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return (
+      <div className="app-loading">
+        <div className="loading-content">
+          <img 
+            src="https://logos-world.net/wp-content/uploads/2022/03/Pepsico-Symbol.png"
+            alt="PepsiCo Logo"
+            className="loading-logo"
+          />
+          <div className="loading-spinner"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`app-layout ${!showSidebar ? 'no-sidebar' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -47,12 +77,17 @@ const AppContent = ({ currentUser, fetchCurrentUser }) => {
         {!isLoginPage && <Header currentUser={currentUser} />}
         
         {/* Breadcrumb - Only show when logged in and not on login page */}
-        {showSidebar && <Breadcrumb />}
+        {showSidebar && <Breadcrumb currentUser={currentUser} />}
         
         <main className={`content-area ${isLoginPage ? 'login-content' : ''}`}>
           <Routes>
             <Route path="/" element={<Login onLogin={fetchCurrentUser} />} />
-            <Route path="/Home" element={<Home />} />
+            <Route path="/Home" element={
+              currentUser?.role === "technician" ? 
+                <div>Access Denied - Technicians should use /technician-home</div> : 
+                <Home />
+            } />
+            <Route path="/technician-home" element={<TechnicianHome currentUser={currentUser} />} />
             <Route path="/create-loto" element={<CreateLOTO />} />
             <Route path="/loto-list" element={<LOTOList />} />
             <Route path="/admin" element={<AdminHome />} />
@@ -75,11 +110,14 @@ const AppContent = ({ currentUser, fetchCurrentUser }) => {
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       fetchCurrentUser();
+    } else {
+      setIsLoading(false);
     }
   }, []);
 
@@ -100,14 +138,18 @@ function App() {
     } catch (err) {
       console.log("Error fetching current user");
       localStorage.removeItem("token");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <Router>
-      <GlobalStyles />
-      <AppContent currentUser={currentUser} fetchCurrentUser={fetchCurrentUser} />
-      <ToastContainer />
+      <LoadingProvider>
+        <GlobalStyles />
+        <AppContent currentUser={currentUser} fetchCurrentUser={fetchCurrentUser} isLoading={isLoading} />
+        <ToastContainer />
+      </LoadingProvider>
     </Router>
   );
 }

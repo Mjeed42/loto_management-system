@@ -680,11 +680,7 @@ const LOTOdetail = () => {
 
             {/* Handover History Section */}
             <div className="info-section handover-history-section">
-              <div className="section-icon">
-                <svg className="section-svg" viewBox="0 0 24 24" fill="none">
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
+              
               <div className="section-content">
                 <div className="section-header">
                   <h5>Handover History</h5>

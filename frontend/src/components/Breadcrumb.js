@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Icon from "./Icon";
 
-const Breadcrumb = ({ customBreadcrumbs = null }) => {
+const Breadcrumb = ({ customBreadcrumbs = null, currentUser = null }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -13,7 +13,10 @@ const Breadcrumb = ({ customBreadcrumbs = null }) => {
     }
 
     const pathSegments = location.pathname.split("/").filter(Boolean);
-    const breadcrumbs = [{ label: "Home", path: "/Home", icon: "home" }];
+    
+    // Determine the correct home path based on user role
+    const homePath = currentUser?.role === "technician" ? "/technician-home" : "/Home";
+    const breadcrumbs = [{ label: "Home", path: homePath, icon: "home" }];
 
     // Map common paths
     const pathMap = {

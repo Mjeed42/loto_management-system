@@ -13,6 +13,18 @@ const NotificationBadge = ({ onNotificationClick }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // Add manual refresh for debugging
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'r' && e.ctrlKey) {
+        console.log("🔄 Manual refresh triggered");
+        fetchNotificationCount();
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
+
   const fetchNotificationCount = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -22,13 +34,27 @@ const NotificationBadge = ({ onNotificationClick }) => {
         },
       };
 
+      console.log("🔔 Fetching notification count...");
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover",
+        "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover/count",
         config
       );
+      console.log("📊 Notification count response:", res.data);
       setNotificationCount(res.data.count);
     } catch (err) {
-      console.log("Error fetching notifications");
+      console.error("❌ Error fetching notification count:", err);
+      // Fallback: try the main notifications endpoint
+      try {
+        const fallbackRes = await axios.get(
+          "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover",
+          config
+        );
+        console.log("📊 Fallback notification response:", fallbackRes.data);
+        setNotificationCount(fallbackRes.data.count || 0);
+      } catch (fallbackErr) {
+        console.error("❌ Fallback also failed:", fallbackErr);
+        setNotificationCount(0);
+      }
     }
   };
 

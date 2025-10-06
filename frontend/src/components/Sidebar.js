@@ -5,68 +5,81 @@ import Icon from "./Icon";
 const Sidebar = ({ currentUser, onCollapse }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed by default
+  const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed like GitHub
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  
+  // Check if we're on mobile
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-  // Navigation items based on user role
+  // GitHub-style navigation structure
   const getNavigationItems = () => {
     if (!currentUser) return [];
 
-    const baseItems = [
+    const items = [
       { 
-        path: "/Home", 
+        path: currentUser.role === "technician" ? "/technician-home" : "/Home", 
         label: "Home", 
         icon: "home",
-        description: "Overview and quick stats"
-      },
-      { 
-        path: "/loto-list", 
-        label: "My LOTOs", 
-        icon: "list",
-        description: "View and manage your LOTOs"
+        description: "Dashboard"
       },
       { 
         path: "/create-loto", 
         label: "Create LOTO", 
         icon: "plus",
-        description: "Start new lockout procedure"
+        description: "New LOTO"
       },
       { 
+        path: "/loto-list", 
+        label: currentUser.role === "technician" ? "My LOTOs" : "All LOTOs", 
+        icon: "list",
+        description: "LOTO List"
+      }
+    ];
+
+    // Add notifications for supervisors and admins
+    if (currentUser.role !== "technician") {
+      items.push({
         path: "/notifications", 
         label: "Notifications", 
         icon: "notification",
-        description: "View system notifications"
-      },
-    ];
+        description: "Alerts"
+      });
+    }
 
+    // Add admin items
     if (currentUser.role === "admin") {
-      baseItems.push(
-        {
-          type: "divider",
-          label: "Administration"
-        },
+      items.push(
         { 
           path: "/admin", 
-          label: "Admin Panel", 
+          label: "Admin", 
           icon: "settings",
-          description: "System administration"
+          description: "Settings"
         },
         { 
           path: "/data-export", 
-          label: "Data Export", 
+          label: "Reports", 
           icon: "download",
-          description: "Export reports and data"
+          description: "Export"
         },
         { 
           path: "/monitoring", 
           label: "Monitoring", 
           icon: "chart",
-          description: "System monitoring dashboard"
+          description: "Analytics"
         }
       );
     }
 
-    return baseItems;
+    return items;
   };
 
   const isActivePath = (path) => {
@@ -99,16 +112,19 @@ const Sidebar = ({ currentUser, onCollapse }) => {
         />
       )}
 
-      {/* Mobile Toggle Button */}
-      <button 
-        className="sidebar-mobile-toggle"
-        onClick={toggleMobileSidebar}
-      >
-        <Icon name="menu" />
-      </button>
+      {/* Hamburger Button - Only show when sidebar is closed */}
+      {!isMobileOpen && (
+        <button 
+          className="sidebar-hamburger-btn"
+          onClick={toggleMobileSidebar}
+          title="Open sidebar"
+        >
+          <Icon name="menu" />
+        </button>
+      )}
 
-      {/* Sidebar */}
-      <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
+      {/* GitHub-style Sidebar */}
+      <aside className={`sidebar github-style ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
         {/* Sidebar Header */}
         <div className="sidebar-header">
           <div className="sidebar-brand">
@@ -119,13 +135,22 @@ const Sidebar = ({ currentUser, onCollapse }) => {
                 className="sidebar-logo"
               />
             </div>
-            {!isCollapsed && (
+            {(!isCollapsed || isMobileOpen) && (
               <div className="brand-text">
                 <h3>LOTO Management</h3>
                 <span>Lockout/Tagout System</span>
               </div>
             )}
           </div>
+          
+          {/* Close Button - Show when sidebar is open */}
+          <button 
+            className="sidebar-close-btn"
+            onClick={toggleMobileSidebar}
+            title="Close sidebar"
+          >
+            <Icon name="x" />
+          </button>
           
           {/* Desktop Toggle */}
           <button 
@@ -142,7 +167,7 @@ const Sidebar = ({ currentUser, onCollapse }) => {
           <div className="user-avatar">
             <Icon name="user" />
           </div>
-          {!isCollapsed && (
+          {(!isCollapsed || isMobileOpen) && (
             <div className="user-info">
               <span className="user-name">
                 {currentUser.firstName} {currentUser.lastName}
@@ -152,39 +177,28 @@ const Sidebar = ({ currentUser, onCollapse }) => {
           )}
         </div>
 
-        {/* Navigation */}
+        {/* GitHub-style Navigation */}
         <nav className="sidebar-nav">
-          {navigationItems.map((item, index) => {
-            if (item.type === "divider") {
-              return (
-                <div key={index} className="nav-divider">
-                  {!isCollapsed && <span>{item.label}</span>}
+          {navigationItems.map((item, index) => (
+            <button
+              key={item.path}
+              className={`nav-item ${isActivePath(item.path) ? "active" : ""}`}
+              onClick={() => {
+                navigate(item.path);
+                setIsMobileOpen(false);
+              }}
+              title={isCollapsed ? item.label : item.description}
+            >
+              <div className="nav-icon">
+                <Icon name={item.icon} />
+              </div>
+              {(!isCollapsed || isMobileOpen) && (
+                <div className="nav-content">
+                  <span className="nav-label">{item.label}</span>
                 </div>
-              );
-            }
-
-            return (
-              <button
-                key={item.path}
-                className={`nav-item ${isActivePath(item.path) ? "active" : ""}`}
-                onClick={() => {
-                  navigate(item.path);
-                  setIsMobileOpen(false);
-                }}
-                title={isCollapsed ? item.label : item.description}
-              >
-                <div className="nav-icon">
-                  <Icon name={item.icon} />
-                </div>
-                {!isCollapsed && (
-                  <div className="nav-content">
-                    <span className="nav-label">{item.label}</span>
-                    <span className="nav-description">{item.description}</span>
-                  </div>
-                )}
-              </button>
-            );
-          })}
+              )}
+            </button>
+          ))}
         </nav>
 
         {/* Sidebar Footer */}
@@ -206,15 +220,14 @@ const Sidebar = ({ currentUser, onCollapse }) => {
               // Hard refresh to reset app state
               window.location.href = "/";
             }}
-            title="Logout"
+            title={isCollapsed ? "Logout" : "Sign out of system"}
           >
             <div className="nav-icon">
               <Icon name="logout" />
             </div>
-            {!isCollapsed && (
+            {(!isCollapsed || isMobileOpen) && (
               <div className="nav-content">
                 <span className="nav-label">Logout</span>
-                <span className="nav-description">Sign out of system</span>
               </div>
             )}
           </button>
