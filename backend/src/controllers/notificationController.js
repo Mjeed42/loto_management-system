@@ -181,3 +181,128 @@ exports.rejectHandover = async (req, res) => {
     });
   }
 };
+
+// @desc    Mark notification as read
+// @route   PUT /api/notifications/handover/:id/read
+// @access  Private
+exports.markNotificationAsRead = async (req, res) => {
+  try {
+    const notification = await HandoverNotification.findById(req.params.id);
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification not found",
+      });
+    }
+
+    // Check if user is the recipient
+    if (notification.toUser.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to read this notification",
+      });
+    }
+
+    // Mark as read
+    notification.read = true;
+    notification.readAt = new Date();
+    await notification.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Notification marked as read",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Mark all notifications as read
+// @route   PUT /api/notifications/handover/read-all
+// @access  Private
+exports.markAllNotificationsAsRead = async (req, res) => {
+  try {
+    const result = await HandoverNotification.updateMany(
+      {
+        toUser: req.user.id,
+        read: false,
+      },
+      {
+        read: true,
+        readAt: new Date(),
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `${result.modifiedCount} notifications marked as read`,
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Delete all notifications (soft delete - mark as deleted)
+// @route   DELETE /api/notifications/handover/delete-all
+// @access  Private
+exports.deleteAllNotifications = async (req, res) => {
+  try {
+    const result = await HandoverNotification.deleteMany({
+      toUser: req.user.id,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `${result.deletedCount} notifications deleted`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get notification count (unread only)
+// @route   GET /api/notifications/handover/count
+// @access  Private
+exports.getNotificationCount = async (req, res) => {
+  try {
+    console.log("🔍 Getting notification count for user:", req.user.id);
+    
+    const count = await HandoverNotification.countDocuments({
+      toUser: req.user.id,
+      status: "pending",
+      $or: [
+        { read: false },
+        { read: { $exists: false } } // Handle notifications created before read field was added
+      ]
+    });
+
+    console.log("📊 Notification count result:", count);
+
+    res.status(200).json({
+      success: true,
+      count: count,
+    });
+  } catch (error) {
+    console.error("❌ Get notification count error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};

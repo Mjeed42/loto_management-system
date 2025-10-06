@@ -6,5 +6,6 @@
     "**/.git": true
   },
   "docker.commands.attach": "docker exec -it ${containerId} /bin/sh",
-  "containers.commands.attach": "docker exec -it ${containerId} /bin/sh"
+  "containers.commands.attach": "docker exec -it ${containerId} /bin/sh",
+  "git.ignoreLimitWarning": true
 }
