@@ -214,7 +214,7 @@ exports.verifyLOTO = async (req, res) => {
     // Check if this LOTO has a specific supervisor assigned
     if (loto.supervisor) {
       // Prevent supervisor from verifying their own LOTO
-      if (loto.supervisor.toString() === loto.isolator.toString()) {
+      if (loto.supervisor.toString() === loto.isolator.toString() && req.user.role !== "admin") {
         return res.status(403).json({
           success: false,
           message: "Supervisor cannot verify their own LOTO",

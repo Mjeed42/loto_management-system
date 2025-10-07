@@ -108,17 +108,7 @@ const Home = () => {
         badge: "Dashboard",
         roles: ["supervisor", "admin"]
       },
-      {
-        title: "Notifications",
-        description: "View pending handover requests and alerts",
-        icon: "🔔",
-        variant: "info",
-        action: () => navigate("/notifications"),
-        gradient: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
-        color: "#06b6d4",
-        badge: "Updates",
-        roles: ["supervisor", "admin"]
-      }
+      
     ];
 
     // Admin-only actions
@@ -194,10 +184,7 @@ const Home = () => {
                 {getGreeting()}, {currentUser?.firstName || "User"}!
               </h1>
             </div>
-            <p className="hero-subtitle">
-              Welcome to your LOTO Management Dashboard. Monitor safety procedures, 
-              track progress, and ensure workplace safety compliance.
-            </p>
+            
             <div className="hero-time">
               <div className="time-display">
                 <span className="time-icon">⏰</span>
@@ -227,62 +214,11 @@ const Home = () => {
 
       {/* Main Content Grid */}
       <div className="home-main-grid">
-        {/* Quick Stats Dashboard */}
-        <div className="home-stats-card">
-          <div className="stats-header">
-            <h2>Quick Overview</h2>
-            <p>Your LOTO management at a glance</p>
-          </div>
-          <div className="stats-grid">
-            <div className="stat-card total">
-              <div className="stat-icon">
-                <span>📊</span>
-              </div>
-              <div className="stat-content">
-                <div className="stat-number">{loading ? "..." : stats.totalLOTOs}</div>
-                <div className="stat-label">Total LOTOs</div>
-                <div className="stat-description">All procedures</div>
-              </div>
-            </div>
-            <div className="stat-card active">
-              <div className="stat-icon">
-                <span>⚡</span>
-              </div>
-              <div className="stat-content">
-                <div className="stat-number">{loading ? "..." : stats.activeLOTOs}</div>
-                <div className="stat-label">Active</div>
-                <div className="stat-description">In progress</div>
-              </div>
-            </div>
-            <div className="stat-card pending">
-              <div className="stat-icon">
-                <span>⏳</span>
-              </div>
-              <div className="stat-content">
-                <div className="stat-number">{loading ? "..." : stats.pendingVerification}</div>
-                <div className="stat-label">Pending</div>
-                <div className="stat-description">Awaiting approval</div>
-              </div>
-            </div>
-            <div className="stat-card completed">
-              <div className="stat-icon">
-                <span>✅</span>
-              </div>
-              <div className="stat-content">
-                <div className="stat-number">{loading ? "..." : stats.completedToday}</div>
-                <div className="stat-label">Completed Today</div>
-                <div className="stat-description">Finished procedures</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Quick Actions */}
-        <div className="home-actions-card">
-          <div className="actions-header">
-            <h2>Quick Actions</h2>
-            <p>Get started with common tasks</p>
-          </div>
+        
+          
           <div className="actions-grid">
             {quickActions.map((action, index) => (
               <div key={index} className="action-card" onClick={action.action}>
@@ -303,35 +239,9 @@ const Home = () => {
               </div>
             ))}
           </div>
-        </div>
+       
 
-        {/* Recent Activity Card */}
-        <div className="home-recent-card">
-          <div className="recent-header">
-            <h3>Recent Activity</h3>
-            <Button 
-              variant="outline-primary" 
-              onClick={() => navigate("/loto-list")}
-              className="view-all-btn"
-            >
-              View All →
-            </Button>
-          </div>
-          <div className="recent-content">
-            <div className="recent-placeholder">
-              <div className="placeholder-icon">📈</div>
-              <h4>Track Your Progress</h4>
-              <p>Monitor recent LOTO activities, handovers, and completions to stay on top of safety procedures.</p>
-              <Button 
-                variant="primary" 
-                onClick={() => navigate("/loto-list")}
-                className="cta-button"
-              >
-                View LOTO List
-              </Button>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </div>
   );

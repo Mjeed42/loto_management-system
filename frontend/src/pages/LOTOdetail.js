@@ -447,10 +447,18 @@ const LOTOdetail = () => {
   const canVerify =
     currentUser &&
     (currentUser.role === "admin" || 
-     (currentUser.role === "supervisor" && loto.supervisor && loto.supervisor._id === currentUser.id));
+     (currentUser.role === "supervisor" && 
+      ((loto.supervisor && loto.supervisor._id === currentUser.id) ||
+       (loto.supervisorName && loto.supervisorName.toLowerCase().includes(`${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim().toLowerCase())))));
   const isAdmin = currentUser && currentUser.role === "admin";
   const isTechnician = currentUser && currentUser.role === "technician";
   const isSupervisor = currentUser && currentUser.role === "supervisor";
+
+  // Get the correct home path based on user role
+  const getHomePath = () => {
+    if (isTechnician) return "/technician-home";
+    return "/Home";
+  };
 
   return (
     <div className="loto-details-container animate-fade-in">
@@ -492,7 +500,7 @@ const LOTOdetail = () => {
             </button>
             <button
               className="action-btn primary"
-              onClick={() => navigate("/Home")}
+              onClick={() => navigate(getHomePath())}
             >
               <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -906,90 +914,6 @@ const LOTOdetail = () => {
               </div>
             )}
           </div>
-
-          {/* Handover History Section */}
-          <div className="handover-history-section">
-            <div className="section-header">
-              <div className="section-icon">
-                <svg className="section-svg" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className="section-title">
-                <h4>Handover History</h4>
-                <p>Complete record of all handover activities</p>
-              </div>
-              <div className="history-count">
-                <span className="count-badge">{handoverHistory.length} handover{handoverHistory.length !== 1 ? 's' : ''}</span>
-              </div>
-            </div>
-
-            {historyLoading ? (
-              <div className="history-loading">
-                <div className="loading-spinner"></div>
-                <span>Loading handover history...</span>
-              </div>
-            ) : handoverHistory.length > 0 ? (
-              <div className="history-timeline">
-                {handoverHistory.map((handover, index) => (
-                  <div key={index} className={`history-item ${handover.status}`}>
-                    <div className="history-indicator">
-                      <div className={`status-dot ${handover.status}`}>
-                        {handover.status === 'accepted' && '✓'}
-                        {handover.status === 'rejected' && '✗'}
-                        {handover.status === 'pending' && '⏳'}
-                      </div>
-                    </div>
-                    <div className="history-content">
-                      <div className="history-header">
-                        <div className="handover-parties">
-                          <span className="from-user">{handover.fromUserName}</span>
-                          <svg className="arrow-icon" viewBox="0 0 24 24" fill="none">
-                            <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                          <span className="to-user">{handover.toUserName}</span>
-                        </div>
-                        <div className="history-status">
-                          <span className={`status-badge ${handover.status}`}>
-                            {handover.status === 'accepted' && 'Accepted'}
-                            {handover.status === 'rejected' && 'Rejected'}
-                            {handover.status === 'pending' && 'Pending'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="history-details">
-                        <div className="history-dates">
-                          <span className="handover-date">
-                            <strong>Handover:</strong> {new Date(handover.handoverDate).toLocaleString()}
-                          </span>
-                          {handover.responseDate && (
-                            <span className="response-date">
-                              <strong>Response:</strong> {new Date(handover.responseDate).toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                        {handover.handoverNotes && (
-                          <div className="history-notes">
-                            <strong>Notes:</strong> {handover.handoverNotes}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="no-history">
-                <div className="no-history-icon">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <h5>No Handover History</h5>
-                <p>This LOTO has not been handed over yet.</p>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Modern Actions Section */}
@@ -1049,29 +973,103 @@ const LOTOdetail = () => {
               </div>
             )}
 
-            {/* Verification */}
-            {loto.status === "pending_verification_new" && canVerify && (
-              <div className="action-group verification-group">
-                <div className="action-header">
-                  <h5>Verification Required</h5>
-                  <p>This LOTO is pending supervisor verification.</p>
-                </div>
-                <div className="action-button-container">
-                  <button className="action-button success " onClick={handleVerify}>
-                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span>Verify LOTO</span>
-                  </button>
-                  <button className="action-button danger" onClick={() => handleReject(loto)}>
-                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                      <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                    <span>Reject LOTO</span>
-                  </button>
-                </div>
-              </div>
+            {/* Supervisor Actions */}
+            {canVerify && (
+              <>
+                {/* Verification Actions */}
+                {loto.status === "pending_verification_new" && (
+                  <div className="action-group verification-group">
+                    <div className="action-header">
+                      <h5>Verification Required</h5>
+                      <p>This LOTO is pending supervisor verification.</p>
+                    </div>
+                    <div className="action-button-container">
+                      <button className="action-button success" onClick={handleVerify}>
+                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                          <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span>Verify LOTO</span>
+                      </button>
+                      <button className="action-button danger" onClick={() => handleReject(loto)}>
+                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                          <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        <span>Reject LOTO</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rejected LOTO Actions */}
+                {loto.status === "rejected" && (
+                  <div className="action-group update-group">
+                    <div className="action-header">
+                      <h5>Update Required</h5>
+                      <p>This LOTO was rejected and requires modification.</p>
+                    </div>
+                    <div className="action-button-container">
+                      <button className="action-button primary" onClick={handleUpdate}>
+                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span>Edit LOTO</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Active LOTO Actions */}
+                {loto.status === "active" && (
+                  <div className="action-group supervisor-group">
+                    <div className="action-header">
+                      <h5>Supervisor Actions</h5>
+                      <p>Available operations for active LOTOs.</p>
+                    </div>
+                    <div className="action-buttons">
+                      <button className="action-button info" onClick={() => handleHandover(loto)}>
+                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span>Handover</span>
+                      </button>
+                      <button className="action-button success" onClick={handleComplete}>
+                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                          <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span>Complete</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Handover Verification Actions */}
+                {loto.status === "pending_handover_verification" && (
+                  <div className="action-group handover-group">
+                    <div className="action-header">
+                      <h5>Handover Verification</h5>
+                      <p>Approve or reject the handover request.</p>
+                    </div>
+                    <div className="action-buttons">
+                      <button className="action-button success" onClick={handleApproveHandover}>
+                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                          <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span>Approve Handover</span>
+                      </button>
+                      <button className="action-button danger" onClick={handleRejectHandover}>
+                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                          <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        <span>Reject Handover</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Current User Actions for Handover Verification */}
@@ -1231,19 +1229,28 @@ const LOTOdetail = () => {
             )}
 
             {/* Technician Actions */}
-            {loto.status === "active" && isIsolator && isTechnician && (
+            {loto.status === "active" && isTechnician && (isIsolator || isHandoverRecipient) && (
               <div className="action-group technician-group">
                 <div className="action-header">
                   <h5>Technician Actions</h5>
                   <p>Available operations for technicians.</p>
                 </div>
                 <div className="action-buttons">
-                  <button className="action-button info" onClick={() => handleHandover(loto)}>
+                  <button className="action-button primary" onClick={handleUpdate}>
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Handover</span>
+                    <span>Update</span>
                   </button>
+                  {isIsolator && (
+                    <button className="action-button info" onClick={() => handleHandover(loto)}>
+                      <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>Handover</span>
+                    </button>
+                  )}
                   <button className="action-button success" onClick={handleComplete}>
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

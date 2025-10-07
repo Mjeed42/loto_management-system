@@ -207,15 +207,7 @@ const Login = ({ onLogin }) => {
           </button>
         </form>
 
-        <p style={{
-          textAlign: 'center',
-          color: '#6b7280',
-          marginTop: '1.5rem',
-          fontSize: '0.875rem',
-          margin: '1.5rem 0 0 0'
-        }}>
-          Secure access to your LOTO management portal
-        </p>
+        
       </div>
 
       <style jsx>{`

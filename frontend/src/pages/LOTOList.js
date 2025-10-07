@@ -27,6 +27,7 @@ const LOTOList = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterSupervisor, setFilterSupervisor] = useState("all"); // New supervisor filter
   const [activeFilter, setActiveFilter] = useState(null); // Track which stat card is active
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedLotoForRejection, setSelectedLotoForRejection] = useState(null);
@@ -89,8 +90,12 @@ const LOTOList = () => {
           shift: loto.shift || "N/A",
           line: loto.line || "N/A",
           isolator: loto.isolator || null,
-          isolatedPart: loto.isolatedPart || "N/A",
-          reason: loto.reason || "N/A",
+          supervisor: loto.supervisor || null,
+          supervisorName: loto.supervisorName || null,
+          currentResponsible: loto.currentResponsible || null,
+          currentResponsibleName: loto.currentResponsibleName || null,
+          createdBy: loto.createdBy || null,
+          createdByName: loto.createdByName || null,
           status: loto.status || "pending",
           expectedDuration: loto.expectedDuration || 0,
           energyTypes: Array.isArray(loto.energyTypes) ? loto.energyTypes : [],
@@ -168,6 +173,7 @@ const LOTOList = () => {
   const clearFilters = () => {
     setActiveFilter(null);
     setFilterStatus("all");
+    setFilterSupervisor("all");
     setSearchTerm("");
   };
 
@@ -185,11 +191,8 @@ const LOTOList = () => {
         config
       );
 
-      setLotos(
-        lotos.map((loto) =>
-          loto._id === lotoId ? { ...loto, ...res.data.data } : loto
-        )
-      );
+      // Refresh the LOTO list to ensure UI is updated
+      fetchLOTOs();
 
       if (window.LOTOUtils) {
         window.LOTOUtils.showNotification(
@@ -548,10 +551,12 @@ const LOTOList = () => {
       (loto.serialNumber ?? "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      (loto.isolatedPart ?? "")
+      (loto.supervisorName ?? "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      (loto.reason ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (loto.currentResponsibleName ?? "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       (loto.isolator?.firstName
         ? `${loto.isolator.firstName} ${loto.isolator.lastName}`
         : ""
@@ -562,7 +567,30 @@ const LOTOList = () => {
     const matchesStatus =
       filterStatus === "all" || loto.status === filterStatus;
 
-    return matchesSearch && matchesStatus;
+    // Supervisor filtering logic - Check if user's name appears in relevant fields
+    const matchesSupervisor = (() => {
+      if (filterSupervisor === "all") return true;
+      if (!currentUser || currentUser.role !== "supervisor") return true;
+      
+      // Get current user's full name for comparison
+      const currentUserName = `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim().toLowerCase();
+      
+      if (filterSupervisor === "my_created") {
+        // Show LOTOs where user is the Isolator (creator)
+        return loto.isolator && 
+          `${loto.isolator.firstName || ""} ${loto.isolator.lastName || ""}`.trim().toLowerCase().includes(currentUserName);
+      }
+      
+      if (filterSupervisor === "my_authorized") {
+        // Show LOTOs where user is the Authorized Supervisor
+        return loto.supervisorName && 
+          loto.supervisorName.toLowerCase().includes(currentUserName);
+      }
+      
+      return true;
+    })();
+
+    return matchesSearch && matchesStatus && matchesSupervisor;
   });
 
   if (loading) {
@@ -591,8 +619,18 @@ const LOTOList = () => {
     if (currentUser.role === "admin") return true;
     
     // Supervisors can only verify LOTOs they are assigned to
-    if (currentUser.role === "supervisor" && loto.supervisor && loto.supervisor._id === currentUser.id) {
-      return true;
+    if (currentUser.role === "supervisor") {
+      const currentUserName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim();
+      
+      // Check by supervisor ID if available
+      if (loto.supervisor && loto.supervisor._id === currentUser.id) {
+        return true;
+      }
+      
+      // Check by supervisor name if ID check fails
+      if (loto.supervisorName && loto.supervisorName.toLowerCase().includes(currentUserName.toLowerCase())) {
+        return true;
+      }
     }
     
     return false;
@@ -844,52 +882,94 @@ const LOTOList = () => {
       )}
 
       {/* Search and Filter Section */}
-      <div className="row mb-4">
-        <div className="col-md-8">
-          <div className="search-container">
-            <div className="position-relative">
-              <input
-                type="text"
-                className="search-input form-control"
-                placeholder="Search LOTOs by serial number, equipment, reason, or isolator..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  paddingLeft: "3rem",
-                  borderRadius: "2rem",
-                  border: "2px solid #e2e8f0",
-                  background: "rgba(255, 255, 255, 0.9)",
-                  backdropFilter: "blur(10px)",
-                }}
-              />
+      <div className="search-filter-section mb-4">
+        <div className="row g-3">
+          {/* Search Input */}
+          <div className="col-lg-6 col-md-12">
+            <div className="search-container">
+              <div className="position-relative">
+                <div className="search-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  className="form-control search-input-enhanced"
+                  placeholder="Search LOTOs by serial number, supervisor, responsible, or isolator..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    className="clear-search-btn"
+                    onClick={() => setSearchTerm("")}
+                    title="Clear search"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        <div className="col-md-4">
-          <select
-            className="search-input form-control"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            style={{
-              borderRadius: "1rem",
-              border: "2px solid #e2e8f0",
-              background: "rgba(255, 255, 255, 0.9)",
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <option value="all">All Status</option>
-            <option value="pending_verification_new">Pending Verification</option>
-            <option value="active">Active</option>
-            <option value="pending_handover_verification">Pending Handover</option>
-            <option value="handed_over">Handed Over</option>
-            <option value="rejected">Rejected</option>
-            <option value="completed">Completed</option>
-          </select>
+
+          {/* Status Filter */}
+          <div className="col-lg-3 col-md-6">
+            <div className="filter-container">
+              <label className="filter-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
+                </svg>
+                Status Filter
+              </label>
+              <select
+                className="form-select filter-select-enhanced"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="pending_verification_new">Pending Verification</option>
+                <option value="active">Active</option>
+                <option value="pending_handover_verification">Pending Handover</option>
+                <option value="handed_over">Handed Over</option>
+                <option value="rejected">Rejected</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Supervisor Filter */}
+          {currentUser && currentUser.role === "supervisor" && (
+            <div className="col-lg-3 col-md-6">
+              <div className="filter-container">
+                <label className="filter-label">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  My LOTOs
+                </label>
+                <select
+                  className="form-select filter-select-enhanced"
+                  value={filterSupervisor}
+                  onChange={(e) => setFilterSupervisor(e.target.value)}
+                >
+                  <option value="all">All LOTOs</option>
+                  <option value="my_created">Created By Me</option>
+                  <option value="my_authorized">Authorized By Me</option>
+                </select>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Active Filter Indicator and Clear Button */}
-      {(activeFilter || searchTerm) && (
+      {(activeFilter || searchTerm || filterSupervisor !== "all") && (
         <div className="row mb-3">
           <div className="col-12">
             <div className="d-flex align-items-center gap-3 flex-wrap">
@@ -911,6 +991,12 @@ const LOTOList = () => {
                     Search: "{searchTerm}"
                   </span>
                 )}
+                {filterSupervisor !== "all" && currentUser && currentUser.role === "supervisor" && (
+                  <span className="badge bg-warning">
+                    {filterSupervisor === "my_created" ? "Created By Me" :
+                     filterSupervisor === "my_authorized" ? "Authorized By Me" : filterSupervisor}
+                  </span>
+                )}
               </div>
               <button 
                 className="btn btn-outline-secondary btn-sm"
@@ -928,19 +1014,19 @@ const LOTOList = () => {
       {filteredLotos.length === 0 && !loading ? (
         <div className="empty-state">
           <div className="empty-state-icon">
-            {searchTerm || filterStatus !== "all" ? "🔍" : "📋"}
+            {searchTerm || filterStatus !== "all" || filterSupervisor !== "all" ? "🔍" : "📋"}
           </div>
           <h3 className="empty-state-title">
-            {searchTerm || filterStatus !== "all"
+            {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
               ? "No LOTOs Found"
               : "No LOTOs Created Yet"}
           </h3>
           <p className="empty-state-text">
-            {searchTerm || filterStatus !== "all"
+            {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
               ? "Try adjusting your search or filter to find what you're looking for."
               : "Get started by creating your first LOTO."}
           </p>
-          {!(searchTerm || filterStatus !== "all") && (
+          {!(searchTerm || filterStatus !== "all" || filterSupervisor !== "all") && (
             <Button
               variant="primary"
               onClick={() => navigate("/create-loto")}
@@ -951,14 +1037,14 @@ const LOTOList = () => {
           )}
         </div>
       ) : (
-        <div className="table-responsive">
+        <div className="table-responsive d-none d-md-block">
           <table className="table table-hover align-middle">
             <thead className="table-light">
               <tr>
                 <th scope="col">#</th>
                 <th scope="col">Serial Number</th>
-                <th scope="col">Isolated Part</th>
-                <th scope="col">Reason</th>
+                <th scope="col">Authorized Supervisor</th>
+                <th scope="col">Current Responsible</th>
                 <th scope="col">Isolator</th>
                 <th scope="col">Energy Types</th>
                 <th scope="col">Status</th>
@@ -977,8 +1063,17 @@ const LOTOList = () => {
                 >
                   <th scope="row">{index + 1}</th>
                   <td>{loto.serialNumber || "N/A"}</td>
-                  <td>{loto.isolatedPart || "N/A"}</td>
-                  <td>{loto.reason || "N/A"}</td>
+                  <td>
+                    {loto.supervisorName || "N/A"}
+                  </td>
+                  <td>
+                    {loto.currentResponsibleName || 
+                     (loto.isolator
+                       ? `${loto.isolator.firstName || ""} ${
+                           loto.isolator.lastName || ""
+                         }`
+                       : "N/A")}
+                  </td>
                   <td>
                     {loto.isolator
                       ? `${loto.isolator.firstName || ""} ${
@@ -1105,11 +1200,10 @@ const LOTOList = () => {
                           </Button>
                         </>
                       )}
-                      
-                      {/* Regular User Actions */}
-                      {!isAdmin && (
+                      {/* Supervisor Actions */}
+                      {canVerifyLOTO(loto) && currentUser?.role !== "admin" && (
                         <>
-                          {canVerifyLOTO(loto) && loto.status === "pending_verification_new" && (
+                          {loto.status === "pending_verification_new" && (
                             <>
                               <Button
                                 variant="success"
@@ -1135,7 +1229,46 @@ const LOTOList = () => {
                               </Button>
                             </>
                           )}
-                          {canVerifyLOTO(loto) && loto.status === "pending_handover_verification" && (
+                          {loto.status === "rejected" && (
+                            <Button
+                              variant="warning"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdate(loto._id);
+                              }}
+                              className="hover-scale"
+                            >
+                              ✏️ Edit
+                            </Button>
+                          )}
+                          {loto.status === "active" && (
+                            <>
+                              <Button
+                                variant="info"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleHandover(loto);
+                                }}
+                                className="hover-scale"
+                              >
+                                🤝 Handover
+                              </Button>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleComplete(loto._id);
+                                }}
+                                className="hover-scale"
+                              >
+                                ✅ Complete
+                              </Button>
+                            </>
+                          )}
+                          {loto.status === "pending_handover_verification" && (
                             <>
                               <Button
                                 variant="success"
@@ -1161,6 +1294,11 @@ const LOTOList = () => {
                               </Button>
                             </>
                           )}
+                        </>
+                      )}
+                      {/* Regular User Actions */}
+                      {!isAdmin && !isSupervisor && (
+                        <>
                           {isTechnician && loto.status === "rejected" && loto.isolator?._id === currentUser?.id && (
                             <Button
                               variant="warning"
@@ -1174,7 +1312,7 @@ const LOTOList = () => {
                               ✏️ Edit
                             </Button>
                           )}
-                          {isTechnician && loto.status === "active" && (
+                          {isTechnician && loto.status === "active" && loto.isolator?._id === currentUser?.id && (
                             <>
                               <Button
                                 variant="info"
@@ -1199,6 +1337,24 @@ const LOTOList = () => {
                                 ✅ Complete
                               </Button>
                             </>
+                          )}
+                          
+                          {/* Technician Complete for Handover Recipients */}
+                          {isTechnician && loto.status === "active" && 
+                           loto.handoverHistory && loto.handoverHistory.length > 0 && 
+                           loto.handoverHistory[loto.handoverHistory.length - 1].toUser === currentUser?.id &&
+                           loto.isolator?._id !== currentUser?.id && (
+                            <Button
+                              variant="success"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleComplete(loto._id);
+                              }}
+                              className="hover-scale"
+                            >
+                              ✅ Complete
+                            </Button>
                           )}
                           
                           {/* Handover Recipient Decision Buttons */}
@@ -1243,7 +1399,7 @@ const LOTOList = () => {
       )}
 
       {/* Mobile Card View */}
-      <div className="mobile-cards-view">
+      <div className="mobile-cards-view d-block d-md-none">
         {filteredLotos.map((loto, index) => (
           <div key={loto._id} className="loto-card" onClick={() => navigate(`/loto/${loto._id}`)}>
             {/* Card Header */}
@@ -1260,13 +1416,20 @@ const LOTOList = () => {
             {/* Card Content */}
             <div className="card-content">
               <div className="info-row">
-                <div className="info-label">Isolated Part</div>
-                <div className="info-value">{loto.isolatedPart || "N/A"}</div>
+                <div className="info-label">Authorized Supervisor</div>
+                <div className="info-value">
+                  {loto.supervisorName || "N/A"}
+                </div>
               </div>
               
               <div className="info-row">
-                <div className="info-label">Reason</div>
-                <div className="info-value">{loto.reason || "N/A"}</div>
+                <div className="info-label">Current Responsible</div>
+                <div className="info-value">
+                  {loto.currentResponsibleName || 
+                   (loto.isolator
+                     ? `${loto.isolator.firstName || ""} ${loto.isolator.lastName || ""}`
+                     : "N/A")}
+                </div>
               </div>
               
               <div className="info-row">
@@ -1356,45 +1519,119 @@ const LOTOList = () => {
               )}
 
               {/* Supervisor Actions */}
-              {currentUser?.role === "supervisor" && (
+              {canVerifyLOTO(loto) && currentUser?.role !== "admin" && (
                 <>
-                  {loto.status === "pending_verification" && (
+                  {/* Verify LOTO */}
+                  {loto.status === "pending_verification_new" && (
                     <button
                       className="btn btn-success"
-                      onClick={() => handleStatusChange(loto._id, "active")}
+                      onClick={() => handleVerify(loto._id)}
                     >
                       ✅ Verify
                     </button>
                   )}
                   
-                  {loto.status === "active" && (
+                  {/* Reject LOTO */}
+                  {loto.status === "pending_verification_new" && (
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => handleReject(loto)}
+                    >
+                      ❌ Reject
+                    </button>
+                  )}
+                  
+                  {/* Update LOTO for rejected status */}
+                  {loto.status === "rejected" && (
                     <button
                       className="btn btn-warning"
+                      onClick={() => navigate(`/loto/${loto._id}/update`)}
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
+                  
+                  {/* Handover LOTO */}
+                  {loto.status === "active" && (
+                    <button
+                      className="btn btn-info"
                       onClick={() => handleHandover(loto._id)}
                     >
                       🤝 Handover
                     </button>
                   )}
                   
+                  {/* Complete LOTO */}
+                  {loto.status === "active" && (
+                    <button
+                      className="btn btn-success"
+                      onClick={() => handleStatusChange(loto._id, "completed")}
+                    >
+                      ✅ Complete
+                    </button>
+                  )}
+                  
+                  {/* Approve Handover */}
                   {loto.status === "pending_handover_verification" && (
                     <button
                       className="btn btn-success"
-                      onClick={() => handleStatusChange(loto._id, "handed_over")}
+                      onClick={() => handleApproveHandover(loto._id)}
                     >
-                      ✅ Complete Handover
+                      ✅ Approve Handover
+                    </button>
+                  )}
+                  
+                  {/* Reject Handover */}
+                  {loto.status === "pending_handover_verification" && (
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => handleRejectHandover(loto._id)}
+                    >
+                      ❌ Reject Handover
                     </button>
                   )}
                 </>
               )}
 
               {/* Technician Actions */}
-              {currentUser?.role === "technician" && loto.status === "active" && (
-                <button
-                  className="btn btn-success"
-                  onClick={() => handleStatusChange(loto._id, "completed")}
-                >
-                  ✅ Complete
-                </button>
+              {currentUser?.role === "technician" && (
+                <>
+                  {/* Update LOTO - Only if technician is isolator or handover recipient */}
+                  {((loto.status === "pending_verification_new" || loto.status === "active") && 
+                    (loto.isolator?._id === currentUser.id || 
+                     (loto.handoverHistory && loto.handoverHistory.length > 0 && 
+                      loto.handoverHistory[loto.handoverHistory.length - 1].toUser === currentUser.id))) && (
+                    <button
+                      className="btn btn-warning"
+                      onClick={() => navigate(`/loto/${loto._id}/update`)}
+                    >
+                      ✏️ Update
+                    </button>
+                  )}
+                  
+                  {/* Handover LOTO - Only if technician is isolator */}
+                  {loto.status === "active" && loto.isolator?._id === currentUser.id && (
+                    <button
+                      className="btn btn-info"
+                      onClick={() => handleHandover(loto._id)}
+                    >
+                      🤝 Handover
+                    </button>
+                  )}
+                  
+                  {/* Complete LOTO - Only if technician is isolator or handover recipient */}
+                  {loto.status === "active" && 
+                   (loto.isolator?._id === currentUser.id || 
+                    (loto.handoverHistory && loto.handoverHistory.length > 0 && 
+                     loto.handoverHistory[loto.handoverHistory.length - 1].toUser === currentUser.id)) && (
+                    <button
+                      className="btn btn-success"
+                      onClick={() => handleStatusChange(loto._id, "completed")}
+                    >
+                      ✅ Complete
+                    </button>
+                  )}
+                </>
               )}
 
               {/* Handover Recipient Decision Buttons */}

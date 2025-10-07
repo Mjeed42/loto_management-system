@@ -711,6 +711,7 @@
     letter-spacing: 0.5px;
     font-weight: 600;
     min-width: 100px;
+    text-align: center;
   }
   
   .info-value {
@@ -1031,6 +1032,7 @@
   font-weight: 600;
   min-width: 110px;
   flex-shrink: 0;
+  text-align: center;
 }
 
 .info-value {
@@ -1923,6 +1925,11 @@
   appearance: none;
 }
 
+button, input:where([type="button"]), input:where([type="reset"]), input:where([type="submit"]) {
+  -webkit-appearance: button;
+  background-color: #eaff00a6;
+  background-image: none;
+}
 .cf-alert {
   position: relative;
   padding: 1rem 1rem;
@@ -3039,7 +3046,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  
   min-height: calc(100vh - 120px);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -3061,10 +3068,15 @@
   gap: 32px;
   align-items: center;
   padding: 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   position: relative;
   overflow: hidden;
+}
+.loading-state p, .chart-header p, .card-header p, .metric-description, .alert-message, .update-label {
+  color: #f00;
+}
+.update-label {
+  color: #f00;
 }
 
 .header-content::before {
@@ -3106,7 +3118,7 @@
   font-size: 32px;
   font-weight: 800;
   margin: 0;
-  color: white;
+  color: rgb(0, 0, 0);
   letter-spacing: -0.025em;
   line-height: 1.1;
 }
@@ -3114,7 +3126,7 @@
 .brand-text p {
   font-size: 18px;
   margin: 8px 0 0 0;
-  color: white;
+  color: rgb(0, 0, 0);
   font-weight: 500;
   letter-spacing: 0.025em;
 }
@@ -3354,6 +3366,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 600;
+  text-align: center;
 }
 
 .info-value {
@@ -3491,9 +3504,10 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background:linear-gradient(135deg, #91c8ff 0%, #a0c3f0 100%);
   border-bottom: 1px solid #e2e8f0;
   overflow: hidden;
+  border-radius: 20px;
 }
 
 .status-header h5 {
@@ -3584,7 +3598,7 @@
 }
 
 .history-item {
-  display: flex;
+
   align-items: center;
   gap: 16px;
   padding: 16px;
@@ -3663,7 +3677,7 @@
   .brand-text p {
     font-size: 13px;
     margin-top: 4px;
-    color: white;
+    color: rgb(0, 0, 0);
   }
   
   .header-actions {
@@ -3883,7 +3897,7 @@
   .brand-text p {
     font-size: 12px;
     margin-top: 2px;
-    color: white;
+    color: rgb(0, 0, 0);
   }
   
   .header-actions {
