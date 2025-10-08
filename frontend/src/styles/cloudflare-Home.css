@@ -1431,7 +1431,6 @@
 
 .cf-header-content {
   width: 100%;
-  max-width: 80rem;
   margin: 0 auto;
   padding: 0 1rem;
 }
@@ -1469,7 +1468,7 @@
 
 /* ===== MAIN CONTENT ===== */
 .cf-main {
-  max-width: 80rem;
+
   margin: 0 auto;
   padding: 2rem 1rem;
 }
@@ -1978,7 +1977,6 @@ button, input:where([type="button"]), input:where([type="reset"]), input:where([
 
 .cf-card-body {
   flex: 1 1 auto;
-  padding: 1.5rem;
 }
 
 .cf-justify-between {

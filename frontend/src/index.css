@@ -11,6 +11,106 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* RTL Support */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="rtl"] body {
+  font-family: "Segoe UI", "Tahoma", "Arial", sans-serif;
+}
+
+/* RTL Layout Adjustments */
+[dir="rtl"] .section-icon {
+  margin-right: 0;
+  margin-left: 16px;
+}
+
+[dir="rtl"] .cf-btn {
+  text-align: right;
+}
+
+[dir="rtl"] .cf-form-group label {
+  text-align: right;
+}
+
+[dir="rtl"] .cf-form-control {
+  text-align: right;
+}
+
+[dir="rtl"] .cf-table th,
+[dir="rtl"] .cf-table td {
+  text-align: right;
+}
+
+[dir="rtl"] .cf-nav {
+  direction: rtl;
+}
+
+[dir="rtl"] .cf-sidebar {
+  right: 0;
+  left: auto;
+}
+
+[dir="rtl"] .cf-main-content {
+  margin-right: 250px;
+  margin-left: 0;
+}
+
+[dir="rtl"] .cf-header {
+  padding-right: 250px;
+  padding-left: 0;
+}
+
+/* RTL Form Elements */
+[dir="rtl"] .cf-form-group {
+  text-align: right;
+}
+
+[dir="rtl"] .cf-form-control {
+  padding-right: 12px;
+  padding-left: 40px;
+}
+
+[dir="rtl"] .cf-input-group .cf-input-group-text {
+  border-left: 1px solid #ced4da;
+  border-right: none;
+}
+
+[dir="rtl"] .cf-input-group .cf-form-control {
+  border-left: none;
+  border-right: 1px solid #ced4da;
+}
+
+/* RTL Modal */
+[dir="rtl"] .cf-modal-header {
+  text-align: right;
+}
+
+[dir="rtl"] .cf-modal-body {
+  text-align: right;
+}
+
+[dir="rtl"] .cf-modal-footer {
+  text-align: left;
+}
+
+/* RTL Dropdown */
+[dir="rtl"] .cf-dropdown-menu {
+  right: 0;
+  left: auto;
+}
+
+/* RTL Breadcrumb */
+[dir="rtl"] .cf-breadcrumb {
+  direction: rtl;
+}
+
+[dir="rtl"] .cf-breadcrumb-item + .cf-breadcrumb-item::before {
+  content: "\\";
+  transform: scaleX(-1);
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;

@@ -113,7 +113,7 @@ const Login = ({ onLogin }) => {
         <h2 style={{
           fontSize: '1.875rem',
           fontWeight: '700',
-          color: '#1e3a8a',
+          color: '#fff',
           marginBottom: '1.5rem',
           textAlign: 'center',
           margin: '0 0 1.5rem 0'
@@ -218,7 +218,7 @@ const Login = ({ onLogin }) => {
         
         .login-container {
           display: flex;
-          height: 100vh;
+          height: 60vh;
           font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
         }
         
@@ -235,7 +235,7 @@ const Login = ({ onLogin }) => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: linear-gradient(90deg,rgba(251, 85, 85, 0.79) 0%, rgb(255, 106, 106) 44%, rgba(255, 0, 0, 0.87) 100%);
+  background: linear-gradient(90deg,rgba(0, 31, 134, 0.76) 0%, rgb(0, 8, 132) 44%, rgb(0, 9, 147) 100%);
   padding-left: 3rem;
   padding-right: 3rem;
   border-radius: 20px 20px 20px  20px;
@@ -251,7 +251,7 @@ const Login = ({ onLogin }) => {
     width: 100% !important;
     height: 60vh !important;
     padding: 2rem !important;
-    background:linear-gradient(90deg,rgba(251, 85, 85, 0.79) 0%, rgb(255, 106, 106) 44%, rgba(255, 0, 0, 0.87) 100%);
+    background:linear-gradient(90deg,rgba(0, 31, 134, 0.76) 0%, rgb(0, 8, 132) 44%, rgb(0, 9, 147) 100%);
     border-radius: 1.25rem;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(0, 0, 0, 0.05);
@@ -311,7 +311,7 @@ const Login = ({ onLogin }) => {
         
         .login-form label {
           display: block;
-          color: #374151;
+          color:rgb(255, 255, 255);
           font-weight: 500;
           margin-bottom: 0.5rem;
         }

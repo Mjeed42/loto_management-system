@@ -3239,7 +3239,8 @@ const GlobalStyles = () => (
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.5rem;
+      flex-shrink: 0;
     }
     
     .header-dropdown {
@@ -3962,7 +3963,7 @@ const GlobalStyles = () => (
       position: relative;
       overflow: hidden;
       min-height: 48px;
-      width: 150px;
+      width: 170px;
     }
     
     .action-btn.primary {
@@ -7447,12 +7448,17 @@ const GlobalStyles = () => (
     }
 
     .login-content {
-      padding: 0;
+      
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: var(--gray-50);
+      background: 
+        linear-gradient(90deg,rgba(12, 0, 157, 0.8) 0%, rgba(0, 0, 0, 0.53) 44%, rgba(32, 40, 157, 0.68) 100%), url('/pepsicoLogo.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
     }
 
     .content-area {

@@ -6,6 +6,9 @@ import "react-toastify/dist/ReactToastify.css";
 import "./styles/cloudflare-Home.css";
 import { LoadingProvider } from "./contexts/LoadingContext";
 
+// Initialize i18n
+import './i18n-simple';
+
 // Components
 import GlobalStyles from "./components/GlobalStyles";
 import Header from "./components/Header";
@@ -24,6 +27,7 @@ import CompleteLOTO from "./pages/CompleteLOTO";
 import Notifications from "./pages/Notifications";
 import AdminHome from "./pages/AdminHome";
 import DataExport from "./pages/DataExport";
+import TranslationTest from "./components/TranslationTest";
 import MonitoringDashboard from "./pages/MonitoringDashboard";
 
 
@@ -99,6 +103,7 @@ const AppContent = ({ currentUser, fetchCurrentUser, isLoading }) => {
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/data-export" element={<DataExport />} />
             <Route path="/monitoring" element={<MonitoringDashboard />} />
+            <Route path="/test-translation" element={<TranslationTest />} />
           </Routes>
         </main>
       </div>

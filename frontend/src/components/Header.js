@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Button from "./Button";
 import Icon from "./Icon";
 import NotificationBadge from "./NotificationBadge";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const Header = ({ currentUser, onToggleSidebar }) => {
   const navigate = useNavigate();
@@ -121,6 +122,9 @@ const Header = ({ currentUser, onToggleSidebar }) => {
         </div>
 
         <div className="header-actions">
+          {/* Language Switcher */}
+          <LanguageSwitcher />
+          
           {/* Notifications Dropdown */}
           <div className="header-dropdown" ref={notificationRef}>
             <button

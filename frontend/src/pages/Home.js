@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
 import axios from "axios";
 
 const Home = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentUser, setCurrentUser] = useState(null);
@@ -87,25 +89,25 @@ const Home = () => {
     // Full actions for supervisors and admins
     const baseActions = [
       {
-        title: "Create New LOTO",
-        description: "Start a new lockout/tagout safety procedure",
+        title: t('home.createNewLoto'),
+        description: t('home.createNewLotoDesc'),
         icon: "➕",
         variant: "primary",
         action: () => navigate("/create-loto"),
         gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
         color: "#6366f1",
-        badge: "Primary Action",
+        badge: t('home.primaryAction'),
         roles: ["supervisor", "admin"]
       },
       {
-        title: "View All LOTOs",
-        description: "Manage and monitor all lockout/tagout procedures",
+        title: t('home.viewAllLotos'),
+        description: t('home.viewAllLotosDesc'),
         icon: "📋",
         variant: "success",
         action: () => navigate("/loto-list"),
         gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
         color: "#10b981",
-        badge: "Dashboard",
+        badge: t('home.dashboard'),
         roles: ["supervisor", "admin"]
       },
       

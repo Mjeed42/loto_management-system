@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../components/Button";
 import RejectLOTOModal from "../components/RejectLOTOModal";
 import StatusChangeModal from "../components/StatusChangeModal";
@@ -19,6 +20,7 @@ const formatEnergyType = (type) => {
 };
 
 const LOTOList = () => {
+  const { t } = useTranslation();
   const { showLoading, hideLoading } = useLoading();
   const navigate = useNavigate();
   const [lotos, setLotos] = useState([]);
@@ -661,9 +663,9 @@ const LOTOList = () => {
           <div className="cf-header-inner">
             <div>
               <h1 className="cf-header-title">
-                📋 LOTO Management
+                📋 {t('lotoList.title')}
               </h1>
-              <p className="cf-header-subtitle">Manage and monitor all lockout procedures</p>
+              <p className="cf-header-subtitle">{t('lotoList.subtitle')}</p>
             </div>
             <div className="cf-header-actions">
               <button
@@ -676,13 +678,13 @@ const LOTOList = () => {
                 className="cf-btn cf-btn-sm cf-btn-outline-secondary"
                 onClick={() => navigate("/create-loto")}
               >
-                ➕ Create LOTO
+                ➕ {t('navigation.createLoto')}
               </button>
               <button
                 className="cf-btn cf-btn-sm cf-btn-outline-secondary"
-                onClick={() => navigate("/Home")}
+                onClick={() => navigate(currentUser?.role === "technician" ? "/technician-home" : "/Home")}
               >
-                🏠 Home
+                🏠 {t('common.home')}
               </button>
             </div>
           </div>
@@ -700,7 +702,7 @@ const LOTOList = () => {
           >
             <div className="cf-stat-content">
               <div className="cf-stat-info">
-                <div className="cf-stat-title">Total LOTOs</div>
+                <div className="cf-stat-title">{t('lotoList.totalLotos')}</div>
                 <div className="cf-stat-value">{lotos.length}</div>
               </div>
               <div className="cf-stat-icon cf-bg-primary">
@@ -716,7 +718,7 @@ const LOTOList = () => {
           >
             <div className="cf-stat-content">
               <div className="cf-stat-info">
-                <div className="cf-stat-title">Active</div>
+                <div className="cf-stat-title">{t('lotoList.active')}</div>
                 <div className="cf-stat-value">
                   {lotos.filter((l) => l.status === "active").length}
                 </div>
@@ -734,7 +736,7 @@ const LOTOList = () => {
           >
             <div className="cf-stat-content">
               <div className="cf-stat-info">
-                <div className="cf-stat-title">Pending Verification</div>
+                <div className="cf-stat-title">{t('lotoList.pendingVerification')}</div>
                 <div className="cf-stat-value">
                   {lotos.filter((l) => l.status === "pending_verification_new").length}
                 </div>
@@ -752,7 +754,7 @@ const LOTOList = () => {
           >
             <div className="cf-stat-content">
               <div className="cf-stat-info">
-                <div className="cf-stat-title">Pending Handover</div>
+                <div className="cf-stat-title">{t('lotoList.pendingHandover')}</div>
                 <div className="cf-stat-value">
                   {lotos.filter((l) => l.status === "pending_handover_verification").length}
                 </div>
@@ -770,7 +772,7 @@ const LOTOList = () => {
           >
             <div className="cf-stat-content">
               <div className="cf-stat-info">
-                <div className="cf-stat-title">Handed Over</div>
+                <div className="cf-stat-title">{t('lotoList.handedOver')}</div>
                 <div className="cf-stat-value">
                   {lotos.filter((l) => l.status === "handed_over").length}
                 </div>
@@ -788,7 +790,7 @@ const LOTOList = () => {
           >
             <div className="cf-stat-content">
               <div className="cf-stat-info">
-                <div className="cf-stat-title">Rejected</div>
+                <div className="cf-stat-title">{t('lotoList.rejected')}</div>
                 <div className="cf-stat-value">
                   {lotos.filter((l) => l.status === "rejected").length}
                 </div>
@@ -806,7 +808,7 @@ const LOTOList = () => {
           >
             <div className="cf-stat-content">
               <div className="cf-stat-info">
-                <div className="cf-stat-title">Completed</div>
+                <div className="cf-stat-title">{t('lotoList.completed')}</div>
                 <div className="cf-stat-value">
                   {lotos.filter((l) => l.status === "completed").length}
                 </div>
@@ -839,7 +841,7 @@ const LOTOList = () => {
                 <input
                   type="text"
                   className="search-input"
-                  placeholder="Search LOTOs by serial number, supervisor, responsible, or isolator..."
+                  placeholder={t('lotoList.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -854,13 +856,13 @@ const LOTOList = () => {
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                   >
-                    <option value="all">All Status</option>
-                    <option value="pending_verification_new">Pending Verification</option>
-                    <option value="active">Active</option>
-                    <option value="pending_handover_verification">Pending Handover</option>
-                    <option value="handed_over">Handed Over</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="completed">Completed</option>
+                    <option value="all">{t('lotoList.allStatus')}</option>
+                    <option value="pending_verification_new">{t('lotoList.pendingVerification')}</option>
+                    <option value="active">{t('lotoList.active')}</option>
+                    <option value="pending_handover_verification">{t('lotoList.pendingHandover')}</option>
+                    <option value="handed_over">{t('lotoList.handedOver')}</option>
+                    <option value="rejected">{t('lotoList.rejected')}</option>
+                    <option value="completed">{t('lotoList.completed')}</option>
                   </select>
                 </div>
 
@@ -872,9 +874,9 @@ const LOTOList = () => {
                       value={filterSupervisor}
                       onChange={(e) => setFilterSupervisor(e.target.value)}
                     >
-                      <option value="all">All LOTOs</option>
-                      <option value="my_created">Created By Me</option>
-                      <option value="my_authorized">Authorized By Me</option>
+                      <option value="all">{t('lotoList.allLotos')}</option>
+                      <option value="my_created">{t('lotoList.createdByMe')}</option>
+                      <option value="my_authorized">{t('lotoList.authorizedByMe')}</option>
                     </select>
                   </div>
                 )}
@@ -889,28 +891,28 @@ const LOTOList = () => {
             <div className="cf-card-body">
               <div className="active-filters-container">
                 <div className="filters-info">
-                  <span className="filters-label">Active filters:</span>
+                  <span className="filters-label">{t('lotoList.activeFilters')}:</span>
                   <div className="filters-badges">
                     {activeFilter && (
                       <span className="cf-badge cf-bg-primary">
-                        {activeFilter === "all" ? "All LOTOs" : 
-                         activeFilter === "active" ? "Active" :
-                         activeFilter === "pending_verification_new" ? "Pending Verification" :
-                         activeFilter === "pending_handover_verification" ? "Pending Handover" :
-                         activeFilter === "handed_over" ? "Handed Over" :
-                         activeFilter === "rejected" ? "Rejected" :
-                         activeFilter === "completed" ? "Completed" : activeFilter}
+                        {activeFilter === "all" ? t('lotoList.allLotos') : 
+                         activeFilter === "active" ? t('lotoList.active') :
+                         activeFilter === "pending_verification_new" ? t('lotoList.pendingVerification') :
+                         activeFilter === "pending_handover_verification" ? t('lotoList.pendingHandover') :
+                         activeFilter === "handed_over" ? t('lotoList.handedOver') :
+                         activeFilter === "rejected" ? t('lotoList.rejected') :
+                         activeFilter === "completed" ? t('lotoList.completed') : activeFilter}
                       </span>
                     )}
                     {searchTerm && (
                       <span className="cf-badge cf-bg-info">
-                        Search: "{searchTerm}"
+                        {t('lotoList.search')}: "{searchTerm}"
                       </span>
                     )}
                     {filterSupervisor !== "all" && currentUser && currentUser.role === "supervisor" && (
                       <span className="cf-badge cf-bg-warning">
-                        {filterSupervisor === "my_created" ? "Created By Me" :
-                         filterSupervisor === "my_authorized" ? "Authorized By Me" : filterSupervisor}
+                        {filterSupervisor === "my_created" ? t('lotoList.createdByMe') :
+                         filterSupervisor === "my_authorized" ? t('lotoList.authorizedByMe') : filterSupervisor}
                       </span>
                     )}
                   </div>
@@ -919,7 +921,7 @@ const LOTOList = () => {
                   className="clear-filters-btn"
                   onClick={clearFilters}
                 >
-                  ✕ Clear All Filters
+                  ✕ {t('lotoList.clearFilters')}
                 </button>
               </div>
             </div>
@@ -936,13 +938,13 @@ const LOTOList = () => {
               </div>
               <h3 className="cf-text-lg cf-font-semibold cf-text-primary cf-mb-2">
                 {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
-                  ? "No LOTOs Found"
-                  : "No LOTOs Created Yet"}
+                  ? t('lotoList.noLotosFound')
+                  : t('lotoList.noLotosCreatedYet')}
               </h3>
               <p className="cf-text-secondary cf-mb-4">
                 {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
-                  ? "Try adjusting your search or filter to find what you're looking for."
-                  : "Get started by creating your first LOTO."}
+                  ? t('lotoList.tryAdjustingSearch')
+                  : t('lotoList.getStartedCreating')}
               </p>
               {!(searchTerm || filterStatus !== "all" || filterSupervisor !== "all") && (
                 <button
@@ -963,13 +965,13 @@ const LOTOList = () => {
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>Serial Number</th>
-                      <th>Authorized Supervisor</th>
-                      <th>Current Responsible</th>
-                      <th>Isolator</th>
-                      <th>Energy Types</th>
-                      <th>Status</th>
-                      <th className="cf-text-center">Actions</th>
+                      <th>{t('lotoList.serialNumber')}</th>
+                      <th>{t('lotoList.authorizedSupervisor')}</th>
+                      <th>{t('lotoList.currentResponsible')}</th>
+                      <th>{t('lotoList.isolator')}</th>
+                      <th>{t('lotoList.energyTypes')}</th>
+                      <th>{t('lotoList.status')}</th>
+                      <th className="cf-text-center">{t('lotoList.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1020,7 +1022,7 @@ const LOTOList = () => {
                                       }}
                                       style={{ backgroundColor: "#10b981", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
                                     >
-                                      ✅ Verify
+                                      ✅ {t('lotoList.verify')}
                                     </button>
                                     <button
                                       className="cf-btn cf-btn-sm"
@@ -1030,7 +1032,7 @@ const LOTOList = () => {
                                       }}
                                       style={{ backgroundColor: "#ef4444", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
                                     >
-                                      ❌ Reject
+                                      ❌ {t('lotoList.reject')}
                                     </button>
                                   </>
                                 )}
@@ -1043,7 +1045,7 @@ const LOTOList = () => {
                                     }}
                                     style={{ backgroundColor: "#f59e0b", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
                                   >
-                                    ✏️ Edit
+                                    ✏️ {t('lotoList.edit')}
                                   </button>
                                 )}
                                 {loto.status === "active" && (
@@ -1056,7 +1058,7 @@ const LOTOList = () => {
                                       }}
                                       style={{ backgroundColor: "#06b6d4", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
                                     >
-                                      🤝 Handover
+                                      🤝 {t('lotoList.handover')}
                                     </button>
                                     <button
                                       className="cf-btn cf-btn-sm"
@@ -1080,7 +1082,7 @@ const LOTOList = () => {
                                       }}
                                       style={{ backgroundColor: "#10b981", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
                                     >
-                                      ✅ Approve
+                                      ✅ {t('lotoList.approve')}
                                     </button>
                                     <button
                                       className="cf-btn cf-btn-sm"
@@ -1090,7 +1092,7 @@ const LOTOList = () => {
                                       }}
                                       style={{ backgroundColor: "#ef4444", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
                                     >
-                                      ❌ Reject
+                                      ❌ {t('lotoList.reject')}
                                     </button>
                                   </>
                                 )}
@@ -1104,7 +1106,7 @@ const LOTOList = () => {
                                   }}
                                   style={{ backgroundColor: "#3b82f6", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
                                 >
-                                  ⭐ Status
+                                  ⭐ {t('lotoList.status')}
                                 </button>
                               </>
                             )}
@@ -1118,7 +1120,7 @@ const LOTOList = () => {
                                 }}
                                 style={{ backgroundColor: "#6b7280", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
                               >
-                                View
+                                {t('lotoList.view')}
                               </button>
                             )}
                           </div>
@@ -1228,7 +1230,7 @@ const LOTOList = () => {
                   className="btn btn-primary"
                   onClick={() => navigate(`/loto/${loto._id}`)}
                 >
-                   View
+                   {t('lotoList.view')}
                 </button>
                 {currentUser?.role === "admin" && (
                   <>
@@ -1236,13 +1238,13 @@ const LOTOList = () => {
                       className="btn btn-warning"
                       onClick={() => navigate(`/loto/${loto._id}/update`)}
                     >
-                      ✏️ Edit
+                      ✏️ {t('lotoList.edit')}
                     </button>
                     <button
                       className="btn btn-danger"
                       onClick={() => handleDelete(loto._id, loto.serialNumber)}
                     >
-                      🗑️ Delete
+                      🗑️ {t('lotoList.delete')}
                     </button>
                   </>
                 )}

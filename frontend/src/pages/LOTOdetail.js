@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
 import BackButton from "../components/BackButton";
@@ -9,6 +10,7 @@ import StatusChangeModal from "../components/StatusChangeModal";
 import HandoverModal from "../components/HandoverModal";
 
 const LOTOdetail = () => {
+  const { t } = useTranslation();
   const [loto, setLoto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -66,7 +68,7 @@ const LOTOdetail = () => {
       setLoto(res.data.data);
       setLoading(false);
     } catch (err) {
-      setError(err.response?.data?.message || "Error fetching LOTO");
+      setError(err.response?.data?.message || t('lotoDetails.errorFetchingLoto'));
       setLoading(false);
     }
   };
@@ -123,8 +125,8 @@ const LOTOdetail = () => {
       const errorMessage =
         err.response?.data?.message ||
         err.response?.data?.error ||
-        "Error deleting LOTO";
-      alert(`Delete failed: ${errorMessage}`);
+        t('lotoDetails.errorDeletingLoto');
+      alert(`${t('lotoDetails.deleteFailed')}: ${errorMessage}`);
     }
   };
 
@@ -150,7 +152,7 @@ const LOTOdetail = () => {
       alert("LOTO verified successfully!");
       fetchLOTO();
     } catch (err) {
-      alert(err.response?.data?.message || "Error verifying LOTO");
+      alert(err.response?.data?.message || t('lotoDetails.errorVerifyingLoto'));
     }
   };
 
@@ -178,14 +180,14 @@ const LOTOdetail = () => {
       );
 
       if (res.data.success) {
-        alert("LOTO rejected successfully");
+        alert(t('lotoDetails.lotoRejectedSuccessfully'));
         setRejectModalOpen(false);
         setSelectedLotoForRejection(null);
         // Refresh the LOTO data
         fetchLOTO();
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Error rejecting LOTO");
+      alert(err.response?.data?.message || t('lotoDetails.errorRejectingLoto'));
     }
   };
 
@@ -222,7 +224,7 @@ const LOTOdetail = () => {
         fetchLOTO();
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Error changing LOTO status");
+      alert(err.response?.data?.message || t('lotoDetails.errorChangingStatus'));
     }
   };
 
@@ -261,7 +263,7 @@ const LOTOdetail = () => {
       }
     } catch (err) {
       console.error("Error creating handover:", err);
-      alert(err.response?.data?.message || "Error creating handover");
+      alert(err.response?.data?.message || t('lotoDetails.errorCreatingHandover'));
     }
   };
 
@@ -297,7 +299,7 @@ const LOTOdetail = () => {
       }
     } catch (err) {
       console.error("Error making recipient decision:", err);
-      alert(err.response?.data?.message || "Error making decision");
+      alert(err.response?.data?.message || t('lotoDetails.errorMakingDecision'));
     }
   };
 
@@ -307,7 +309,7 @@ const LOTOdetail = () => {
       const rejectionReason = action === 'reject' ? prompt('Enter rejection reason:') : '';
       
       if (action === 'reject' && !rejectionReason) {
-        alert('Rejection reason is required');
+        alert(t('lotoDetails.rejectionReasonRequired'));
         return;
       }
 
@@ -335,7 +337,7 @@ const LOTOdetail = () => {
       }
     } catch (err) {
       console.error("Error verifying handover:", err);
-      alert(err.response?.data?.message || "Error verifying handover");
+      alert(err.response?.data?.message || t('lotoDetails.errorVerifyingHandover'));
     }
   };
 
@@ -343,7 +345,7 @@ const LOTOdetail = () => {
     try {
       // Get the latest handover index (last one in the array)
       if (!handoverHistory || handoverHistory.length === 0) {
-        alert("No handover found to approve");
+        alert(t('lotoDetails.noHandoverFoundToApprove'));
         return;
       }
       
@@ -351,7 +353,7 @@ const LOTOdetail = () => {
       await handleVerifyHandover(handoverIndex, 'approve');
     } catch (err) {
       console.error("Error approving handover:", err);
-      alert("Error approving handover");
+      alert(t('lotoDetails.errorApprovingHandover'));
     }
   };
 
@@ -359,7 +361,7 @@ const LOTOdetail = () => {
     try {
       // Get the latest handover index (last one in the array)
       if (!handoverHistory || handoverHistory.length === 0) {
-        alert("No handover found to reject");
+        alert(t('lotoDetails.noHandoverFoundToReject'));
         return;
       }
       
@@ -367,7 +369,7 @@ const LOTOdetail = () => {
       await handleVerifyHandover(handoverIndex, 'reject');
     } catch (err) {
       console.error("Error rejecting handover:", err);
-      alert("Error rejecting handover");
+      alert(t('lotoDetails.errorRejectingHandover'));
     }
   };
 
@@ -377,7 +379,7 @@ const LOTOdetail = () => {
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
-        <p className="mt-2">Loading LOTO details...</p>
+        <p className="mt-2">{t('lotoDetails.loading')}</p>
       </div>
     );
   }
@@ -423,12 +425,12 @@ const LOTOdetail = () => {
   // 👇 Status Badge with Emoji — styled like CreateLOTO
   const getStatusBadge = (status) => {
     const config = {
-      pending_verification_new: { text: "⏳ Pending Verification (New)", variant: "warning" },
-      active: { text: "✅ Active", variant: "success" },
-      pending_handover_verification: { text: "🤝 Pending Handover Verification", variant: "info" },
-      handed_over: { text: "📋 Handed Over", variant: "primary" },
-      completed: { text: "🏁 Completed", variant: "secondary" },
-      rejected: { text: "❌ Rejected", variant: "danger" },
+      pending_verification_new: { text: t('lotoDetails.pendingVerificationNew'), variant: "warning" },
+      active: { text: t('lotoDetails.active'), variant: "success" },
+      pending_handover_verification: { text: t('lotoDetails.pendingHandoverVerification'), variant: "info" },
+      handed_over: { text: t('lotoDetails.handedOver'), variant: "primary" },
+      completed: { text: t('lotoDetails.completed'), variant: "secondary" },
+      rejected: { text: t('lotoDetails.rejected'), variant: "danger" },
     }[status] || { text: status, variant: "secondary" };
 
     return (
@@ -454,7 +456,7 @@ const LOTOdetail = () => {
 
   return (
     <div className="loto-details-container animate-fade-in">
-      <BackButton to="/loto-list" label="Back to My LOTOs" />
+      <BackButton to="/loto-list" label={t('lotoDetails.backToMyLotos')} />
       
       {/* Modern Header Section */}
       <div className="loto-details-header">
@@ -466,8 +468,8 @@ const LOTOdetail = () => {
               </svg>
             </div>
             <div className="brand-text">
-              <h1>LOTO Details</h1>
-              <p>Serial Number: {loto.serialNumber}</p>
+              <h1>{t('lotoDetails.title')}</h1>
+              <p>{t('lotoDetails.serialNumberLabel')}: {loto.serialNumber}</p>
             </div>
           </div>
           <div className="header-actions">
@@ -479,7 +481,7 @@ const LOTOdetail = () => {
                 <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span>Refresh</span>
+              <span>{t('lotoDetails.refresh')}</span>
             </button>
             <button
               className="action-btn secondary"
@@ -488,16 +490,16 @@ const LOTOdetail = () => {
               <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                 <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span>Back to List</span>
+              <span>{t('lotoDetails.backToList')}</span>
             </button>
             <button
               className="action-btn primary"
-              onClick={() => navigate("/Home")}
+              onClick={() => navigate(currentUser?.role === "technician" ? "/technician-home" : "/Home")}
             >
               <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span>Home</span>
+              <span>{t('lotoDetails.home')}</span>
             </button>
           </div>
         </div>
@@ -531,8 +533,8 @@ const LOTOdetail = () => {
               </svg>
             </div>
             <div className="info-title">
-              <h3>LOTO Information</h3>
-              <p>Complete details and status</p>
+              <h3>{t('lotoDetails.lotoInformation')}</h3>
+              <p>{t('lotoDetails.completeDetailsAndStatus')}</p>
             </div>
             <div className="status-badge-container">
               {getStatusBadge(loto.status)}
@@ -542,22 +544,22 @@ const LOTOdetail = () => {
           <div className="info-grid">
             {/* Basic Information */}
             <div className="info-group">
-              <h4 className="group-title">Basic Information</h4>
+              <h4 className="group-title">{t('lotoDetails.basicInformation')}</h4>
               <div className="info-items">
                 <div className="info-item">
-                  <span className="info-label">Serial Number</span>
+                  <span className="info-label">{t('lotoDetails.serialNumber')}</span>
                   <span className="info-value">{loto.serialNumber}</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Date Created</span>
+                  <span className="info-label">{t('lotoDetails.createdAt')}</span>
                   <span className="info-value">{new Date(loto.date).toLocaleString()}</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Shift</span>
+                  <span className="info-label">{t('lotoDetails.shift')}</span>
                   <span className="info-value">{loto.shift}</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Isolator</span>
+                  <span className="info-label">{t('lotoDetails.isolator')}</span>
                   <span className="info-value">{loto.isolatorName}</span>
                 </div>
               </div>
@@ -565,22 +567,22 @@ const LOTOdetail = () => {
 
             {/* Location Information */}
             <div className="info-group">
-              <h4 className="group-title">Location Details</h4>
+              <h4 className="group-title">{t('lotoDetails.locationDetails')}</h4>
               <div className="info-items">
                 <div className="info-item">
-                  <span className="info-label">Location Path</span>
+                  <span className="info-label">{t('lotoDetails.location')}</span>
                   <span className="info-value location-path">{locationPath}</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Isolated Part</span>
+                  <span className="info-label">{t('lotoDetails.isolatedPart')}</span>
                   <span className="info-value">{loto.isolatedPart}</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Reason</span>
+                  <span className="info-label">{t('lotoDetails.reason')}</span>
                   <span className="info-value">{loto.reason}</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">PTW Number</span>
+                  <span className="info-label">{t('lotoDetails.ptwNumber')}</span>
                   <span className="info-value">{loto.ptwNumber}</span>
                 </div>
               </div>
@@ -588,16 +590,16 @@ const LOTOdetail = () => {
 
             {/* Duration & Supervisor */}
             <div className="info-group">
-              <h4 className="group-title">Assignment & Duration</h4>
+              <h4 className="group-title">{t('lotoDetails.workDetails')}</h4>
               <div className="info-items">
                 <div className="info-item">
-                  <span className="info-label">Expected Duration</span>
+                  <span className="info-label">{t('lotoDetails.expectedDuration')}</span>
                   <span className="info-value">{loto.expectedDuration} hours</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Authorized Supervisor</span>
+                  <span className="info-label">{t('lotoDetails.supervisorAssignment')}</span>
                   <span className={`info-value ${loto.supervisorName ? 'supervisor-assigned' : 'no-supervisor'}`}>
-                    {loto.supervisorName || 'None assigned'}
+                    {loto.supervisorName || t('lotoDetails.noneAssigned')}
                   </span>
                 </div>
               </div>
@@ -606,7 +608,7 @@ const LOTOdetail = () => {
 
           {/* Energy Types Section */}
           <div className="energy-types-section">
-            <h4 className="section-title">Energy Types to Isolate</h4>
+            <h4 className="section-title">{t('lotoDetails.energyTypes')}</h4>
             {loto.energyTypes && loto.energyTypes.length > 0 ? (
               <div className="energy-types-grid">
                 {loto.energyTypes.map((energy, index) => (
@@ -622,7 +624,7 @@ const LOTOdetail = () => {
               </div>
             ) : (
               <div className="no-energy-types">
-                <span>No energy types specified</span>
+                <span>{t('lotoDetails.noEnergyTypesSpecified')}</span>
               </div>
             )}
           </div>
@@ -638,7 +640,7 @@ const LOTOdetail = () => {
                   </svg>
                 </div>
                 <div className="section-content">
-                  <h5>Verified By</h5>
+                  <h5>{t('lotoDetails.verifiedBy')}</h5>
                   <div className="verification-details">
                     <span className="verifier-name">{loto.verifiedBy.firstName} {loto.verifiedBy.lastName}</span>
                     <span className="verification-time">{new Date(loto.verifiedAt).toLocaleString()}</span>
@@ -656,7 +658,7 @@ const LOTOdetail = () => {
                   </svg>
                 </div>
                 <div className="section-content">
-                  <h5>Handover Notes</h5>
+                  <h5>{t('lotoDetails.handoverNotes')}</h5>
                   <p className="notes-text">{loto.handoverNotes}</p>
                 </div>
               </div>
@@ -672,7 +674,7 @@ const LOTOdetail = () => {
                   </svg>
                 </div>
                 <div className="section-content">
-                  <h5>Completion Notes</h5>
+                  <h5>{t('lotoDetails.completionNotes')}</h5>
                   <p className="notes-text">{loto.completionNotes}</p>
                 </div>
               </div>
@@ -683,17 +685,17 @@ const LOTOdetail = () => {
               
               <div className="section-content">
                 <div className="section-header">
-                  <h5>Handover History</h5>
-                  <p>Complete chain of responsibility transfers</p>
+                  <h5>{t('lotoDetails.handoverHistory')}</h5>
+                  <p>{t('lotoDetails.completeChainOfResponsibility')}</p>
                 </div>
                 
                 {historyLoading ? (
-                  <div className="loading-text">Loading handover history...</div>
+                  <div className="loading-text">{t('lotoDetails.loadingHandoverHistory')}</div>
                 ) : handoverHistory && handoverHistory.length > 0 ? (
                   <div className="handover-history-content">
                     {/* Handover Chain */}
                     <div className="handover-chain">
-                      <h6>Responsibility Chain:</h6>
+                      <h6>{t('lotoDetails.responsibilityChain')}:</h6>
                       <div className="chain-display">
                         {(() => {
                           const chain = [`${loto.isolator.firstName} ${loto.isolator.lastName}`];
@@ -707,7 +709,7 @@ const LOTOdetail = () => {
 
                     {/* Current Responsible */}
                     <div className="current-responsible">
-                      <h6>Current Responsible:</h6>
+                      <h6>{t('lotoDetails.currentResponsible')}:</h6>
                       <span className="responsible-name">
                         {loto.currentResponsibleName || `${loto.isolator.firstName} ${loto.isolator.lastName}`}
                       </span>
@@ -715,7 +717,7 @@ const LOTOdetail = () => {
 
                     {/* Detailed History */}
                     <div className="detailed-history">
-                      <h6>Detailed History:</h6>
+                      <h6>{t('lotoDetails.detailedHistory')}:</h6>
                       <div className="history-list">
                         {handoverHistory.map((handover, index) => (
                           <div key={index} className="history-item">
@@ -786,13 +788,13 @@ const LOTOdetail = () => {
                                     className="btn btn-success btn-sm"
                                     onClick={() => handleRecipientDecision(index, 'accept')}
                                   >
-                                    ✅ Accept Handover
+                                    ✅ {t('lotoDetails.approve')}
                                   </button>
                                   <button
                                     className="btn btn-danger btn-sm"
                                     onClick={() => handleRecipientDecision(index, 'reject')}
                                   >
-                                    ❌ Reject Handover
+                                    ❌ {t('lotoDetails.reject')}
                                   </button>
                                 </div>
                               )}
@@ -875,9 +877,9 @@ const LOTOdetail = () => {
                   </div>
                 ) : (
                   <div className="no-history">
-                    <p>No handover history available. The isolator is currently responsible.</p>
+                    <p>{t('lotoDetails.noHandoverHistoryAvailable')}</p>
                     <div className="current-responsible">
-                      <h6>Current Responsible:</h6>
+                      <h6>{t('lotoDetails.currentResponsible')}:</h6>
                       <span className="responsible-name">
                         {`${loto.isolator.firstName} ${loto.isolator.lastName}`}
                       </span>
@@ -897,7 +899,7 @@ const LOTOdetail = () => {
                   </svg>
                 </div>
                 <div className="section-content">
-                  <h5>Actual Finish Time</h5>
+                  <h5>{t('lotoDetails.actualFinishTime')}</h5>
                   <div className="finish-details">
                     <span className="finish-time">{new Date(loto.actualFinishTime).toLocaleTimeString()}</span>
                     <span className="finish-date">{new Date(loto.actualFinishDate).toLocaleDateString()}</span>
@@ -917,8 +919,8 @@ const LOTOdetail = () => {
               </svg>
             </div>
             <div className="actions-title">
-              <h3>Actions</h3>
-              <p>Available operations</p>
+              <h3>{t('lotoDetails.actions')}</h3>
+              <p>{t('lotoDetails.availableOperations')}</p>
             </div>
           </div>
 
@@ -931,13 +933,13 @@ const LOTOdetail = () => {
              currentUser?.id === loto.handoverHistory[loto.handoverHistory.length - 1].toUser && (
               <div className="action-group handover-recipient-group">
                 <div className="action-header">
-                  <h5>🤝 Handover Decision Required</h5>
-                  <p>You have been assigned a handover. Please accept or reject this handover request.</p>
+                  <h5>{t('lotoDetails.handoverDecisionRequired')}</h5>
+                  <p>{t('lotoDetails.handoverDecisionDesc')}</p>
                   <div className="handover-details">
-                    <strong>From:</strong> {loto.handoverHistory[loto.handoverHistory.length - 1].fromUserName}<br/>
-                    <strong>Date:</strong> {new Date(loto.handoverHistory[loto.handoverHistory.length - 1].handoverDate).toLocaleString()}<br/>
+                    <strong>{t('lotoDetails.from')}:</strong> {loto.handoverHistory[loto.handoverHistory.length - 1].fromUserName}<br/>
+                    <strong>{t('lotoDetails.date')}:</strong> {new Date(loto.handoverHistory[loto.handoverHistory.length - 1].handoverDate).toLocaleString()}<br/>
                     {loto.handoverHistory[loto.handoverHistory.length - 1].handoverNotes && (
-                      <><strong>Notes:</strong> {loto.handoverHistory[loto.handoverHistory.length - 1].handoverNotes}</>
+                      <><strong>{t('lotoDetails.notes')}:</strong> {loto.handoverHistory[loto.handoverHistory.length - 1].handoverNotes}</>
                     )}
                   </div>
                 </div>
@@ -949,7 +951,7 @@ const LOTOdetail = () => {
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Accept Handover</span>
+                    <span>{t('lotoDetails.approve')}</span>
                   </button>
                   <button 
                     className="action-button danger" 
@@ -959,7 +961,7 @@ const LOTOdetail = () => {
                       <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                       <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                     </svg>
-                    <span>Reject Handover</span>
+                    <span>{t('lotoDetails.reject')}</span>
                   </button>
                 </div>
               </div>
@@ -969,22 +971,22 @@ const LOTOdetail = () => {
             {loto.status === "pending_verification_new" && canVerify && (
               <div className="action-group verification-group">
                 <div className="action-header">
-                  <h5>Verification Required</h5>
-                  <p>This LOTO is pending supervisor verification.</p>
+                  <h5>{t('lotoDetails.verificationRequired')}</h5>
+                  <p>{t('lotoDetails.verificationDesc')}</p>
                 </div>
                 <div className="action-button-container">
                   <button className="action-button success " onClick={handleVerify}>
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Verify LOTO</span>
+                    <span>{t('lotoDetails.verify')}</span>
                   </button>
                   <button className="action-button danger" onClick={() => handleReject(loto)}>
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                       <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                     </svg>
-                    <span>Reject LOTO</span>
+                    <span>{t('lotoDetails.reject')}</span>
                   </button>
                 </div>
               </div>
@@ -994,8 +996,8 @@ const LOTOdetail = () => {
             {loto.status === "pending_handover_verification" && currentUser && (
               <div className="action-group current-user-group">
                 <div className="action-header">
-                  <h5>📝 Available Actions</h5>
-                  <p>While handover verification is pending, you can update limited LOTO details.</p>
+                  <h5>{t('lotoDetails.availableActions')}</h5>
+                  <p>{t('lotoDetails.availableActionsDesc')}</p>
                 </div>
                 <div className="action-button-container">
                   <button 
@@ -1006,7 +1008,7 @@ const LOTOdetail = () => {
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Update LOTO Details</span>
+                    <span>{t('lotoDetails.edit')}</span>
                   </button>
                 </div>
               </div>
@@ -1016,22 +1018,22 @@ const LOTOdetail = () => {
             {loto.status === "pending_handover_verification" && canVerify && (
               <div className="action-group handover-verification-group">
                 <div className="action-header">
-                  <h5>Handover Verification Required</h5>
-                  <p>This handover is pending supervisor verification.</p>
+                  <h5>{t('lotoDetails.handoverVerificationRequired')}</h5>
+                  <p>{t('lotoDetails.handoverVerificationDesc')}</p>
                 </div>
                 <div className="action-button-container">
                   <button className="action-button success" onClick={handleApproveHandover}>
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Approve Handover</span>
+                    <span>{t('lotoDetails.approve')}</span>
                   </button>
                   <button className="action-button danger" onClick={handleRejectHandover}>
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                       <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                     </svg>
-                    <span>Reject Handover</span>
+                    <span>{t('lotoDetails.reject')}</span>
                   </button>
                 </div>
               </div>
@@ -1041,7 +1043,7 @@ const LOTOdetail = () => {
             {isAdmin && (
               <div className="action-group admin-group">
                 <div className="action-header">
-                  <h5>🔧 Admin Actions</h5>
+                  <h5>🔧 {t('lotoDetails.adminActions')}</h5>
                   <p>Full administrative control over this LOTO.</p>
                 </div>
                 <div className="action-button-container">
@@ -1051,14 +1053,14 @@ const LOTOdetail = () => {
                         <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                           <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        <span>Verify LOTO</span>
+                        <span>{t('lotoDetails.verify')}</span>
                       </button>
                       <button className="action-button danger" onClick={() => handleReject(loto)}>
                         <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                           <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                           <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                         </svg>
-                        <span>Reject LOTO</span>
+                        <span>{t('lotoDetails.reject')}</span>
                       </button>
                     </>
                   )}
@@ -1068,14 +1070,14 @@ const LOTOdetail = () => {
                         <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                           <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        <span>Approve Handover</span>
+                        <span>{t('lotoDetails.approve')}</span>
                       </button>
                       <button className="action-button danger" onClick={handleRejectHandover}>
                         <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                           <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                           <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                         </svg>
-                        <span>Reject Handover</span>
+                        <span>{t('lotoDetails.reject')}</span>
                       </button>
                     </>
                   )}
@@ -1085,7 +1087,7 @@ const LOTOdetail = () => {
                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      <span>Edit LOTO</span>
+                      <span>{t('lotoDetails.edit')}</span>
                     </button>
                   )}
                   {loto.status === "active" && (
@@ -1094,14 +1096,14 @@ const LOTOdetail = () => {
                         <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                           <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        <span>Handover</span>
+                        <span>{t('lotoDetails.handover')}</span>
                       </button>
                       <button className="action-button success" onClick={handleComplete}>
                         <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                           <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        <span>Complete</span>
+                        <span>{t('lotoDetails.complete')}</span>
                       </button>
                     </>
                   )}
@@ -1112,7 +1114,7 @@ const LOTOdetail = () => {
                       <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      <span>Create Handover</span>
+                      <span>{t('lotoDetails.handover')}</span>
                     </button>
                   )}
                   
@@ -1121,7 +1123,7 @@ const LOTOdetail = () => {
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Change Status</span>
+                    <span>{t('lotoDetails.statusChange')}</span>
                   </button>
                 </div>
               </div>
@@ -1131,8 +1133,8 @@ const LOTOdetail = () => {
             {loto.status === "rejected" && isIsolator && isTechnician && (
               <div className="action-group edit-group">
                 <div className="action-header">
-                  <h5>Edit Required</h5>
-                  <p>This LOTO was rejected and requires modification.</p>
+                  <h5>{t('lotoDetails.editRequired')}</h5>
+                  <p>{t('lotoDetails.editRequiredDesc')}</p>
                 </div>
                 <div className="action-button-container">
                   <button className="action-button warning" onClick={handleUpdate}>
@@ -1140,7 +1142,7 @@ const LOTOdetail = () => {
                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Edit LOTO</span>
+                    <span>{t('lotoDetails.edit')}</span>
                   </button>
                 </div>
               </div>
@@ -1150,22 +1152,22 @@ const LOTOdetail = () => {
             {loto.status === "active" && isIsolator && isTechnician && (
               <div className="action-group technician-group">
                 <div className="action-header">
-                  <h5>Technician Actions</h5>
-                  <p>Available operations for technicians.</p>
+                  <h5>{t('lotoDetails.technicianActions')}</h5>
+                  <p>{t('lotoDetails.technicianActionsDesc')}</p>
                 </div>
                 <div className="action-buttons">
                   <button className="action-button info" onClick={() => handleHandover(loto)}>
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Handover</span>
+                    <span>{t('lotoDetails.handover')}</span>
                   </button>
                   <button className="action-button success" onClick={handleComplete}>
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Complete</span>
+                    <span>{t('lotoDetails.complete')}</span>
                   </button>
                 </div>
               </div>
@@ -1175,8 +1177,8 @@ const LOTOdetail = () => {
             {loto.status === "pending_verification_new" && isIsolator && (
               <div className="action-group update-group">
                 <div className="action-header">
-                  <h5>Update Required</h5>
-                  <p>You can update the LOTO details while pending.</p>
+                  <h5>{t('lotoDetails.updateRequired')}</h5>
+                  <p>{t('lotoDetails.updateRequiredDesc')}</p>
                 </div>
                 <div className="action-button-container">
                   <button className="action-button primary " onClick={handleUpdate}>
@@ -1184,7 +1186,7 @@ const LOTOdetail = () => {
                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Update Details</span>
+                    <span>{t('lotoDetails.updateDetails')}</span>
                   </button>
                 </div>
               </div>
@@ -1194,8 +1196,8 @@ const LOTOdetail = () => {
             {loto.status === "active" && isIsolator && (isSupervisor || currentUser?.role === "admin") && (
               <div className="action-group supervisor-group">
                 <div className="action-header">
-                  <h5>{currentUser?.role === "admin" ? "Admin" : "Supervisor"} Actions</h5>
-                  <p>Full administrative operations available.</p>
+                  <h5>{currentUser?.role === "admin" ? t('lotoDetails.adminActions') : t('lotoDetails.supervisorActions')}</h5>
+                  <p>{t('lotoDetails.fullAdministrativeOperations')}</p>
                 </div>
                 <div className="action-buttons">
                   <button className="action-button primary" onClick={handleUpdate}>
@@ -1203,20 +1205,20 @@ const LOTOdetail = () => {
                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Update</span>
+                    <span>{t('lotoDetails.edit')}</span>
                   </button>
                   <button className="action-button info" onClick={() => handleHandover(loto)}>
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Handover</span>
+                    <span>{t('lotoDetails.handover')}</span>
                   </button>
                   <button className="action-button success" onClick={handleComplete}>
                     <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                       <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Complete</span>
+                    <span>{t('lotoDetails.complete')}</span>
                   </button>
                 </div>
               </div>
@@ -1225,15 +1227,15 @@ const LOTOdetail = () => {
             {/* Status Information */}
             <div className="status-info-section">
               <div className="status-header">
-                <h5>Current Status</h5>
+                <h5>{t('lotoDetails.currentStatus')}</h5>
                 <div className="status-badge-large">{getStatusBadge(loto.status)}</div>
               </div>
               <div className="status-description">
-                {loto.status === "pending_verification_new" && "⏳ Awaiting supervisor verification"}
-                {loto.status === "pending_handover_verification" && "🤝 Waiting for handover verification"}
-                {loto.status === "active" && "✅ Maintenance in progress"}
-                {loto.status === "completed" && "🏁 Work completed and LOTO closed"}
-                {loto.status === "rejected" && "❌ LOTO rejected - requires modification"}
+                {loto.status === "pending_verification_new" && t('lotoDetails.awaitingSupervisorVerification')}
+                {loto.status === "pending_handover_verification" && t('lotoDetails.waitingForHandoverVerification')}
+                {loto.status === "active" && t('lotoDetails.maintenanceInProgress')}
+                {loto.status === "completed" && t('lotoDetails.workCompletedAndLotoClosed')}
+                {loto.status === "rejected" && t('lotoDetails.lotoRejectedRequiresModification')}
               </div>
             </div>
 
@@ -1241,39 +1243,39 @@ const LOTOdetail = () => {
             {loto.status === "rejected" && (
               <div className="action-group rejection-group">
                 <div className="action-header">
-                  <h5>Rejection Details</h5>
-                  <p>This LOTO was rejected and requires modification.</p>
+                  <h5>{t('lotoDetails.rejectionDetails')}</h5>
+                  <p>{t('lotoDetails.rejectionDetailsDesc')}</p>
                 </div>
                 <div className="rejection-details">
                   <div className="rejection-info">
                     <div className="rejection-field">
-                      <label>Rejected By:</label>
-                      <span>{loto.rejectedBy ? `${loto.rejectedBy.firstName} ${loto.rejectedBy.lastName}` : 'Unknown'}</span>
+                      <label>{t('lotoDetails.rejectedBy')}:</label>
+                      <span>{loto.rejectedBy ? `${loto.rejectedBy.firstName} ${loto.rejectedBy.lastName}` : t('lotoDetails.unknown')}</span>
                     </div>
                     <div className="rejection-field">
-                      <label>Rejected At:</label>
-                      <span>{loto.rejectedAt ? new Date(loto.rejectedAt).toLocaleString() : 'Unknown'}</span>
+                      <label>{t('lotoDetails.rejectedAt')}:</label>
+                      <span>{loto.rejectedAt ? new Date(loto.rejectedAt).toLocaleString() : t('lotoDetails.unknown')}</span>
                     </div>
                     <div className="rejection-field">
-                      <label>Rejection Notes:</label>
-                      <div className="rejection-notes">{loto.rejectionNotes || 'No notes provided'}</div>
+                      <label>{t('lotoDetails.rejectionNotes')}:</label>
+                      <div className="rejection-notes">{loto.rejectionNotes || t('lotoDetails.noNotesProvided')}</div>
                     </div>
                     {loto.rejectedFields && loto.rejectedFields.length > 0 && (
                       <div className="rejection-field">
-                        <label>Fields Requiring Correction:</label>
+                        <label>{t('lotoDetails.fieldsRequiringCorrection')}:</label>
                         <div className="rejected-fields-list">
                           {loto.rejectedFields.map((field, index) => (
                             <span key={index} className="rejected-field-badge">
-                              {field === 'shift' && 'Shift'}
-                              {field === 'location' && 'Location'}
-                              {field === 'line' && 'Line'}
-                              {field === 'machine' && 'Machine'}
-                              {field === 'isolatedPart' && 'Isolated Part'}
-                              {field === 'reason' && 'Reason'}
-                              {field === 'ptwNumber' && 'PTW Number'}
-                              {field === 'expectedDuration' && 'Expected Duration'}
-                              {field === 'supervisor' && 'Supervisor Assignment'}
-                              {field === 'energyTypes' && 'Energy Types'}
+                              {field === 'shift' && t('lotoDetails.shift')}
+                              {field === 'location' && t('lotoDetails.location')}
+                              {field === 'line' && t('lotoDetails.line')}
+                              {field === 'machine' && t('lotoDetails.machine')}
+                              {field === 'isolatedPart' && t('lotoDetails.isolatedPart')}
+                              {field === 'reason' && t('lotoDetails.reason')}
+                              {field === 'ptwNumber' && t('lotoDetails.ptwNumber')}
+                              {field === 'expectedDuration' && t('lotoDetails.expectedDuration')}
+                              {field === 'supervisor' && t('lotoDetails.supervisorAssignment')}
+                              {field === 'energyTypes' && t('lotoDetails.energyTypes')}
                             </span>
                           ))}
                         </div>
@@ -1288,8 +1290,8 @@ const LOTOdetail = () => {
             {currentUser?.role === "admin" && (
               <div className="action-group delete-group">
                 <div className="action-header">
-                  <h5>Danger Zone</h5>
-                  <p>Permanently delete this LOTO record.</p>
+                  <h5>{t('lotoDetails.dangerZone')}</h5>
+                  <p>{t('lotoDetails.dangerZoneDesc')}</p>
                 </div>
                 <div className="action-button-container">
                   <button className="action-button danger" onClick={handleDelete}>
@@ -1297,7 +1299,7 @@ const LOTOdetail = () => {
                       <polyline points="3,6 5,6 21,6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>Delete LOTO Permanently</span>
+                    <span>{t('lotoDetails.delete')}</span>
                   </button>
                 </div>
               </div>

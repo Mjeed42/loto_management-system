@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
 import BackButton from "../components/BackButton";
@@ -9,6 +10,7 @@ import ActionButton from "../components/ActionButton";
 import StandardButton from "../components/StandardButton";
 
 const CreateLOTO = () => {
+  const { t } = useTranslation();
   const { showLoading, hideLoading } = useLoading();
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
@@ -550,7 +552,7 @@ const CreateLOTO = () => {
 
   return (
     <div className="create-loto-container">
-      <BackButton to={getHomePath()} label="Back to Home" />
+      <BackButton to={getHomePath()} label={t('createLoto.backToHome')} />
       
       
       
@@ -562,7 +564,7 @@ const CreateLOTO = () => {
               <Icon name="plus" size="xl" />
                 </div>
             <div className="header-text">
-              <h1>Create New LOTO</h1>
+              <h1>{t('createLoto.title')}</h1>
               <p>Lockout/Tagout Safety Procedure</p>
             </div>
           </div>
@@ -586,7 +588,7 @@ const CreateLOTO = () => {
             <div className="step-number">
               {stepValidation[1] ? <Icon name="check" size="sm" /> : '1'}
                 </div>
-            <span>Basic Info</span>
+            <span>{t('createLoto.step1Title')}</span>
               </div>
           <div className={`progress-line ${currentStep > 1 ? 'completed' : ''}`}></div>
           <div 
@@ -596,7 +598,7 @@ const CreateLOTO = () => {
             <div className="step-number">
               {stepValidation[2] ? <Icon name="check" size="sm" /> : '2'}
             </div>
-            <span>Location</span>
+            <span>{t('createLoto.step2Title')}</span>
           </div>
           <div className={`progress-line ${currentStep > 2 ? 'completed' : ''}`}></div>
           <div 
@@ -606,7 +608,7 @@ const CreateLOTO = () => {
             <div className="step-number">
               {stepValidation[3] ? <Icon name="check" size="sm" /> : '3'}
             </div>
-            <span>Work Details</span>
+            <span>{t('createLoto.step3Title')}</span>
           </div>
           <div className={`progress-line ${currentStep > 3 ? 'completed' : ''}`}></div>
           <div 
@@ -616,7 +618,7 @@ const CreateLOTO = () => {
             <div className="step-number">
               {stepValidation[4] ? <Icon name="check" size="sm" /> : '4'}
             </div>
-            <span>Energy Types</span>
+            <span>{t('createLoto.step4Title')}</span>
           </div>
           <div className={`progress-line ${currentStep > 4 ? 'completed' : ''}`}></div>
           <div 
@@ -642,8 +644,8 @@ const CreateLOTO = () => {
               <Icon name="info" size="md" />
             </div>
             <div className="section-title">
-              <h3>Basic Information</h3>
-              <p>Essential details for the LOTO procedure</p>
+              <h3>{t('createLoto.basicInformation')}</h3>
+              <p>{t('createLoto.essentialDetailsDesc')}</p>
             </div>
           </div>
           
@@ -652,7 +654,7 @@ const CreateLOTO = () => {
               <div className="form-field">
                 <label className="field-label">
                   <Icon name="clock" size="sm" />
-                  <span>Shift</span>
+                  <span>{t('createLoto.shift')}</span>
                 </label>
                       <select
                         name="shift"
@@ -670,7 +672,7 @@ const CreateLOTO = () => {
               <div className="form-field">
                 <label className="field-label">
                   <Icon name="clock" size="sm" />
-                  <span>Expected Duration (hours)</span>
+                  <span>{t('createLoto.expectedDuration')}</span>
                       </label>
                       <input
                         type="number"
@@ -688,7 +690,7 @@ const CreateLOTO = () => {
               <div className="form-field full-width">
                 <label className="field-label">
                   <Icon name="file" size="sm" />
-                  <span>PTW Number (Optional)</span>
+                  <span>{t('createLoto.ptwNumber')}</span>
                       </label>
                 <input
                   type="text"
@@ -712,8 +714,8 @@ const CreateLOTO = () => {
               <Icon name="map-pin" size="md" />
             </div>
             <div className="section-title">
-              <h3>Location Selection</h3>
-              <p>Choose the specific location and equipment</p>
+              <h3>{t('createLoto.locationSelection')}</h3>
+              <p>{t('createLoto.locationSelectionDesc')}</p>
             </div>
           </div>
           
@@ -723,7 +725,7 @@ const CreateLOTO = () => {
               <div className="hierarchy-step">
                 <label className="field-label">
                   <Icon name="home" size="sm" />
-                  <span>Primary Location</span>
+                  <span>{t('createLoto.primaryLocation')}</span>
                 </label>
                         <select
                           name="location"
@@ -748,7 +750,7 @@ const CreateLOTO = () => {
                 <div className="hierarchy-step">
                   <label className="field-label">
                     <Icon name="edit" size="sm" />
-                    <span>Custom Location</span>
+                    <span>{t('createLoto.customLocation')}</span>
                           </label>
                           <input
                             type="text"
@@ -770,7 +772,7 @@ const CreateLOTO = () => {
                     <label className="field-label">
                       <Icon name="zap" size="sm" />
                       <span>
-                        {["PKG", "Process"].includes(location) ? "Production Line" : "Equipment Part"}
+                        {["PKG", "Process"].includes(location) ? t('createLoto.productionLine') : t('createLoto.equipmentPart')}
                       </span>
                             </label>
                             <select
@@ -844,7 +846,7 @@ const CreateLOTO = () => {
                     <div className="hierarchy-step">
                       <label className="field-label">
                         <Icon name="settings" size="sm" />
-                        <span>Machine/Equipment</span>
+                        <span>{t('createLoto.machineEquipment')}</span>
                               </label>
                               <select
                                 name="machine"
@@ -1218,7 +1220,7 @@ const CreateLOTO = () => {
                     <div className="hierarchy-step">
                       <label className="field-label">
                         <Icon name="edit" size="sm" />
-                        <span>Custom Machine</span>
+                        <span>{t('createLoto.customMachine')}</span>
                           </label>
                           <input
                             type="text"
@@ -1237,7 +1239,7 @@ const CreateLOTO = () => {
                     <div className="hierarchy-step">
                       <div className="location-path">
                         <Icon name="map-pin" size="sm" />
-                        <strong>Selected Path:</strong>
+                        <strong>{t('createLoto.selectedPath')}:</strong>
                         <span>
                               {location === "Other" && customLocation
                                 ? customLocation
@@ -1253,7 +1255,7 @@ const CreateLOTO = () => {
                   <div className="hierarchy-step">
                     <label className="field-label">
                       <Icon name="target" size="sm" />
-                      <span>Isolated Part Description (Optional)</span>
+                      <span>{t('createLoto.isolatedPartDescription')}</span>
                       </label>
                       <input
                         type="text"
@@ -1279,8 +1281,8 @@ const CreateLOTO = () => {
               <Icon name="clipboard" size="md" />
             </div>
             <div className="section-title">
-              <h3>Work Details</h3>
-              <p>Specify the reason and supervisor assignment</p>
+              <h3>{t('createLoto.workDetails')}</h3>
+              <p>{t('createLoto.specifyReasonDesc')}</p>
             </div>
           </div>
           
@@ -1289,7 +1291,7 @@ const CreateLOTO = () => {
               <div className="form-field">
                 <label className="field-label">
                   <Icon name="info" size="sm" />
-                  <span>Reason for LOTO</span>
+                  <span>{t('createLoto.reasonForLoto')}</span>
                 </label>
                     <select
                       name="reason"
@@ -1312,7 +1314,7 @@ const CreateLOTO = () => {
                 <div className="form-field">
                   <label className="field-label">
                     <Icon name="edit" size="sm" />
-                    <span>Custom Reason</span>
+                    <span>{t('createLoto.customReason')}</span>
                       </label>
                       <input
                         type="text"
@@ -1329,7 +1331,7 @@ const CreateLOTO = () => {
               <div className="form-field">
                 <label className="field-label">
                   <Icon name="user-check" size="sm" />
-                  <span>Assign Supervisor (Optional)</span>
+                  <span>{t('createLoto.assignSupervisor')}</span>
                 </label>
                 <select
                   name="supervisor"
@@ -1362,7 +1364,7 @@ const CreateLOTO = () => {
               <Icon name="zap" size="md" />
             </div>
             <div className="section-title">
-              <h3>Energy Types to Isolate</h3>
+              <h3>{t('createLoto.energyTypesToIsolate')}</h3>
               <p>Select all energy sources that need to be locked out</p>
             </div>
           </div>
@@ -1373,8 +1375,8 @@ const CreateLOTO = () => {
                 <div className="empty-energy-types">
                   <div className="empty-state">
                     <Icon name="zap" size="lg" />
-                    <h4>No Energy Types Added</h4>
-                    <p>Click the button below to add energy sources that need to be locked out</p>
+                    <h4>{t('createLoto.noEnergyTypesAdded')}</h4>
+                    <p>{t('createLoto.clickButtonDesc')}</p>
                     <button
                       type="button"
                       className="add-first-energy-btn"
@@ -1384,7 +1386,7 @@ const CreateLOTO = () => {
                         <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      <span>Add Energy Type</span>
+                      <span>{t('createLoto.addEnergyType')}</span>
                     </button>
                   </div>
                 </div>
@@ -1395,7 +1397,7 @@ const CreateLOTO = () => {
                   <div className="energy-card-header">
                     <div className="energy-card-title">
                       <Icon name="zap" size="sm" />
-                      <span>Energy Source {index + 1}</span>
+                      <span>{t('createLoto.energySource')} {index + 1}</span>
                     </div>
                             <button
                               type="button"
@@ -1411,7 +1413,7 @@ const CreateLOTO = () => {
                   <div className="energy-card-content">
                     <div className="form-field">
                       <label className="field-label">
-                        <span>Energy Type</span>
+                        <span>{t('createLoto.energyType')}</span>
                               </label>
                               <select
                                 value={energy.type}
@@ -1432,7 +1434,7 @@ const CreateLOTO = () => {
 
                     <div className="form-field">
                       <label className="field-label">
-                        <span>Isolation Point Reference</span>
+                        <span>{t('createLoto.isolationPointReference')}</span>
                               </label>
                               <input
                                 type="text"
@@ -1458,7 +1460,7 @@ const CreateLOTO = () => {
                           <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        <span>Add Another Energy Type</span>
+                        <span>{t('createLoto.addAnotherEnergyType')}</span>
                       </button>
                 </>
               )}
@@ -1475,8 +1477,8 @@ const CreateLOTO = () => {
                 <Icon name="eye" size="md" />
                         </div>
               <div className="section-title">
-                <h3>Review Your LOTO</h3>
-                <p>Please review all information before creating the LOTO procedure</p>
+                <h3>{t('createLoto.reviewYourLoto')}</h3>
+                <p>{t('createLoto.pleaseReviewDesc')}</p>
               </div>
             </div>
             
@@ -1484,26 +1486,26 @@ const CreateLOTO = () => {
               <div className="review-grid">
                 {/* Basic Information Review */}
                 <div className="review-section">
-                  <h4><Icon name="info" size="sm" /> Basic Information</h4>
+                  <h4><Icon name="info" size="sm" /> {t('createLoto.basicInformation')}</h4>
                   <div className="review-item">
-                    <span className="review-label">Shift:</span>
+                    <span className="review-label">{t('createLoto.shift')}:</span>
                     <span className="review-value">{formData.shift}</span>
                   </div>
                   <div className="review-item">
-                    <span className="review-label">Expected Duration:</span>
+                    <span className="review-label">{t('createLoto.expectedDuration')}:</span>
                     <span className="review-value">{formData.expectedDuration} hours</span>
                   </div>
                   <div className="review-item">
-                    <span className="review-label">PTW Number:</span>
+                    <span className="review-label">{t('createLoto.ptwNumber')}:</span>
                     <span className="review-value">{formData.ptwNumber || "N/A"}</span>
                   </div>
                 </div>
 
                 {/* Location Review */}
                 <div className="review-section">
-                  <h4><Icon name="map-pin" size="sm" /> Location Details</h4>
+                  <h4><Icon name="map-pin" size="sm" /> {t('createLoto.locationDetails')}</h4>
                   <div className="review-item">
-                    <span className="review-label">Location:</span>
+                    <span className="review-label">{t('createLoto.location')}:</span>
                     <span className="review-value">
                       {showCustomLocation ? customLocation : formData.location}
                     </span>
@@ -1530,9 +1532,9 @@ const CreateLOTO = () => {
 
                 {/* Work Details Review */}
                 <div className="review-section">
-                  <h4><Icon name="clipboard" size="sm" /> Work Details</h4>
+                  <h4><Icon name="clipboard" size="sm" /> {t('createLoto.workDetails')}</h4>
                   <div className="review-item">
-                    <span className="review-label">Reason:</span>
+                    <span className="review-label">{t('createLoto.reason')}:</span>
                     <span className="review-value">
                       {showCustomReason ? customReason : formData.reason}
                     </span>
@@ -1551,7 +1553,7 @@ const CreateLOTO = () => {
 
                 {/* Energy Types Review */}
                 <div className="review-section ">
-                  <h4><Icon name="zap" size="sm" /> Energy Types to Isolate</h4>
+                  <h4><Icon name="zap" size="sm" /> {t('createLoto.energyTypesToIsolate')}</h4>
                   <div className="energy-review-grid">
                     {formData.energyTypes.filter(et => et.type && et.isolationPoint.trim()).length > 0 ? (
                       formData.energyTypes.filter(et => et.type && et.isolationPoint.trim()).map((energy, index) => (
@@ -1594,12 +1596,12 @@ const CreateLOTO = () => {
             ))}
           </div>
           <div className="progress-text">
-            Step {currentStep} of 5: {
-              currentStep === 1 ? 'Basic Info' :
-              currentStep === 2 ? 'Location' :
-              currentStep === 3 ? 'Work Details' :
-              currentStep === 4 ? 'Energy Types' :
-              'Review'
+            {t('createLoto.stepOf')} {currentStep} {t('createLoto.of')} 5: {
+              currentStep === 1 ? t('createLoto.step1Title') :
+              currentStep === 2 ? t('createLoto.step2Title') :
+              currentStep === 3 ? t('createLoto.step3Title') :
+              currentStep === 4 ? t('createLoto.step4Title') :
+              t('createLoto.step5Title')
             }
           </div>
         </div>
@@ -1615,7 +1617,7 @@ const CreateLOTO = () => {
                 onClick={prevStep}
               >
                 <Icon name="chevron-left" size="sm" />
-                <span>Previous</span>
+                <span>{t('createLoto.previous')}</span>
               </button>
             )}
 
@@ -1625,7 +1627,7 @@ const CreateLOTO = () => {
                 className="nav-btn btn-primary"
                 onClick={nextStep}
               >
-                <span>Next</span>
+                <span>{t('createLoto.next')}</span>
                 <Icon name="chevron-right" size="sm" />
               </button>
             )}
@@ -1638,7 +1640,7 @@ const CreateLOTO = () => {
                 disabled={!stepValidation[1] || !stepValidation[2] || !stepValidation[3] || formData.energyTypes.filter(et => et.type && et.isolationPoint.trim()).length === 0}
               >
                 <Icon name="check" size="sm" />
-                <span>Create LOTO Procedure</span>
+                <span>{t('createLoto.createLotoProcedure')}</span>
               </button>
             )}
 
@@ -1648,7 +1650,7 @@ const CreateLOTO = () => {
               onClick={() => navigate(getHomePath())}
             >
               <Icon name="x" size="sm" />
-              <span>Cancel</span>
+              <span>{t('createLoto.cancel')}</span>
             </button>
           </div>
         </div>
