@@ -673,12 +673,12 @@
   .card-header .serial-number {
     font-weight: 600;
     font-size: 16px;
-    color: white;
+    color: rgb(0, 0, 0);
   }
   
   .card-header .row-number {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(83, 83, 83, 0.9) !important;
     background: rgba(255, 255, 255, 0.2);
     padding: 2px 6px;
     border-radius: 4px;
@@ -950,7 +950,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%) !important;
   color: white !important;
   min-height: 60px;
   overflow: hidden;
@@ -969,7 +969,7 @@
 .card-header .serial-number {
   font-weight: 700;
   font-size: 16px;
-  color: white !important;
+  color: rgb(0, 0, 0) !important;
   line-height: 1.2;
   margin: 0;
   
@@ -979,7 +979,7 @@
 
 .card-header .row-number {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: rgba(83, 83, 83, 0.9) !important;
   background: rgba(255, 255, 255, 0.2);
   padding: 2px 6px;
   border-radius: 4px;
@@ -1430,6 +1430,7 @@
 }
 
 .cf-header-content {
+  width: 100%;
   max-width: 80rem;
   margin: 0 auto;
   padding: 0 1rem;
@@ -1523,7 +1524,6 @@
   background-color: var(--cf-white);
   border: 1px solid var(--cf-border);
   border-radius: var(--cf-radius-lg);
-  padding: var(--cf-space-6);
   box-shadow: var(--cf-shadow-sm);
   transition: var(--cf-transition);
 }
@@ -2416,9 +2416,7 @@ button, input:where([type="button"]), input:where([type="reset"]), input:where([
     padding: 1.5rem 1rem;
   }
 
-  .cf-card {
-    padding: 1.5rem;
-  }
+ 
 
   .cf-stat-card {
     padding: 1.5rem;
@@ -2543,9 +2541,7 @@ button, input:where([type="button"]), input:where([type="reset"]), input:where([
     margin-top: 0.5rem;
   }
 
-  .cf-card {
-    padding: 1rem;
-  }
+  
 
   .cf-stat-card {
     padding: 1rem;
@@ -3126,7 +3122,7 @@ button, input:where([type="button"]), input:where([type="reset"]), input:where([
 .brand-text p {
   font-size: 18px;
   margin: 8px 0 0 0;
-  color: rgb(0, 0, 0);
+  color: rgb(138, 138, 138);
   font-weight: 500;
   letter-spacing: 0.025em;
 }
@@ -3677,7 +3673,7 @@ button, input:where([type="button"]), input:where([type="reset"]), input:where([
   .brand-text p {
     font-size: 13px;
     margin-top: 4px;
-    color: rgb(0, 0, 0);
+    color: rgb(138, 138, 138);
   }
   
   .header-actions {
@@ -3897,7 +3893,7 @@ button, input:where([type="button"]), input:where([type="reset"]), input:where([
   .brand-text p {
     font-size: 12px;
     margin-top: 2px;
-    color: rgb(0, 0, 0);
+    color: rgb(138, 138, 138);
   }
   
   .header-actions {

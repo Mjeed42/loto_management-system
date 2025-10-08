@@ -5,10 +5,13 @@ import Button from "../components/Button";
 import Icon from "../components/Icon";
 import BackButton from "../components/BackButton";
 import { useLoading } from "../contexts/LoadingContext";
+import ActionButton from "../components/ActionButton";
+import StandardButton from "../components/StandardButton";
 
 const CreateLOTO = () => {
   const { showLoading, hideLoading } = useLoading();
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
   const [formData, setFormData] = useState({
     shift: "A",
     location: "PKG", // Default location
@@ -43,7 +46,35 @@ const CreateLOTO = () => {
 
   useEffect(() => {
     fetchSupervisors();
+    fetchCurrentUser();
   }, []);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        config
+      );
+      setCurrentUser(res.data.user);
+    } catch (err) {
+      console.log("Error fetching current user:", err);
+    }
+  };
+
+  // Get the correct home path based on user role
+  const getHomePath = () => {
+    if (currentUser?.role === "technician") {
+      return "/technician-home";
+    }
+    return "/Home";
+  };
 
   // Validate current step and update validation state
   useEffect(() => {
@@ -62,13 +93,12 @@ const CreateLOTO = () => {
 
     // Step 2: Location Selection
     if (showCustomLocation) {
-      newValidation[2] = !!(customLocation && formData.isolatedPart);
+      newValidation[2] = !!customLocation;
     } else {
       newValidation[2] = !!(
         formData.location &&
         formData.line &&
-        formData.machine &&
-        formData.isolatedPart
+        formData.machine
       );
     }
 
@@ -87,9 +117,24 @@ const CreateLOTO = () => {
   };
 
   const nextStep = () => {
-    if (stepValidation[currentStep] && currentStep < 5) {
+    // First, validate current step and scroll to first invalid field
+    const firstInvalidField = validateCurrentStepAndGetFirstInvalid();
+    
+    if (firstInvalidField) {
+      // Scroll to the first invalid field
+      scrollToField(firstInvalidField);
+      return;
+    }
+    
+    // If validation passes, move to next step and scroll to top
+    if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
       setError(""); // Clear any errors when moving to next step
+      
+      // Scroll to top of the new section after state update
+      setTimeout(() => {
+        scrollToSectionTop();
+      }, 100);
     }
   };
 
@@ -97,14 +142,166 @@ const CreateLOTO = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
       setError(""); // Clear any errors when moving to previous step
+      
+      // Scroll to top of the previous section
+      setTimeout(() => {
+        scrollToSectionTop();
+      }, 100);
+    }
+  };
+
+  // Function to validate current step and return first invalid field
+  const validateCurrentStepAndGetFirstInvalid = () => {
+    switch (currentStep) {
+      case 1:
+        // Basic Information validation
+        if (!formData.shift) return 'shift';
+        if (!formData.expectedDuration || parseFloat(formData.expectedDuration) < 0.5) return 'expectedDuration';
+        break;
+      case 2:
+        // Location Selection validation
+        if (!formData.location) return 'location';
+        if (showCustomLocation && !customLocation) return 'customLocation';
+        if (!showCustomLocation && !formData.line) return 'line';
+        if (!showCustomLocation && !formData.machine) return 'machine';
+        if (showCustomMachine && !customMachine) return 'customMachine';
+        // Note: isolatedPart is now optional
+        break;
+      case 3:
+        // Work Details validation
+        if (showCustomReason && !customReason) return 'customReason';
+        if (!showCustomReason && !formData.reason) return 'reason';
+        break;
+      case 4:
+        // Energy Types validation
+        if (formData.energyTypes.length === 0) return 'addEnergyType';
+        const firstEmptyEnergy = formData.energyTypes.findIndex(et => !et.type || !et.isolationPoint.trim());
+        if (firstEmptyEnergy !== -1) return `energyType-${firstEmptyEnergy}`;
+        break;
+    }
+    return null;
+  };
+
+  // Function to scroll to a specific field
+  const scrollToField = (fieldName) => {
+    let element = null;
+    let targetElement = null;
+    
+    if (fieldName.startsWith('energyType-')) {
+      const index = fieldName.split('-')[1];
+      element = document.querySelector(`[data-energy-index="${index}"]`);
+      targetElement = element;
+    } else if (fieldName === 'addEnergyType') {
+      element = document.querySelector('.add-first-energy-btn');
+      targetElement = element;
+    } else {
+      element = document.querySelector(`[name="${fieldName}"]`);
+      targetElement = element;
+    }
+    
+    if (element) {
+      element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'nearest'
+      });
+      
+      // Add visual feedback
+      setTimeout(() => {
+        if (fieldName.startsWith('energyType-')) {
+          // For energy type cards
+          element.classList.add('invalid');
+          setTimeout(() => {
+            element.classList.remove('invalid');
+          }, 3000);
+        } else if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
+          // For form inputs
+          element.classList.add('invalid');
+          element.focus();
+          
+          setTimeout(() => {
+            element.classList.remove('invalid');
+          }, 3000);
+        }
+      }, 500);
+      
+      // Set error message for better user guidance
+      let errorMessage = '';
+      switch (fieldName) {
+        case 'shift':
+          errorMessage = 'Please select a shift';
+          break;
+        case 'expectedDuration':
+          errorMessage = 'Please enter expected duration (minimum 0.5 hours)';
+          break;
+        case 'location':
+          errorMessage = 'Please select a location';
+          break;
+        case 'customLocation':
+          errorMessage = 'Please enter custom location';
+          break;
+        case 'line':
+          errorMessage = 'Please select a line/part';
+          break;
+        case 'machine':
+          errorMessage = 'Please select a machine/equipment';
+          break;
+        case 'customMachine':
+          errorMessage = 'Please enter custom machine name';
+          break;
+        case 'reason':
+          errorMessage = 'Please select a reason for LOTO';
+          break;
+        case 'customReason':
+          errorMessage = 'Please enter custom reason';
+          break;
+        case 'addEnergyType':
+          errorMessage = 'Please add at least one energy type';
+          break;
+        default:
+          if (fieldName.startsWith('energyType-')) {
+            errorMessage = 'Please complete this energy type configuration';
+          }
+      }
+      
+      if (errorMessage) {
+        setError(errorMessage);
+      }
+    }
+  };
+
+  // Function to scroll to top of current section
+  const scrollToSectionTop = () => {
+    const formSection = document.querySelector('.form-section');
+    if (formSection) {
+      formSection.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
+      });
     }
   };
 
   const goToStep = (step) => {
-    // Allow going to any previous step or next step if current is valid
-    if (step <= currentStep || (step === currentStep + 1 && stepValidation[currentStep])) {
+    // Allow going to any previous step or next step
+    if (step <= currentStep || step === currentStep + 1) {
+      // If trying to go to next step, validate first
+      if (step === currentStep + 1) {
+        const firstInvalidField = validateCurrentStepAndGetFirstInvalid();
+        if (firstInvalidField) {
+          // Scroll to the first invalid field instead of moving to next step
+          scrollToField(firstInvalidField);
+          return;
+        }
+      }
+      
       setCurrentStep(step);
       setError("");
+      
+      // Scroll to top of the new section
+      setTimeout(() => {
+        scrollToSectionTop();
+      }, 100);
     }
   };
 
@@ -353,10 +550,12 @@ const CreateLOTO = () => {
 
   return (
     <div className="create-loto-container">
-      <BackButton to="/Home" label="Back to Home" />
+      <BackButton to={getHomePath()} label="Back to Home" />
       
-      {/* Modern Header Section */}
-      <div className="create-loto-header">
+      
+      
+      {/* Desktop Header Section - Hidden on mobile */}
+      <div className="create-loto-header d-none d-md-block">
         <div className="header-content">
           <div className="header-main">
             <div className="header-icon">
@@ -368,21 +567,20 @@ const CreateLOTO = () => {
             </div>
           </div>
           <div className="header-actions">
-            <button 
-              type="button"
-              className="btn-secondary"
-                    onClick={() => navigate("/loto-list")}
+            <ActionButton
+              variant="secondary"
+              icon="list"
+              onClick={() => navigate("/loto-list")}
             >
-              <Icon name="list" size="sm" />
-              <span>My LOTOs</span>
-            </button>
+              My LOTOs
+            </ActionButton>
           </div>
         </div>
         
         {/* Progress Indicator */}
         <div className="progress-indicator">
           <div 
-            className={`progress-step ${currentStep >= 1 ? 'active' : ''} ${stepValidation[1] ? 'completed' : ''}`}
+            className={`progress-step ${currentStep >= 1 ? 'active' : ''} ${stepValidation[1] ? 'completed valid' : currentStep === 1 ? 'invalid' : ''}`}
             onClick={() => goToStep(1)}
           >
             <div className="step-number">
@@ -392,7 +590,7 @@ const CreateLOTO = () => {
               </div>
           <div className={`progress-line ${currentStep > 1 ? 'completed' : ''}`}></div>
           <div 
-            className={`progress-step ${currentStep >= 2 ? 'active' : ''} ${stepValidation[2] ? 'completed' : ''}`}
+            className={`progress-step ${currentStep >= 2 ? 'active' : ''} ${stepValidation[2] ? 'completed valid' : currentStep === 2 ? 'invalid' : ''}`}
             onClick={() => goToStep(2)}
           >
             <div className="step-number">
@@ -402,7 +600,7 @@ const CreateLOTO = () => {
           </div>
           <div className={`progress-line ${currentStep > 2 ? 'completed' : ''}`}></div>
           <div 
-            className={`progress-step ${currentStep >= 3 ? 'active' : ''} ${stepValidation[3] ? 'completed' : ''}`}
+            className={`progress-step ${currentStep >= 3 ? 'active' : ''} ${stepValidation[3] ? 'completed valid' : currentStep === 3 ? 'invalid' : ''}`}
             onClick={() => goToStep(3)}
           >
             <div className="step-number">
@@ -412,7 +610,7 @@ const CreateLOTO = () => {
           </div>
           <div className={`progress-line ${currentStep > 3 ? 'completed' : ''}`}></div>
           <div 
-            className={`progress-step ${currentStep >= 4 ? 'active' : ''} ${stepValidation[4] ? 'completed' : ''}`}
+            className={`progress-step ${currentStep >= 4 ? 'active' : ''} ${stepValidation[4] ? 'completed valid' : currentStep === 4 ? 'invalid' : ''}`}
             onClick={() => goToStep(4)}
           >
             <div className="step-number">
@@ -431,18 +629,7 @@ const CreateLOTO = () => {
         </div>
       </div>
 
-      {/* Error Display */}
-      {error && (
-        <div className="error-banner">
-          <div className="error-content">
-            <Icon name="alert-triangle" size="lg" />
-            <div className="error-text">
-              <strong>Validation Error</strong>
-              <p>{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      
 
       {/* Main Form */}
       <div className="create-loto-form">
@@ -1066,16 +1253,15 @@ const CreateLOTO = () => {
                   <div className="hierarchy-step">
                     <label className="field-label">
                       <Icon name="target" size="sm" />
-                      <span>Isolated Part Description</span>
+                      <span>Isolated Part Description (Optional)</span>
                       </label>
                       <input
                         type="text"
                         name="isolatedPart"
                       value={isolatedPart}
                         onChange={onChange}
-                      placeholder="Describe the specific part to be isolated"
+                      placeholder="Describe the specific part to be isolated (optional)"
                       className="field-input"
-                        required
                       />
                     </div>
                   </div>
@@ -1194,7 +1380,10 @@ const CreateLOTO = () => {
                       className="add-first-energy-btn"
                       onClick={addEnergyType}
                     >
-                      <Icon name="plus" size="sm" />
+                      <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                        <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
                       <span>Add Energy Type</span>
                     </button>
                   </div>
@@ -1202,7 +1391,7 @@ const CreateLOTO = () => {
               ) : (
                 <>
                   {formData.energyTypes.map((energy, index) => (
-                <div key={index} className="energy-type-card">
+                <div key={index} className="energy-type-card" data-energy-index={index}>
                   <div className="energy-card-header">
                     <div className="energy-card-title">
                       <Icon name="zap" size="sm" />
@@ -1262,11 +1451,14 @@ const CreateLOTO = () => {
 
                       <button
                         type="button"
-                className="add-energy-btn"
+                        className="add-energy-btn"
                         onClick={addEnergyType}
                       >
-                <Icon name="plus" size="sm" />
-                <span>Add Another Energy Type</span>
+                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                          <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span>Add Another Energy Type</span>
                       </button>
                 </>
               )}
@@ -1384,6 +1576,34 @@ const CreateLOTO = () => {
             </div>
           </div>
         )}
+        {/* Mobile-First Header - Show only on mobile */}
+      <div className="create-loto-mobile-header d-md-none">
+        
+        
+        {/* Mobile Progress Indicator - Compact */}
+        <div className="mobile-progress-indicator">
+          <div className="progress-dots">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div
+                key={step}
+                className={`progress-dot ${currentStep >= step ? 'active' : ''} ${stepValidation[step] ? 'completed valid' : currentStep === step ? 'invalid' : ''}`}
+                onClick={() => goToStep(step)}
+              >
+                {stepValidation[step] ? <Icon name="check" size="xs" /> : step}
+              </div>
+            ))}
+          </div>
+          <div className="progress-text">
+            Step {currentStep} of 5: {
+              currentStep === 1 ? 'Basic Info' :
+              currentStep === 2 ? 'Location' :
+              currentStep === 3 ? 'Work Details' :
+              currentStep === 4 ? 'Energy Types' :
+              'Review'
+            }
+          </div>
+        </div>
+      </div>
 
         {/* Navigation Buttons */}
         <div className="wizard-navigation">
@@ -1391,7 +1611,7 @@ const CreateLOTO = () => {
             {currentStep > 1 && (
               <button
                 type="button"
-                className="btn-secondary nav-btn"
+                className="nav-btn btn-secondary"
                 onClick={prevStep}
               >
                 <Icon name="chevron-left" size="sm" />
@@ -1402,9 +1622,8 @@ const CreateLOTO = () => {
             {currentStep < 5 && (
               <button
                 type="button"
-                className={`btn-primary nav-btn ${!stepValidation[currentStep] ? 'disabled' : ''}`}
+                className="nav-btn btn-primary"
                 onClick={nextStep}
-                disabled={!stepValidation[currentStep]}
               >
                 <span>Next</span>
                 <Icon name="chevron-right" size="sm" />
@@ -1414,20 +1633,19 @@ const CreateLOTO = () => {
             {currentStep === 5 && (
               <button
                 type="button"
-                className="btn-primary submit-btn"
+                className="nav-btn btn-success submit-btn"
                 onClick={onSubmit}
                 disabled={!stepValidation[1] || !stepValidation[2] || !stepValidation[3] || formData.energyTypes.filter(et => et.type && et.isolationPoint.trim()).length === 0}
-                      >
-                        <Icon name="check" size="sm" />
-                        <span>Create LOTO Procedure</span>
+              >
+                <Icon name="check" size="sm" />
+                <span>Create LOTO Procedure</span>
               </button>
             )}
 
             <button
               type="button"
-              className="btn-cancel nav-btn"
-              onClick={() => navigate("/loto-list")}
-              disabled={false}
+              className="nav-btn btn-outline cancel-btn"
+              onClick={() => navigate(getHomePath())}
             >
               <Icon name="x" size="sm" />
               <span>Cancel</span>

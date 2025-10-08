@@ -84,29 +84,7 @@ const Breadcrumb = ({ customBreadcrumbs = null, currentUser = null }) => {
     return null;
   }
 
-  return (
-    <nav className="breadcrumb-nav">
-      <div className="breadcrumb-container">
-        {breadcrumbs.map((crumb, index) => (
-          <React.Fragment key={crumb.path}>
-            {index > 0 && (
-              <Icon name="chevron-right" className="breadcrumb-separator" />
-            )}
-            <button
-              className={`breadcrumb-item ${
-                index === breadcrumbs.length - 1 ? "current" : ""
-              }`}
-              onClick={() => navigate(crumb.path)}
-              disabled={index === breadcrumbs.length - 1}
-            >
-              <Icon name={crumb.icon} />
-              <span>{crumb.label}</span>
-            </button>
-          </React.Fragment>
-        ))}
-      </div>
-    </nav>
-  );
+  
 };
 
 export default Breadcrumb;

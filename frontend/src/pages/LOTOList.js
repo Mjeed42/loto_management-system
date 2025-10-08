@@ -480,6 +480,19 @@ const LOTOList = () => {
     }
   };
 
+  // Helper function to get short status text for badges
+  const getShortStatusText = (status) => {
+    const statusMap = {
+      pending_verification_new: "PENDING",
+      active: "ACTIVE",
+      pending_handover_verification: "HANDOVER",
+      handed_over: "HANDED OVER",
+      completed: "COMPLETED",
+      rejected: "REJECTED"
+    };
+    return statusMap[status] || status?.replace(/_/g, ' ').toUpperCase() || "UNKNOWN";
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending_verification_new: {
@@ -510,7 +523,7 @@ const LOTOList = () => {
         text: "Completed",
         variant: "secondary",
         icon: "✅",
-        color: "#6b7280",
+        color: "#166534",
       },
       rejected: {
         text: "Rejected",
@@ -641,1022 +654,603 @@ const LOTOList = () => {
   const isSupervisor = currentUser && currentUser.role === "supervisor";
 
   return (
-    <div className="animate-fade-in">
+    <div className="cf-Home">
       {/* Header Section */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card bg-glass border-0 shadow-lg">
-            <div className="card-body py-4">
-              <div className="d-flex justify-content-between align-items-center flex-wrap">
-                <div>
-                  <h1
-                    className="fw-bold mb-2 d-flex align-items-center"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    <span className="me-3" style={{ fontSize: "2rem" }}>
-                      📋
-                    </span>
-                    LOTO Management
-                  </h1>
+      <div className="cf-header">
+        <div className="cf-header-content">
+          <div className="cf-header-inner">
+            <div>
+              <h1 className="cf-header-title">
+                📋 LOTO Management
+              </h1>
+              <p className="cf-header-subtitle">Manage and monitor all lockout procedures</p>
+            </div>
+            <div className="cf-header-actions">
+              <button
+                className="cf-btn cf-btn-sm cf-btn-outline-secondary"
+                onClick={fetchLOTOs}
+              >
+                🔄 Refresh
+              </button>
+              <button
+                className="cf-btn cf-btn-sm cf-btn-outline-secondary"
+                onClick={() => navigate("/create-loto")}
+              >
+                ➕ Create LOTO
+              </button>
+              <button
+                className="cf-btn cf-btn-sm cf-btn-outline-secondary"
+                onClick={() => navigate("/Home")}
+              >
+                🏠 Home
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="cf-main">
+        {/* Statistics Dashboard */}
+        <div className="cf-grid cf-grid-cols-1 md:cf-grid-cols-2 lg:cf-grid-cols-3 cf-gap-4 cf-mb-4">
+          <div 
+            className={`cf-stat-card ${activeFilter === "all" ? "cf-shadow-lg" : ""}`}
+            onClick={() => handleStatCardClick("all")}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="cf-stat-content">
+              <div className="cf-stat-info">
+                <div className="cf-stat-title">Total LOTOs</div>
+                <div className="cf-stat-value">{lotos.length}</div>
+              </div>
+              <div className="cf-stat-icon cf-bg-primary">
+                📊
+              </div>
+            </div>
+          </div>
+
+          <div 
+            className={`cf-stat-card ${activeFilter === "active" ? "cf-shadow-lg" : ""}`}
+            onClick={() => handleStatCardClick("active")}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="cf-stat-content">
+              <div className="cf-stat-info">
+                <div className="cf-stat-title">Active</div>
+                <div className="cf-stat-value">
+                  {lotos.filter((l) => l.status === "active").length}
                 </div>
-                <div className="d-flex gap-2 flex-wrap">
-                  <Button
-                    variant="outline-secondary"
-                    onClick={fetchLOTOs}
-                    className="hover-scale"
-                  >
-                    <span className="me-2">🔄</span> Refresh
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={() => navigate("/create-loto")}
-                    className="hover-scale"
-                  >
-                    <span className="me-2">➕</span> Create LOTO
-                  </Button>
-                  <Button
-                    variant="outline-primary"
-                    onClick={() => navigate("/Home")}
-                    className="hover-scale"
-                  >
-                    <span className="me-2">🏠</span> Home
-                  </Button>
+              </div>
+              <div className="cf-stat-icon cf-bg-success">
+                ⚡
+              </div>
+            </div>
+          </div>
+
+          <div 
+            className={`cf-stat-card ${activeFilter === "pending_verification_new" ? "cf-shadow-lg" : ""}`}
+            onClick={() => handleStatCardClick("pending_verification_new")}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="cf-stat-content">
+              <div className="cf-stat-info">
+                <div className="cf-stat-title">Pending Verification</div>
+                <div className="cf-stat-value">
+                  {lotos.filter((l) => l.status === "pending_verification_new").length}
                 </div>
+              </div>
+              <div className="cf-stat-icon cf-bg-warning">
+                ⏳
+              </div>
+            </div>
+          </div>
+
+          <div 
+            className={`cf-stat-card ${activeFilter === "pending_handover_verification" ? "cf-shadow-lg" : ""}`}
+            onClick={() => handleStatCardClick("pending_handover_verification")}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="cf-stat-content">
+              <div className="cf-stat-info">
+                <div className="cf-stat-title">Pending Handover</div>
+                <div className="cf-stat-value">
+                  {lotos.filter((l) => l.status === "pending_handover_verification").length}
+                </div>
+              </div>
+              <div className="cf-stat-icon cf-bg-info">
+                🔄
+              </div>
+            </div>
+          </div>
+
+          <div 
+            className={`cf-stat-card ${activeFilter === "handed_over" ? "cf-shadow-lg" : ""}`}
+            onClick={() => handleStatCardClick("handed_over")}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="cf-stat-content">
+              <div className="cf-stat-info">
+                <div className="cf-stat-title">Handed Over</div>
+                <div className="cf-stat-value">
+                  {lotos.filter((l) => l.status === "handed_over").length}
+                </div>
+              </div>
+              <div className="cf-stat-icon cf-bg-primary">
+                📋
+              </div>
+            </div>
+          </div>
+
+          <div 
+            className={`cf-stat-card ${activeFilter === "rejected" ? "cf-shadow-lg" : ""}`}
+            onClick={() => handleStatCardClick("rejected")}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="cf-stat-content">
+              <div className="cf-stat-info">
+                <div className="cf-stat-title">Rejected</div>
+                <div className="cf-stat-value">
+                  {lotos.filter((l) => l.status === "rejected").length}
+                </div>
+              </div>
+              <div className="cf-stat-icon cf-bg-danger">
+                ❌
+              </div>
+            </div>
+          </div>
+
+          <div 
+            className={`cf-stat-card ${activeFilter === "completed" ? "cf-shadow-lg" : ""}`}
+            onClick={() => handleStatCardClick("completed")}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="cf-stat-content">
+              <div className="cf-stat-info">
+                <div className="cf-stat-title">Completed</div>
+                <div className="cf-stat-value">
+                  {lotos.filter((l) => l.status === "completed").length}
+                </div>
+              </div>
+              <div className="cf-stat-icon cf-bg-success">
+                ✅
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Modern Statistics Dashboard */}
-      <div className="modern-stats-grid mb-5">
-        <div 
-          className={`stat-card total-card ${activeFilter === "all" ? "active" : ""}`}
-          onClick={() => handleStatCardClick("all")}
-          style={{ cursor: "pointer" }}
-        >
-          <div className="stat-icon">
-            <div className="icon-wrapper">
-              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
-                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+        {/* Error Display */}
+        {error && (
+          <div className="cf-alert cf-alert-danger cf-d-flex cf-align-items-center">
+            <span className="cf-me-3" style={{ fontSize: "1.5rem" }}>
+              ⚠️
+            </span>
+            <div>
+              <strong>Error:</strong> {error}
             </div>
           </div>
-          <div className="stat-content">
-            <div className="stat-number">{lotos.length}</div>
-            <div className="stat-label">Total LOTOs</div>
-            <div className="stat-description">All lockout procedures</div>
-          </div>
-          <div className="stat-trend">
-            <span className="trend-indicator">📈</span>
-          </div>
-        </div>
+        )}
 
-        <div 
-          className={`stat-card active-card ${activeFilter === "active" ? "active" : ""}`}
-          onClick={() => handleStatCardClick("active")}
-          style={{ cursor: "pointer" }}
-        >
-          <div className="stat-icon">
-            <div className="icon-wrapper">
-              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
-          <div className="stat-content">
-            <div className="stat-number">
-              {lotos.filter((l) => l.status === "active").length}
-            </div>
-            <div className="stat-label">Active</div>
-            <div className="stat-description">Currently in progress</div>
-          </div>
-          <div className="stat-trend">
-            <span className="trend-indicator">⚡</span>
-          </div>
-        </div>
-
-        <div 
-          className={`stat-card pending-verification-card ${activeFilter === "pending_verification_new" ? "active" : ""}`}
-          onClick={() => handleStatCardClick("pending_verification_new")}
-          style={{ cursor: "pointer" }}
-        >
-          <div className="stat-icon">
-            <div className="icon-wrapper">
-              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                <polyline points="12,6 12,12 16,14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
-          <div className="stat-content">
-            <div className="stat-number">
-              {lotos.filter((l) => l.status === "pending_verification_new").length}
-            </div>
-            <div className="stat-label">Pending Verification</div>
-            <div className="stat-description">New LOTOs awaiting approval</div>
-          </div>
-          <div className="stat-trend">
-            <span className="trend-indicator">⏳</span>
-          </div>
-        </div>
-
-        <div 
-          className={`stat-card pending-handover-card ${activeFilter === "pending_handover_verification" ? "active" : ""}`}
-          onClick={() => handleStatCardClick("pending_handover_verification")}
-          style={{ cursor: "pointer" }}
-        >
-          <div className="stat-icon">
-            <div className="icon-wrapper">
-              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
-                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
-          <div className="stat-content">
-            <div className="stat-number">
-              {lotos.filter((l) => l.status === "pending_handover_verification").length}
-            </div>
-            <div className="stat-label">Pending Handover</div>
-            <div className="stat-description">Awaiting handover verification</div>
-          </div>
-          <div className="stat-trend">
-            <span className="trend-indicator">🔄</span>
-          </div>
-        </div>
-
-        <div 
-          className={`stat-card handed-over-card ${activeFilter === "handed_over" ? "active" : ""}`}
-          onClick={() => handleStatCardClick("handed_over")}
-          style={{ cursor: "pointer" }}
-        >
-          <div className="stat-icon">
-            <div className="icon-wrapper">
-              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
-                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
-          <div className="stat-content">
-            <div className="stat-number">
-              {lotos.filter((l) => l.status === "handed_over").length}
-            </div>
-            <div className="stat-label">Handed Over</div>
-            <div className="stat-description">Successfully transferred</div>
-          </div>
-          <div className="stat-trend">
-            <span className="trend-indicator">📋</span>
-          </div>
-        </div>
-
-        <div 
-          className={`stat-card rejected-card ${activeFilter === "rejected" ? "active" : ""}`}
-          onClick={() => handleStatCardClick("rejected")}
-          style={{ cursor: "pointer" }}
-        >
-          <div className="stat-icon">
-            <div className="icon-wrapper">
-              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
-          <div className="stat-content">
-            <div className="stat-number">
-              {lotos.filter((l) => l.status === "rejected").length}
-            </div>
-            <div className="stat-label">Rejected</div>
-            <div className="stat-description">Requires modification</div>
-          </div>
-          <div className="stat-trend">
-            <span className="trend-indicator">❌</span>
-          </div>
-        </div>
-
-        <div 
-          className={`stat-card completed-card ${activeFilter === "completed" ? "active" : ""}`}
-          onClick={() => handleStatCardClick("completed")}
-          style={{ cursor: "pointer" }}
-        >
-          <div className="stat-icon">
-            <div className="icon-wrapper">
-              <svg className="stat-svg" viewBox="0 0 24 24" fill="none">
-                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
-          <div className="stat-content">
-            <div className="stat-number">
-              {lotos.filter((l) => l.status === "completed").length}
-            </div>
-            <div className="stat-label">Completed</div>
-            <div className="stat-description">Successfully finished</div>
-          </div>
-          <div className="stat-trend">
-            <span className="trend-indicator">✅</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <div className="alert alert-danger d-flex align-items-center">
-          <span className="me-3" style={{ fontSize: "1.5rem" }}>
-            ⚠️
-          </span>
-          <div>
-            <strong>Error:</strong> {error}
-          </div>
-        </div>
-      )}
-
-      {/* Search and Filter Section */}
-      <div className="search-filter-section mb-4">
-        <div className="row g-3">
-          {/* Search Input */}
-          <div className="col-lg-6 col-md-12">
-            <div className="search-container">
-              <div className="position-relative">
-                <div className="search-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                  </svg>
-                </div>
+        {/* Search and Filter Section */}
+        <div className="cf-card cf-mb-4">
+          <div className="cf-card-body">
+            <div className="search-filter-container">
+              {/* Search Input */}
+              <div className="search-input-wrapper">
                 <input
                   type="text"
-                  className="form-control search-input-enhanced"
+                  className="search-input"
                   placeholder="Search LOTOs by serial number, supervisor, responsible, or isolator..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                {searchTerm && (
-                  <button
-                    className="clear-search-btn"
-                    onClick={() => setSearchTerm("")}
-                    title="Clear search"
+              </div>
+
+              {/* Filter Row */}
+              <div className="filter-row">
+                {/* Status Filter */}
+                <div className="filter-wrapper">
+                  <select
+                    className="cf-form-select"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
+                    <option value="all">All Status</option>
+                    <option value="pending_verification_new">Pending Verification</option>
+                    <option value="active">Active</option>
+                    <option value="pending_handover_verification">Pending Handover</option>
+                    <option value="handed_over">Handed Over</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+
+                {/* Supervisor Filter */}
+                {currentUser && currentUser.role === "supervisor" && (
+                  <div className="filter-wrapper">
+                    <select
+                      className="cf-form-select"
+                      value={filterSupervisor}
+                      onChange={(e) => setFilterSupervisor(e.target.value)}
+                    >
+                      <option value="all">All LOTOs</option>
+                      <option value="my_created">Created By Me</option>
+                      <option value="my_authorized">Authorized By Me</option>
+                    </select>
+                  </div>
                 )}
               </div>
             </div>
           </div>
-
-          {/* Status Filter */}
-          <div className="col-lg-3 col-md-6">
-            <div className="filter-container">
-              <label className="filter-label">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
-                </svg>
-                Status Filter
-              </label>
-              <select
-                className="form-select filter-select-enhanced"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-              >
-                <option value="all">All Status</option>
-                <option value="pending_verification_new">Pending Verification</option>
-                <option value="active">Active</option>
-                <option value="pending_handover_verification">Pending Handover</option>
-                <option value="handed_over">Handed Over</option>
-                <option value="rejected">Rejected</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Supervisor Filter */}
-          {currentUser && currentUser.role === "supervisor" && (
-            <div className="col-lg-3 col-md-6">
-              <div className="filter-container">
-                <label className="filter-label">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                  My LOTOs
-                </label>
-                <select
-                  className="form-select filter-select-enhanced"
-                  value={filterSupervisor}
-                  onChange={(e) => setFilterSupervisor(e.target.value)}
-                >
-                  <option value="all">All LOTOs</option>
-                  <option value="my_created">Created By Me</option>
-                  <option value="my_authorized">Authorized By Me</option>
-                </select>
-              </div>
-            </div>
-          )}
         </div>
-      </div>
 
-      {/* Active Filter Indicator and Clear Button */}
-      {(activeFilter || searchTerm || filterSupervisor !== "all") && (
-        <div className="row mb-3">
-          <div className="col-12">
-            <div className="d-flex align-items-center gap-3 flex-wrap">
-              <div className="d-flex align-items-center gap-2">
-                <span className="text-muted">Active filters:</span>
-                {activeFilter && (
-                  <span className="badge bg-primary">
-                    {activeFilter === "all" ? "All LOTOs" : 
-                     activeFilter === "active" ? "Active" :
-                     activeFilter === "pending_verification_new" ? "Pending Verification" :
-                     activeFilter === "pending_handover_verification" ? "Pending Handover" :
-                     activeFilter === "handed_over" ? "Handed Over" :
-                     activeFilter === "rejected" ? "Rejected" :
-                     activeFilter === "completed" ? "Completed" : activeFilter}
-                  </span>
-                )}
-                {searchTerm && (
-                  <span className="badge bg-info">
-                    Search: "{searchTerm}"
-                  </span>
-                )}
-                {filterSupervisor !== "all" && currentUser && currentUser.role === "supervisor" && (
-                  <span className="badge bg-warning">
-                    {filterSupervisor === "my_created" ? "Created By Me" :
-                     filterSupervisor === "my_authorized" ? "Authorized By Me" : filterSupervisor}
-                  </span>
-                )}
-              </div>
-              <button 
-                className="btn btn-outline-secondary btn-sm"
-                onClick={clearFilters}
-              >
-                <i className="fas fa-times me-1"></i>
-                Clear All Filters
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* LOTO Table */}
-      {filteredLotos.length === 0 && !loading ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            {searchTerm || filterStatus !== "all" || filterSupervisor !== "all" ? "🔍" : "📋"}
-          </div>
-          <h3 className="empty-state-title">
-            {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
-              ? "No LOTOs Found"
-              : "No LOTOs Created Yet"}
-          </h3>
-          <p className="empty-state-text">
-            {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
-              ? "Try adjusting your search or filter to find what you're looking for."
-              : "Get started by creating your first LOTO."}
-          </p>
-          {!(searchTerm || filterStatus !== "all" || filterSupervisor !== "all") && (
-            <Button
-              variant="primary"
-              onClick={() => navigate("/create-loto")}
-              className="hover-scale"
-            >
-              <span className="me-2">➕</span> Create LOTO
-            </Button>
-          )}
-        </div>
-      ) : (
-        <div className="table-responsive d-none d-md-block">
-          <table className="table table-hover align-middle">
-            <thead className="table-light">
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Serial Number</th>
-                <th scope="col">Authorized Supervisor</th>
-                <th scope="col">Current Responsible</th>
-                <th scope="col">Isolator</th>
-                <th scope="col">Energy Types</th>
-                <th scope="col">Status</th>
-                <th scope="col" className="text-center">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredLotos.map((loto, index) => (
-                <tr
-                  key={loto._id}
-                  className="loto-row"
-                  onClick={() => navigate(`/loto/${loto._id}`)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <th scope="row">{index + 1}</th>
-                  <td>{loto.serialNumber || "N/A"}</td>
-                  <td>
-                    {loto.supervisorName || "N/A"}
-                  </td>
-                  <td>
-                    {loto.currentResponsibleName || 
-                     (loto.isolator
-                       ? `${loto.isolator.firstName || ""} ${
-                           loto.isolator.lastName || ""
-                         }`
-                       : "N/A")}
-                  </td>
-                  <td>
-                    {loto.isolator
-                      ? `${loto.isolator.firstName || ""} ${
-                          loto.isolator.lastName || ""
-                        }`
-                      : "N/A"}
-                  </td>
-                  <td>
-                    {loto.energyTypes && loto.energyTypes.length > 0
-                      ? loto.energyTypes
-                          .map((et) => formatEnergyType(et.type))
-                          .join(", ")
-                      : "N/A"}
-                  </td>
-                  <td>{getStatusBadge(loto.status)}</td>
-                  <td className="text-center">
-                    <div className="d-flex justify-content-center gap-2">
-                      {/* Admin Full Control */}
-                      {isAdmin && (
-                        <>
-                          {loto.status === "pending_verification_new" && (
-                            <>
-                              <Button
-                                variant="success"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleVerify(loto._id);
-                                }}
-                                className="hover-scale"
-                              >
-                                ✅ Verify
-                              </Button>
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleReject(loto);
-                                }}
-                                className="hover-scale"
-                              >
-                                ❌ Reject
-                              </Button>
-                            </>
-                          )}
-                          {loto.status === "rejected" && (
-                            <Button
-                              variant="warning"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdate(loto._id);
-                              }}
-                              className="hover-scale"
-                            >
-                              ✏️ Edit
-                            </Button>
-                          )}
-                          {loto.status === "active" && (
-                            <>
-                              <Button
-                                variant="info"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleHandover(loto);
-                                }}
-                                className="hover-scale"
-                              >
-                                🤝 Handover
-                              </Button>
-                              <Button
-                                variant="success"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleComplete(loto._id);
-                                }}
-                                className="hover-scale"
-                              >
-                                ✅ Complete
-                              </Button>
-                            </>
-                          )}
-                          {loto.status === "pending_handover_verification" && (
-                            <>
-                              <Button
-                                variant="success"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleApproveHandover(loto._id);
-                                }}
-                                className="hover-scale"
-                              >
-                                ✅ Approve Handover
-                              </Button>
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRejectHandover(loto._id);
-                                }}
-                                className="hover-scale"
-                              >
-                                ❌ Reject Handover
-                              </Button>
-                            </>
-                          )}
-                          
-                          {/* Status Change Button - Always Available for Admins */}
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusChange(loto);
-                            }}
-                            className="hover-scale"
-                          >
-                            ⭐ Change Status
-                          </Button>
-                        </>
-                      )}
-                      {/* Supervisor Actions */}
-                      {canVerifyLOTO(loto) && currentUser?.role !== "admin" && (
-                        <>
-                          {loto.status === "pending_verification_new" && (
-                            <>
-                              <Button
-                                variant="success"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleVerify(loto._id);
-                                }}
-                                className="hover-scale"
-                              >
-                                ✅ Verify
-                              </Button>
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleReject(loto);
-                                }}
-                                className="hover-scale"
-                              >
-                                ❌ Reject
-                              </Button>
-                            </>
-                          )}
-                          {loto.status === "rejected" && (
-                            <Button
-                              variant="warning"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdate(loto._id);
-                              }}
-                              className="hover-scale"
-                            >
-                              ✏️ Edit
-                            </Button>
-                          )}
-                          {loto.status === "active" && (
-                            <>
-                              <Button
-                                variant="info"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleHandover(loto);
-                                }}
-                                className="hover-scale"
-                              >
-                                🤝 Handover
-                              </Button>
-                              <Button
-                                variant="success"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleComplete(loto._id);
-                                }}
-                                className="hover-scale"
-                              >
-                                ✅ Complete
-                              </Button>
-                            </>
-                          )}
-                          {loto.status === "pending_handover_verification" && (
-                            <>
-                              <Button
-                                variant="success"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleApproveHandover(loto._id);
-                                }}
-                                className="hover-scale"
-                              >
-                                ✅ Approve Handover
-                              </Button>
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRejectHandover(loto._id);
-                                }}
-                                className="hover-scale"
-                              >
-                                ❌ Reject Handover
-                              </Button>
-                            </>
-                          )}
-                        </>
-                      )}
-                      {/* Regular User Actions */}
-                      {!isAdmin && !isSupervisor && (
-                        <>
-                          {isTechnician && loto.status === "rejected" && loto.isolator?._id === currentUser?.id && (
-                            <Button
-                              variant="warning"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdate(loto._id);
-                              }}
-                              className="hover-scale"
-                            >
-                              ✏️ Edit
-                            </Button>
-                          )}
-                          {isTechnician && loto.status === "active" && loto.isolator?._id === currentUser?.id && (
-                            <>
-                              <Button
-                                variant="info"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleHandover(loto);
-                                }}
-                                className="hover-scale"
-                              >
-                                🤝 Handover
-                              </Button>
-                              <Button
-                                variant="success"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleComplete(loto._id);
-                                }}
-                                className="hover-scale"
-                              >
-                                ✅ Complete
-                              </Button>
-                            </>
-                          )}
-                          
-                          {/* Technician Complete for Handover Recipients */}
-                          {isTechnician && loto.status === "active" && 
-                           loto.handoverHistory && loto.handoverHistory.length > 0 && 
-                           loto.handoverHistory[loto.handoverHistory.length - 1].toUser === currentUser?.id &&
-                           loto.isolator?._id !== currentUser?.id && (
-                            <Button
-                              variant="success"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleComplete(loto._id);
-                              }}
-                              className="hover-scale"
-                            >
-                              ✅ Complete
-                            </Button>
-                          )}
-                          
-                          {/* Handover Recipient Decision Buttons */}
-                          {loto.status === "pending_handover_verification" && 
-                           loto.handoverHistory && loto.handoverHistory.length > 0 && 
-                           loto.handoverHistory[loto.handoverHistory.length - 1].recipientStatus === 'pending' &&
-                           currentUser?.id === loto.handoverHistory[loto.handoverHistory.length - 1].toUser && (
-                            <>
-                              <Button
-                                variant="success"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRecipientDecision(loto._id, loto.handoverHistory.length - 1, 'accept');
-                                }}
-                                className="hover-scale"
-                              >
-                                ✅ Accept Handover
-                              </Button>
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRecipientDecision(loto._id, loto.handoverHistory.length - 1, 'reject');
-                                }}
-                                className="hover-scale"
-                              >
-                                ❌ Reject Handover
-                              </Button>
-                            </>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Mobile Card View */}
-      <div className="mobile-cards-view d-block d-md-none">
-        {filteredLotos.map((loto, index) => (
-          <div key={loto._id} className="loto-card" onClick={() => navigate(`/loto/${loto._id}`)}>
-            {/* Card Header */}
-            <div className="card-header">
-              <div className="serial-info">
-                <div className="serial-number">{loto.serialNumber || "N/A"}</div>
-                <div className="row-number">#{index + 1}</div>
-              </div>
-              <div className={`status-badge status-${loto.status}`}>
-                {loto.status?.replace(/_/g, ' ').toUpperCase() || "UNKNOWN"}
-              </div>
-            </div>
-
-            {/* Card Content */}
-            <div className="card-content">
-              <div className="info-row">
-                <div className="info-label">Authorized Supervisor</div>
-                <div className="info-value">
-                  {loto.supervisorName || "N/A"}
-                </div>
-              </div>
-              
-              <div className="info-row">
-                <div className="info-label">Current Responsible</div>
-                <div className="info-value">
-                  {loto.currentResponsibleName || 
-                   (loto.isolator
-                     ? `${loto.isolator.firstName || ""} ${loto.isolator.lastName || ""}`
-                     : "N/A")}
-                </div>
-              </div>
-              
-              <div className="info-row">
-                <div className="info-label">Isolator</div>
-                <div className="info-value">
-                  {loto.isolator
-                    ? `${loto.isolator.firstName || ""} ${loto.isolator.lastName || ""}`
-                    : "N/A"}
-                </div>
-              </div>
-              
-              <div className="info-row">
-                <div className="info-label">Energy Types</div>
-                <div className="info-value">
-                  {loto.energyTypes && loto.energyTypes.length > 0 ? (
-                    <div className="energy-types">
-                      {loto.energyTypes.map((et, idx) => (
-                        <span key={idx} className="energy-tag">
-                          {formatEnergyType(et.type)}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    "N/A"
-                  )}
-                </div>
-              </div>
-              
-              {/* Additional useful fields */}
-              {loto.location && (
-                <div className="info-row">
-                  <div className="info-label">Location</div>
-                  <div className="info-value">{loto.location}</div>
-                </div>
-              )}
-              
-              {loto.line && (
-                <div className="info-row">
-                  <div className="info-label">Line</div>
-                  <div className="info-value">{loto.line}</div>
-                </div>
-              )}
-              
-              {loto.machine && (
-                <div className="info-row">
-                  <div className="info-label">Machine</div>
-                  <div className="info-value">{loto.machine}</div>
-                </div>
-              )}
-              
-              {loto.createdAt && (
-                <div className="info-row">
-                  <div className="info-label">Created</div>
-                  <div className="info-value">
-                    {new Date(loto.createdAt).toLocaleDateString()}
+        {/* Active Filter Indicator and Clear Button */}
+        {(activeFilter || searchTerm || filterSupervisor !== "all") && (
+          <div className="cf-card cf-mb-3">
+            <div className="cf-card-body">
+              <div className="active-filters-container">
+                <div className="filters-info">
+                  <span className="filters-label">Active filters:</span>
+                  <div className="filters-badges">
+                    {activeFilter && (
+                      <span className="cf-badge cf-bg-primary">
+                        {activeFilter === "all" ? "All LOTOs" : 
+                         activeFilter === "active" ? "Active" :
+                         activeFilter === "pending_verification_new" ? "Pending Verification" :
+                         activeFilter === "pending_handover_verification" ? "Pending Handover" :
+                         activeFilter === "handed_over" ? "Handed Over" :
+                         activeFilter === "rejected" ? "Rejected" :
+                         activeFilter === "completed" ? "Completed" : activeFilter}
+                      </span>
+                    )}
+                    {searchTerm && (
+                      <span className="cf-badge cf-bg-info">
+                        Search: "{searchTerm}"
+                      </span>
+                    )}
+                    {filterSupervisor !== "all" && currentUser && currentUser.role === "supervisor" && (
+                      <span className="cf-badge cf-bg-warning">
+                        {filterSupervisor === "my_created" ? "Created By Me" :
+                         filterSupervisor === "my_authorized" ? "Authorized By Me" : filterSupervisor}
+                      </span>
+                    )}
                   </div>
                 </div>
+                <button 
+                  className="clear-filters-btn"
+                  onClick={clearFilters}
+                >
+                  ✕ Clear All Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LOTO Table - Desktop Only */}
+        <div className="desktop-table-view">
+          {filteredLotos.length === 0 && !loading ? (
+          <div className="cf-card cf-text-center cf-py-4">
+            <div className="cf-card-body">
+              <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>
+                {searchTerm || filterStatus !== "all" || filterSupervisor !== "all" ? "🔍" : "📋"}
+              </div>
+              <h3 className="cf-text-lg cf-font-semibold cf-text-primary cf-mb-2">
+                {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
+                  ? "No LOTOs Found"
+                  : "No LOTOs Created Yet"}
+              </h3>
+              <p className="cf-text-secondary cf-mb-4">
+                {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
+                  ? "Try adjusting your search or filter to find what you're looking for."
+                  : "Get started by creating your first LOTO."}
+              </p>
+              {!(searchTerm || filterStatus !== "all" || filterSupervisor !== "all") && (
+                <button
+                  className="cf-btn cf-btn-sm"
+                  onClick={() => navigate("/create-loto")}
+                  style={{ backgroundColor: "#3b82f6", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: "0.375rem" }}
+                >
+                  ➕ Create LOTO
+                </button>
               )}
             </div>
+          </div>
+        ) : (
+          <div className="cf-card">
+            <div className="cf-card-body">
+              <div className="cf-table-container">
+                <table className="cf-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Serial Number</th>
+                      <th>Authorized Supervisor</th>
+                      <th>Current Responsible</th>
+                      <th>Isolator</th>
+                      <th>Energy Types</th>
+                      <th>Status</th>
+                      <th className="cf-text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredLotos.map((loto, index) => (
+                      <tr
+                        key={loto._id}
+                        onClick={() => navigate(`/loto/${loto._id}`)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <td>{index + 1}</td>
+                        <td>{loto.serialNumber || "N/A"}</td>
+                        <td>{loto.supervisorName || "N/A"}</td>
+                        <td>
+                          {loto.currentResponsibleName || 
+                           (loto.isolator
+                             ? `${loto.isolator.firstName || ""} ${
+                                 loto.isolator.lastName || ""
+                               }`
+                             : "N/A")}
+                        </td>
+                        <td>
+                          {loto.isolator
+                            ? `${loto.isolator.firstName || ""} ${
+                                loto.isolator.lastName || ""
+                              }`
+                            : "N/A"}
+                        </td>
+                        <td>
+                          {loto.energyTypes && loto.energyTypes.length > 0
+                            ? loto.energyTypes
+                                .map((et) => formatEnergyType(et.type))
+                                .join(", ")
+                            : "N/A"}
+                        </td>
+                        <td>{getStatusBadge(loto.status)}</td>
+                        <td className="cf-text-center">
+                          <div className="cf-d-flex cf-gap-2 cf-justify-content-between">
+                            {/* Admin Full Control */}
+                            {isAdmin && (
+                              <>
+                                {loto.status === "pending_verification_new" && (
+                                  <>
+                                    <button
+                                      className="cf-btn cf-btn-sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleVerify(loto._id);
+                                      }}
+                                      style={{ backgroundColor: "#10b981", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
+                                    >
+                                      ✅ Verify
+                                    </button>
+                                    <button
+                                      className="cf-btn cf-btn-sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleReject(loto);
+                                      }}
+                                      style={{ backgroundColor: "#ef4444", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
+                                    >
+                                      ❌ Reject
+                                    </button>
+                                  </>
+                                )}
+                                {loto.status === "rejected" && (
+                                  <button
+                                    className="cf-btn cf-btn-sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleUpdate(loto._id);
+                                    }}
+                                    style={{ backgroundColor: "#f59e0b", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
+                                  >
+                                    ✏️ Edit
+                                  </button>
+                                )}
+                                {loto.status === "active" && (
+                                  <>
+                                    <button
+                                      className="cf-btn cf-btn-sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleHandover(loto);
+                                      }}
+                                      style={{ backgroundColor: "#06b6d4", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
+                                    >
+                                      🤝 Handover
+                                    </button>
+                                    <button
+                                      className="cf-btn cf-btn-sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleComplete(loto._id);
+                                      }}
+                                      style={{ backgroundColor: "#10b981", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
+                                    >
+                                      ✅ Complete
+                                    </button>
+                                  </>
+                                )}
+                                {loto.status === "pending_handover_verification" && (
+                                  <>
+                                    <button
+                                      className="cf-btn cf-btn-sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleApproveHandover(loto._id);
+                                      }}
+                                      style={{ backgroundColor: "#10b981", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
+                                    >
+                                      ✅ Approve
+                                    </button>
+                                    <button
+                                      className="cf-btn cf-btn-sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRejectHandover(loto._id);
+                                      }}
+                                      style={{ backgroundColor: "#ef4444", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
+                                    >
+                                      ❌ Reject
+                                    </button>
+                                  </>
+                                )}
+                                
+                                {/* Status Change Button - Always Available for Admins */}
+                                <button
+                                  className="cf-btn cf-btn-sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange(loto);
+                                  }}
+                                  style={{ backgroundColor: "#3b82f6", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
+                                >
+                                  ⭐ Status
+                                </button>
+                              </>
+                            )}
+                            {/* Simplified action buttons for other roles */}
+                            {!isAdmin && (
+                              <button
+                                className="cf-btn cf-btn-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/loto/${loto._id}`);
+                                }}
+                                style={{ backgroundColor: "#6b7280", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
+                              >
+                                View
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+        </div>
 
-            {/* Card Actions */}
-            <div className="card-actions" onClick={(e) => e.stopPropagation()}>
-              {/* View Button - Always Available */}
-              <button
-                className="btn btn-primary"
-                onClick={() => navigate(`/loto/${loto._id}`)}
-              >
-                👁️ View
-              </button>
-
-              {/* Admin Full Control */}
-              {currentUser?.role === "admin" && (
-                <>
+        {/* Mobile Card View */}
+        <div className="mobile-cards-view">
+          {filteredLotos.length === 0 && !loading ? (
+            <div className="cf-card cf-text-center cf-py-4">
+              <div className="cf-card-body">
+                <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>
+                  {searchTerm || filterStatus !== "all" || filterSupervisor !== "all" ? "🔍" : "📋"}
+                </div>
+                <h3 className="cf-text-lg cf-font-semibold cf-text-primary cf-mb-2">
+                  {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
+                    ? "No LOTOs Found"
+                    : "No LOTOs Created Yet"}
+                </h3>
+                <p className="cf-text-secondary cf-mb-4">
+                  {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
+                    ? "Try adjusting your search or filter to find what you're looking for."
+                    : "Get started by creating your first LOTO."}
+                </p>
+                {!(searchTerm || filterStatus !== "all" || filterSupervisor !== "all") && (
                   <button
-                    className="btn btn-warning"
-                    onClick={() => navigate(`/loto/${loto._id}/update`)}
+                    className="cf-btn cf-btn-sm"
+                    onClick={() => navigate("/create-loto")}
+                    style={{ backgroundColor: "#3b82f6", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: "0.375rem" }}
                   >
-                    ✏️ Edit
+                    ➕ Create LOTO
                   </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => handleDelete(loto._id, loto.serialNumber)}
-                  >
-                    🗑️ Delete
-                  </button>
-                </>
-              )}
+                )}
+              </div>
+            </div>
+          ) : (
+            filteredLotos.map((loto, index) => (
+            <div key={loto._id} className="loto-card" onClick={() => navigate(`/loto/${loto._id}`)}>
+              {/* Card Header */}
+              <div className="card-header">
+                <div className="serial-info">
+                  <div className="serial-number">{loto.serialNumber || "N/A"}</div>
+                  <div className="row-number">#{index + 1}</div>
+                </div>
+                <div className={`status-badge status-${loto.status}`}>
+                  {getShortStatusText(loto.status)}
+                </div>
+              </div>
 
-              {/* Supervisor Actions */}
-              {canVerifyLOTO(loto) && currentUser?.role !== "admin" && (
-                <>
-                  {/* Verify LOTO */}
-                  {loto.status === "pending_verification_new" && (
-                    <button
-                      className="btn btn-success"
-                      onClick={() => handleVerify(loto._id)}
-                    >
-                      ✅ Verify
-                    </button>
-                  )}
-                  
-                  {/* Reject LOTO */}
-                  {loto.status === "pending_verification_new" && (
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => handleReject(loto)}
-                    >
-                      ❌ Reject
-                    </button>
-                  )}
-                  
-                  {/* Update LOTO for rejected status */}
-                  {loto.status === "rejected" && (
+              {/* Card Content */}
+              <div className="card-content">
+                <div className="info-row">
+                  <div className="info-label">Authorized Supervisor</div>
+                  <div className="info-value">
+                    {loto.supervisorName || "N/A"}
+                  </div>
+                </div>
+                
+                <div className="info-row">
+                  <div className="info-label">Current Responsible</div>
+                  <div className="info-value">
+                    {loto.currentResponsibleName || 
+                     (loto.isolator
+                       ? `${loto.isolator.firstName || ""} ${loto.isolator.lastName || ""}`
+                       : "N/A")}
+                  </div>
+                </div>
+                
+                <div className="info-row">
+                  <div className="info-label">Isolator</div>
+                  <div className="info-value">
+                    {loto.isolator
+                      ? `${loto.isolator.firstName || ""} ${loto.isolator.lastName || ""}`
+                      : "N/A"}
+                  </div>
+                </div>
+                
+                <div className="info-row">
+                  <div className="info-label">Energy Types</div>
+                  <div className="info-value">
+                    {loto.energyTypes && loto.energyTypes.length > 0 ? (
+                      <div className="energy-types">
+                        {loto.energyTypes.map((et, idx) => (
+                          <span key={idx} className="energy-tag">
+                            {formatEnergyType(et.type)}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      "N/A"
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Actions */}
+              <div className="card-actions" onClick={(e) => e.stopPropagation()}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => navigate(`/loto/${loto._id}`)}
+                >
+                   View
+                </button>
+                {currentUser?.role === "admin" && (
+                  <>
                     <button
                       className="btn btn-warning"
                       onClick={() => navigate(`/loto/${loto._id}/update`)}
                     >
                       ✏️ Edit
                     </button>
-                  )}
-                  
-                  {/* Handover LOTO */}
-                  {loto.status === "active" && (
-                    <button
-                      className="btn btn-info"
-                      onClick={() => handleHandover(loto._id)}
-                    >
-                      🤝 Handover
-                    </button>
-                  )}
-                  
-                  {/* Complete LOTO */}
-                  {loto.status === "active" && (
-                    <button
-                      className="btn btn-success"
-                      onClick={() => handleStatusChange(loto._id, "completed")}
-                    >
-                      ✅ Complete
-                    </button>
-                  )}
-                  
-                  {/* Approve Handover */}
-                  {loto.status === "pending_handover_verification" && (
-                    <button
-                      className="btn btn-success"
-                      onClick={() => handleApproveHandover(loto._id)}
-                    >
-                      ✅ Approve Handover
-                    </button>
-                  )}
-                  
-                  {/* Reject Handover */}
-                  {loto.status === "pending_handover_verification" && (
                     <button
                       className="btn btn-danger"
-                      onClick={() => handleRejectHandover(loto._id)}
+                      onClick={() => handleDelete(loto._id, loto.serialNumber)}
                     >
-                      ❌ Reject Handover
+                      🗑️ Delete
                     </button>
-                  )}
-                </>
-              )}
-
-              {/* Technician Actions */}
-              {currentUser?.role === "technician" && (
-                <>
-                  {/* Update LOTO - Only if technician is isolator or handover recipient */}
-                  {((loto.status === "pending_verification_new" || loto.status === "active") && 
-                    (loto.isolator?._id === currentUser.id || 
-                     (loto.handoverHistory && loto.handoverHistory.length > 0 && 
-                      loto.handoverHistory[loto.handoverHistory.length - 1].toUser === currentUser.id))) && (
-                    <button
-                      className="btn btn-warning"
-                      onClick={() => navigate(`/loto/${loto._id}/update`)}
-                    >
-                      ✏️ Update
-                    </button>
-                  )}
-                  
-                  {/* Handover LOTO - Only if technician is isolator */}
-                  {loto.status === "active" && loto.isolator?._id === currentUser.id && (
-                    <button
-                      className="btn btn-info"
-                      onClick={() => handleHandover(loto._id)}
-                    >
-                      🤝 Handover
-                    </button>
-                  )}
-                  
-                  {/* Complete LOTO - Only if technician is isolator or handover recipient */}
-                  {loto.status === "active" && 
-                   (loto.isolator?._id === currentUser.id || 
-                    (loto.handoverHistory && loto.handoverHistory.length > 0 && 
-                     loto.handoverHistory[loto.handoverHistory.length - 1].toUser === currentUser.id)) && (
-                    <button
-                      className="btn btn-success"
-                      onClick={() => handleStatusChange(loto._id, "completed")}
-                    >
-                      ✅ Complete
-                    </button>
-                  )}
-                </>
-              )}
-
-              {/* Handover Recipient Decision Buttons */}
-              {loto.status === "pending_handover_verification" && 
-               loto.handoverHistory && loto.handoverHistory.length > 0 && 
-               loto.handoverHistory[loto.handoverHistory.length - 1].recipientStatus === 'pending' &&
-               currentUser?.id === loto.handoverHistory[loto.handoverHistory.length - 1].toUser && (
-                <>
-                  <button
-                    className="btn btn-success"
-                    onClick={() => handleRecipientDecision(loto._id, loto.handoverHistory.length - 1, 'accept')}
-                  >
-                    ✅ Accept
-                  </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => handleRecipientDecision(loto._id, loto.handoverHistory.length - 1, 'reject')}
-                  >
-                    ❌ Reject
-                  </button>
-                </>
-              )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+          )}
+        </div>
       </div>
 
       {/* Rejection Modal */}

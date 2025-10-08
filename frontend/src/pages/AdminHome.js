@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
 import RejectLOTOModal from "../components/RejectLOTOModal";
+import ActionButton from "../components/ActionButton";
+import StandardButton from "../components/StandardButton";
 
 const AdminHome = () => {
   const [users, setUsers] = useState([]);
@@ -502,214 +504,237 @@ const AdminHome = () => {
   }
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-        <h1 className="d-flex align-items-center gap-2">
-          <Icon name="settings" /> Admin Page
-        </h1>
-        <div className="d-flex flex-wrap gap-2 justify-content-center">
-          <Button
-            variant="primary"
-            onClick={() => setShowCreateForm(!showCreateForm)}
-          >
-            <Icon name="add" /> {showCreateForm ? "Cancel" : "Create User"}
-          </Button>
-
-          <Button variant="outline-secondary" onClick={fetchHomeData}>
-            <Icon name="refresh" /> Refresh
-          </Button>
-          <Button variant="outline-info" onClick={() => navigate("/monitoring")}>
-            <Icon name="chart" /> Monitoring Dashboard
-          </Button>
-          <Button variant="outline-success" onClick={() => navigate("/data-export")}>
-            <Icon name="download" /> Data Export
-          </Button>
-          <Button variant="outline-primary" onClick={() => navigate("/Home")}>
-            <Icon name="Home" /> Home
-          </Button>
+    <div className="cf-main" style={{ overflowX: 'hidden', maxWidth: '100%' }}>
+      <div className="cf-header">
+        <div className="cf-header-content">
+          <div className="cf-header-inner">
+            <div>
+              <h1 className="cf-header-title">
+                ⚙️ Admin Page
+              </h1>
+              <p className="cf-header-subtitle">Manage users and LOTO operations</p>
+            </div>
+            <div className="cf-header-actions">
+              <ActionButton
+                variant="secondary"
+                onClick={() => setShowCreateForm(!showCreateForm)}
+                icon={showCreateForm ? "cancel" : "add"}
+              >
+                {showCreateForm ? "Cancel" : "Create User"}
+              </ActionButton>
+              <ActionButton
+                variant="secondary"
+                onClick={fetchHomeData}
+                icon="refresh"
+              >
+                Refresh
+              </ActionButton>
+              <ActionButton
+                variant="secondary"
+                onClick={() => navigate("/monitoring")}
+                icon="chart"
+              >
+                Monitoring
+              </ActionButton>
+              <ActionButton
+                variant="secondary"
+                onClick={() => navigate("/data-export")}
+                icon="download"
+              >
+                Export
+              </ActionButton>
+              <ActionButton
+                variant="primary"
+                onClick={() => navigate("/Home")}
+                icon="home"
+              >
+                Home
+              </ActionButton>
+            </div>
+          </div>
         </div>
       </div>
       {error && (
-        <div className="alert alert-danger">
-          <Icon name="warning" className="me-2" /> {error}
+        <div className="cf-alert cf-alert-danger cf-d-flex cf-align-items-center cf-mb-4">
+          <span className="cf-me-2" style={{ fontSize: "1.5rem" }}>
+            ⚠️
+          </span>
+          <div>
+            <strong>Error:</strong> {error}
+          </div>
         </div>
       )}
       {/* Create User Form */}
       {showCreateForm && (
-        <div className="card mb-4">
-          <div className="card-header">
-            <h5 className="mb-0">
-              <Icon name="add" /> Create New User
+        <div className="cf-card cf-mb-4">
+          <div className="cf-card-header">
+            <h5 className="cf-card-title">
+              ➕ Create New User
             </h5>
           </div>
-          <div className="card-body">
+          <div className="cf-card-body">
             <form onSubmit={handleCreateUser}>
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Username</label>
-                    <input
-                      type="text"
-                      name="username"
-                      value={formData.username}
-                      onChange={onChange}
-                      className="form-control"
-                      placeholder="Enter username"
-                      required
-                    />
-                  </div>
+              <div className="cf-grid cf-grid-cols-1 md:cf-grid-cols-2 cf-gap-4 cf-mb-4">
+                <div>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Username</label>
+                  <input
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={onChange}
+                    className="cf-form-select"
+                    placeholder="Enter username"
+                    required
+                  />
                 </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={onChange}
-                      className="form-control"
-                      placeholder="Enter email"
-                      required
-                    />
-                  </div>
+                <div>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={onChange}
+                    className="cf-form-select"
+                    placeholder="Enter email"
+                    required
+                  />
                 </div>
               </div>
 
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Password</label>
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={onChange}
-                      className="form-control"
-                      placeholder="Enter password"
-                      required
-                      minLength="6"
-                    />
-                  </div>
+              <div className="cf-grid cf-grid-cols-1 md:cf-grid-cols-2 cf-gap-4 cf-mb-4">
+                <div>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={onChange}
+                    className="cf-form-select"
+                    placeholder="Enter password"
+                    required
+                    minLength="6"
+                  />
                 </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Role</label>
-                    <select
-                      name="role"
-                      value={formData.role}
-                      onChange={onChange}
-                      className="form-control"
-                    >
-                      <option value="technician">Technician</option>
-                      <option value="supervisor">Supervisor</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Role</label>
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={onChange}
+                    className="cf-form-select"
+                  >
+                    <option value="technician">Technician</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">First Name</label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={onChange}
-                      className="form-control"
-                      placeholder="Enter first name"
-                      required
-                    />
-                  </div>
+              <div className="cf-grid cf-grid-cols-1 md:cf-grid-cols-2 cf-gap-4 cf-mb-4">
+                <div>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={onChange}
+                    className="cf-form-select"
+                    placeholder="Enter first name"
+                    required
+                  />
                 </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Last Name</label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={onChange}
-                      className="form-control"
-                      placeholder="Enter last name"
-                      required
-                    />
-                  </div>
+                <div>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Last Name</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={onChange}
+                    className="cf-form-select"
+                    placeholder="Enter last name"
+                    required
+                  />
                 </div>
               </div>
 
-              <div className="form-group mb-3">
-                <label className="form-label">Employee ID</label>
+              <div className="cf-mb-4">
+                <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Employee ID</label>
                 <input
                   type="text"
                   name="employeeId"
                   value={formData.employeeId}
                   onChange={onChange}
-                  className="form-control"
+                  className="cf-form-select"
                   placeholder="Enter employee ID"
                 />
               </div>
 
-              <div className="d-flex gap-2">
-                <Button type="submit" variant="primary">
-                  <Icon name="save" /> Create User
-                </Button>
-                <Button
-                  variant="secondary"
+              <div className="cf-d-flex cf-gap-2">
+                <StandardButton type="submit" variant="primary" icon="save">
+                  Create User
+                </StandardButton>
+                <StandardButton
+                  type="button"
+                  variant="outline"
+                  icon="cancel"
                   onClick={() => setShowCreateForm(false)}
                 >
-                  <Icon name="cancel" /> Cancel
-                </Button>
+                  Cancel
+                </StandardButton>
               </div>
             </form>
           </div>
         </div>
       )}
       {/* User Management */}
-      <div className="card mb-4">
-        <div className="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-          <h5 className="mb-0 d-flex align-items-center gap-2">
-            <Icon name="users" /> User Management
+      <div className="cf-card cf-mb-4">
+        <div className="cf-card-header">
+          <h5 className="cf-card-title">
+            👥 User Management
           </h5>
-          <div className="toolbar d-flex flex-wrap gap-2 justify-content-center">
-            <div className="input-group" style={{ maxWidth: "300px" }}>
+        </div>
+        <div className="cf-card-body">
+          <div className="cf-d-flex cf-justify-content-between cf-align-items-center cf-mb-4">
+            <div style={{ maxWidth: "300px" }}>
               <input
                 type="text"
-                className="form-control"
+                className="cf-form-select"
                 placeholder="Search users..."
                 value={userSearchTerm}
                 onChange={onUserSearchChange}
               />
               {userSearchTerm && (
-                <button
-                  className="btn btn-outline-secondary"
-                  type="button"
+                <StandardButton
+                  variant="outline"
+                  icon="cancel"
                   onClick={clearSearch}
+                  className="cf-mt-2"
                 >
-                  ✕
-                </button>
+                  Clear
+                </StandardButton>
               )}
             </div>
-            <Button variant="outline-primary" onClick={fetchHomeData}>
-              <Icon name="refresh" /> Refresh Users
-            </Button>
+            <ActionButton 
+              variant="secondary"
+              icon="refresh"
+              onClick={fetchHomeData}
+            >
+              Refresh Users
+            </ActionButton>
           </div>
-        </div>
 
-        <div className="card-body p-0">
-          <div className="table-wrapper">
-            <table className="table table-hover mb-0">
+          <div className="cf-table-container" style={{ overflowX: 'auto', width: '100%' }}>
+            <table className="cf-table">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Username</th>
-                  <th className="d-none d-md-table-cell">Email</th>
+                  <th className="cf-d-none cf-d-md-table-cell">Email</th>
                   <th>Role</th>
                   <th>Status</th>
                   <th>Employee ID</th>
                   <th>Last Login</th>
-                  <th>Actions</th>
+                  <th className="cf-text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -720,30 +745,24 @@ const AdminHome = () => {
                         {user.firstName} {user.lastName}
                       </td>
                       <td>{user.username}</td>
-                      <td className="d-none d-md-table-cell">{user.email}</td>
+                      <td className="cf-d-none cf-d-md-table-cell">{user.email}</td>
                       <td>{getRoleBadge(user.role)}</td>
                       <td>{getStatusBadge(user.isActive)}</td>
                       <td>{user.employeeId || "N/A"}</td>
                       <td>{formatDate(user.lastLogin)}</td>
-                      <td>
-                        <div className="d-flex flex-wrap gap-1">
-                          <Button
-                            variant="outline-primary"
-                            size="sm"
+                      <td className="cf-text-center">
+                        <div className="cf-d-flex cf-gap-2 cf-justify-content-center">
+                          <button
+                            className="cf-btn cf-btn-sm cf-btn-outline-secondary"
                             onClick={() =>
                               handleResetPassword(user._id, user.username)
                             }
                             title="Reset Password"
                           >
-                            <Icon name="key" /> Reset Password
-                          </Button>
-                          <Button
-                            variant={
-                              user.isActive
-                                ? "outline-warning"
-                                : "outline-success"
-                            }
-                            size="sm"
+                            🔑 Reset
+                          </button>
+                          <button
+                            className={`cf-btn cf-btn-sm ${user.isActive ? "cf-btn-outline-secondary" : "cf-btn-outline-secondary"}`}
                             onClick={() =>
                               handleToggleStatus(
                                 user._id,
@@ -756,18 +775,17 @@ const AdminHome = () => {
                             }
                           >
                             {user.isActive ? "🚫" : "✅"}
-                          </Button>
+                          </button>
                           {user.role !== "admin" && (
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
+                            <button
+                              className="cf-btn cf-btn-sm cf-btn-outline-secondary"
                               onClick={() =>
                                 handleDeleteUser(user._id, user.username)
                               }
                               title="Delete User"
                             >
-                              <Icon name="delete" />
-                            </Button>
+                              🗑️
+                            </button>
                           )}
                         </div>
                       </td>
@@ -775,14 +793,14 @@ const AdminHome = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8" className="text-center py-4">
+                    <td colSpan="8" className="cf-text-center cf-py-4">
                       {userSearchTerm ? (
                         <>
-                          <Icon name="search" /> No users match your search
+                          🔍 No users match your search
                         </>
                       ) : (
                         <>
-                          <Icon name="info" /> No users found
+                          ℹ️ No users found
                         </>
                       )}
                     </td>
@@ -794,29 +812,35 @@ const AdminHome = () => {
         </div>
       </div>
       {/* LOTO Management */}
-      <div className="card">
-        <div className="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-          <h5 className="mb-0 d-flex align-items-center gap-2">
-            <Icon name="list" /> LOTO Management
+      <div className="cf-card">
+        <div className="cf-card-header">
+          <h5 className="cf-card-title">
+            📋 LOTO Management
           </h5>
-          <Button variant="outline-primary" onClick={fetchHomeData}>
-            <Icon name="refresh" /> Refresh LOTOs
-          </Button>
         </div>
-        <div className="card-body p-0">
-          <div className="table-wrapper">
-            <table className="table table-hover mb-0">
+        <div className="cf-card-body">
+          <div className="cf-d-flex cf-justify-content-between cf-align-items-center cf-mb-4">
+            <ActionButton 
+              variant="secondary"
+              icon="refresh"
+              onClick={fetchHomeData}
+            >
+              Refresh LOTOs
+            </ActionButton>
+          </div>
+          <div className="cf-table-container" style={{ overflowX: 'auto', width: '100%' }}>
+            <table className="cf-table">
               <thead>
                 <tr>
                   <th>SN</th>
                   <th>Date</th>
                   <th>Shift</th>
-                  <th className="d-none d-md-table-cell">Isolator</th>
+                  <th className="cf-d-none cf-d-md-table-cell">Isolator</th>
                   <th>Part</th>
-                  <th className="d-none d-lg-table-cell">Reason</th>
+                  <th className="cf-d-none cf-d-lg-table-cell">Reason</th>
                   <th>Status</th>
                   <th>Duration</th>
-                  <th>Actions</th>
+                  <th className="cf-text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -828,45 +852,45 @@ const AdminHome = () => {
                       </td>
                       <td>{formatDate(loto.date)}</td>
                       <td>{loto.shift}</td>
-                      <td className="d-none d-md-table-cell">
+                      <td className="cf-d-none cf-d-md-table-cell">
                         {loto.isolator?.firstName} {loto.isolator?.lastName}
                       </td>
                       <td>{loto.isolatedPart}</td>
-                      <td className="d-none d-lg-table-cell">{loto.reason}</td>
+                      <td className="cf-d-none cf-d-lg-table-cell">{loto.reason}</td>
                       <td>{getLotoStatusBadge(loto.status)}</td>
                       <td>{loto.expectedDuration} hrs</td>
-                      <td>
-                        <div className="d-flex flex-wrap gap-1">
+                      <td className="cf-text-center">
+                        <div className="cf-d-flex cf-gap-2 cf-justify-content-center">
                           {loto.status === "pending" && (
                             <>
-                              <Button
-                                variant="success"
-                                size="sm"
+                              <button
+                                className="cf-btn cf-btn-sm"
+                                style={{ backgroundColor: '#10b981', color: 'white' }}
                                 onClick={() =>
                                   handleVerifyLoto(loto._id, loto.serialNumber)
                                 }
                                 title="Verify LOTO"
                               >
-                                <Icon name="check" />
-                              </Button>
-                              <Button
-                                variant="danger"
-                                size="sm"
+                                ✅
+                              </button>
+                              <button
+                                className="cf-btn cf-btn-sm"
+                                style={{ backgroundColor: '#ef4444', color: 'white' }}
                                 onClick={() =>
                                   handleRejectLoto(loto)
                                 }
                                 title="Reject LOTO"
                               >
-                                <Icon name="x" />
-                              </Button>
+                                ❌
+                              </button>
                             </>
                           )}
                           {(loto.status === "active" ||
                             loto.status === "handover") && (
                             <>
-                              <Button
-                                variant="info"
-                                size="sm"
+                              <button
+                                className="cf-btn cf-btn-sm"
+                                style={{ backgroundColor: '#3b82f6', color: 'white' }}
                                 onClick={() =>
                                   handleHandoverLoto(
                                     loto._id,
@@ -875,11 +899,11 @@ const AdminHome = () => {
                                 }
                                 title="Handover LOTO"
                               >
-                                <Icon name="handover" />
-                              </Button>
-                              <Button
-                                variant="success"
-                                size="sm"
+                                🤝
+                              </button>
+                              <button
+                                className="cf-btn cf-btn-sm"
+                                style={{ backgroundColor: '#10b981', color: 'white' }}
                                 onClick={() =>
                                   handleCompleteLoto(
                                     loto._id,
@@ -888,28 +912,28 @@ const AdminHome = () => {
                                 }
                                 title="Complete LOTO"
                               >
-                                <Icon name="check" />
-                              </Button>
+                                ✅
+                              </button>
                             </>
                           )}
-                          <Button
-                            variant="danger"
-                            size="sm"
+                          <button
+                            className="cf-btn cf-btn-sm"
+                            style={{ backgroundColor: '#ef4444', color: 'white' }}
                             onClick={() =>
                               handleDeleteLoto(loto._id, loto.serialNumber)
                             }
                             title="Delete LOTO"
                           >
-                            <Icon name="delete" />
-                          </Button>
+                            🗑️
+                          </button>
                         </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="9" className="text-center py-4">
-                      <Icon name="info" /> No LOTOs found
+                    <td colSpan="9" className="cf-text-center cf-py-4">
+                      ℹ️ No LOTOs found
                     </td>
                   </tr>
                 )}
