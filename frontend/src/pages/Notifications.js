@@ -1,17 +1,48 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const Notifications = () => {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState([]); // Initialize as empty array
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchNotifications();
+    fetchCurrentUser();
   }, []);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        config
+      );
+      setCurrentUser(res.data.user);
+    } catch (err) {
+      console.log("Error fetching current user:", err);
+    }
+  };
+
+  // Get the correct home path based on user role
+  const getHomePath = () => {
+    if (currentUser?.role === "technician") {
+      return "/technician-home";
+    }
+    return "/Home";
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -46,7 +77,7 @@ const Notifications = () => {
       setLoading(false);
     } catch (err) {
       console.error("Error fetching notifications:", err);
-      setError(err.response?.data?.message || "Error fetching notifications");
+      setError(err.response?.data?.message || t('notifications.errorFetching'));
       setNotifications([]); // Ensure notifications is always an array
       setLoading(false);
     }
@@ -61,7 +92,7 @@ const Notifications = () => {
       navigate(`/loto/${notification.lotoId._id}`);
     } else {
       console.error("LOTO ID not found in notification:", notification);
-      alert("Unable to navigate to LOTO details - LOTO ID not found");
+      alert(t('notifications.unableToNavigate'));
     }
   };
 
@@ -114,17 +145,17 @@ const Notifications = () => {
         prev.map(notification => ({ ...notification, read: true, readAt: new Date() }))
       );
 
-      alert(`✅ ${res.data.modifiedCount} notifications marked as read`);
+      alert(`✅ ${res.data.modifiedCount} ${t('notifications.notificationsMarkedRead')}`);
     } catch (err) {
       console.error("Error marking all notifications as read:", err);
-      alert("Error marking notifications as read");
+      alert(t('notifications.errorMarkingRead'));
     } finally {
       setActionLoading(false);
     }
   };
 
   const deleteAllNotifications = async () => {
-    if (!window.confirm("Are you sure you want to delete all notifications? This action cannot be undone.")) {
+    if (!window.confirm(t('notifications.confirmDeleteAll'))) {
       return;
     }
 
@@ -145,10 +176,10 @@ const Notifications = () => {
       // Clear local state
       setNotifications([]);
 
-      alert(`✅ ${res.data.deletedCount} notifications deleted`);
+      alert(`✅ ${res.data.deletedCount} ${t('notifications.notificationsDeleted')}`);
     } catch (err) {
       console.error("Error deleting all notifications:", err);
-      alert("Error deleting notifications");
+      alert(t('notifications.errorDeleting'));
     } finally {
       setActionLoading(false);
     }
@@ -160,7 +191,7 @@ const Notifications = () => {
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "50px" }}>
-        <h2>Loading notifications...</h2>
+        <h2>{t('notifications.loading')}</h2>
       </div>
     );
   }
@@ -176,9 +207,9 @@ const Notifications = () => {
         }}
       >
         <div>
-          <h1 style={{ margin: "0 0 8px 0", color: "#1f2937" }}>Handover Notifications</h1>
+          <h1 style={{ margin: "0 0 8px 0", color: "#1f2937" }}>{t('notifications.title')}</h1>
           <p style={{ margin: "0", color: "#6b7280", fontSize: "14px" }}>
-            Click on any notification to view the LOTO details
+            {t('notifications.subtitle')}
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
@@ -197,7 +228,7 @@ const Notifications = () => {
                   opacity: actionLoading ? 0.6 : 1,
                 }}
               >
-                {actionLoading ? "Processing..." : "Mark All Read"}
+                {actionLoading ? t('notifications.processing') : t('notifications.markAllRead')}
               </button>
               <button
                 onClick={deleteAllNotifications}
@@ -212,12 +243,12 @@ const Notifications = () => {
                   opacity: actionLoading ? 0.6 : 1,
                 }}
               >
-                {actionLoading ? "Processing..." : "Delete All"}
+                {actionLoading ? t('notifications.processing') : t('notifications.deleteAll')}
               </button>
             </>
           )}
           <button
-            onClick={() => navigate("/Home")}
+            onClick={() => navigate(getHomePath())}
             style={{
               padding: "8px 16px",
               backgroundColor: "#6c757d",
@@ -227,7 +258,7 @@ const Notifications = () => {
               cursor: "pointer",
             }}
           >
-            Back to Home
+            {t('notifications.backToHome')}
           </button>
         </div>
       </div>
@@ -255,8 +286,8 @@ const Notifications = () => {
             borderRadius: "5px",
           }}
         >
-          <h3>No pending notifications</h3>
-          <p>You have no pending handover requests.</p>
+          <h3>{t('notifications.noNotifications')}</h3>
+          <p>{t('notifications.noNotificationsDesc')}</p>
         </div>
       ) : (
         <div>
@@ -315,11 +346,11 @@ const Notifications = () => {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <span>Click to view LOTO</span>
+                <span>{t('notifications.clickToView')}</span>
               </div>
 
               <h3 style={{ margin: "0 0 10px 0", color: "#1f2937" }}>
-                Handover Request from {notification.fromUser?.firstName}{" "}
+                {t('notifications.handoverRequestFrom')} {notification.fromUser?.firstName}{" "}
                 {notification.fromUser?.lastName}
                 {notification.read && (
                   <span style={{ 
@@ -328,38 +359,38 @@ const Notifications = () => {
                     marginLeft: "10px",
                     fontWeight: "normal"
                   }}>
-                    (Read)
+                    {t('notifications.read')}
                   </span>
                 )}
               </h3>
 
               <div style={{ marginBottom: "15px" }}>
                 <p>
-                  <strong>LOTO Serial:</strong>{" "}
+                  <strong>{t('notifications.lotoSerial')}:</strong>{" "}
                   <span style={{ color: "#6366f1", fontWeight: "600" }}>
                     {notification.lotoId?.serialNumber}
                   </span>
                 </p>
                 <p>
-                  <strong>Equipment:</strong>{" "}
+                  <strong>{t('notifications.equipment')}:</strong>{" "}
                   {notification.lotoDetails?.isolatedPart}
                 </p>
                 <p>
-                  <strong>Reason:</strong> {notification.lotoDetails?.reason}
+                  <strong>{t('notifications.reason')}:</strong> {notification.lotoDetails?.reason}
                 </p>
                 <p>
-                  <strong>Shift:</strong> {notification.lotoDetails?.shift}
+                  <strong>{t('notifications.shift')}:</strong> {notification.lotoDetails?.shift}
                 </p>
                 <p>
-                  <strong>Line:</strong> {notification.lotoDetails?.line}
+                  <strong>{t('notifications.line')}:</strong> {notification.lotoDetails?.line}
                 </p>
                 {notification.handoverNotes && (
                   <p>
-                    <strong>Notes:</strong> {notification.handoverNotes}
+                    <strong>{t('notifications.notes')}:</strong> {notification.handoverNotes}
                   </p>
                 )}
                 <p>
-                  <strong>Requested:</strong>{" "}
+                  <strong>{t('notifications.requested')}:</strong>{" "}
                   {new Date(notification.createdAt).toLocaleString()}
                 </p>
               </div>
@@ -379,7 +410,7 @@ const Notifications = () => {
                   fontSize: "14px",
                   fontWeight: "500"
                 }}>
-                  Click to view LOTO details and respond to handover
+                  {t('notifications.clickToViewDetails')}
                 </p>
               </div>
             </div>

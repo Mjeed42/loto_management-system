@@ -3165,7 +3165,6 @@ const GlobalStyles = () => (
     /* ============ Modern Header Styles ============ */
     
     .modern-header {
-      position: sticky;
       top: 0;
       z-index: 1000;
       background: rgba(255, 255, 255, 0.95);
@@ -3403,14 +3402,117 @@ const GlobalStyles = () => (
     
     /* ============ PepsiCo Logo Styles ============ */
     
-    /* Login Page Background */
-    /* Removed conflicting login-page-container styles to fix Tailwind layout */
-    
-    .login-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
+   .login-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 380px;
+  padding: 2.5rem 2.5rem;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  color: #333;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+/* Logo */
+.login-card .logo {
+  width: 120px;
+  margin-bottom: 1rem;
+}
+
+/* Subtitle */
+.login-card .subtitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0033a0; /* Pepsi blue */
+  margin-bottom: 1.5rem;
+}
+
+/* Form styling */
+.login-card .form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login-card label {
+  text-align: left;
+  font-size: 0.9rem;
+  color: #0033a0;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.login-card input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-card input:focus {
+  border-color: #0033a0;
+  box-shadow: 0 0 6px rgba(0, 51, 160, 0.3);
+  outline: none;
+}
+
+/* Button */
+.login-card button {
+  background-color: #0033a0;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.login-card button:hover {
+  background-color: #002070;
+  transform: translateY(-2px);
+}
+
+.login-card button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Error box */
+.login-card .error-box {
+  background: #ffe6e6;
+  color: #d00000;
+  border: 1px solid #ffcccc;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .login-card {
+    width: 90%;
+    padding: 2rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .login-card .logo {
+    width: 100px;
+  }
+
+  .login-card .subtitle {
+    font-size: 1.1rem;
+  }
+}
+
     
     /* Header Hamburger Button */
     .header-hamburger-btn {
@@ -3576,10 +3678,6 @@ const GlobalStyles = () => (
       
       /* Removed conflicting login-page-container dark mode styles */
       
-      .login-card {
-        background: rgba(255, 255, 255, 0.95);
-        border-color: rgba(255, 255, 255, 0.1);
-      }
       
       .navbar-pepsico-logo {
         filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.1));
@@ -3956,7 +4054,7 @@ const GlobalStyles = () => (
       border: none;
       border-radius: 0.875rem;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.79rem;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       text-decoration: none;
@@ -8005,8 +8103,8 @@ const GlobalStyles = () => (
       .sidebar-mobile-toggle {
         width: 36px;
         height: 36px;
-        top: 0.6rem;
-        left: 0.6rem;
+        top: 0.4rem;
+        left: 0.2rem;
       }
 
       .sidebar-mobile-toggle svg {

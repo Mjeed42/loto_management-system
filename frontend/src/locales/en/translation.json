@@ -144,5 +144,28 @@
     "arabic": "العربية",
     "selectLanguage": "Select Language",
     "changeLanguage": "Change Language"
+  },
+  "sidebar": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "createLoto": "Create LOTO",
+    "newLoto": "New LOTO",
+    "myLotos": "My LOTOs",
+    "allLotos": "All LOTOs",
+    "lotoList": "LOTO List",
+    "notifications": "Notifications",
+    "alerts": "Alerts",
+    "admin": "Admin",
+    "settings": "Settings",
+    "reports": "Reports",
+    "export": "Export",
+    "monitoring": "Monitoring",
+    "analytics": "Analytics",
+    "lotoManagement": "LOTO Management",
+    "closeSidebar": "Close sidebar",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "logout": "Logout",
+    "signOut": "Sign out of system"
   }
 }

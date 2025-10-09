@@ -31,7 +31,7 @@ export const LoadingProvider = ({ children }) => {
       <div className="global-loading-overlay">
         <div className="loading-content">
           <img 
-            src="https://logos-world.net/wp-content/uploads/2022/03/Pepsico-Symbol.png"
+            src="../components/PEP_logo.png"
             alt="PepsiCo Logo"
             className="loading-logo"
           />
@@ -49,5 +49,6 @@ export const LoadingProvider = ({ children }) => {
     </LoadingContext.Provider>
   );
 };
+
 
 

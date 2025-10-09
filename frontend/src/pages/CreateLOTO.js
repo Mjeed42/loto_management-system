@@ -518,7 +518,7 @@ const CreateLOTO = () => {
             res.data.data?.serialNumber || res.data.serialNumber
           }`
         );
-        navigate("/loto-list");
+        navigate(getHomePath());
       } else {
         setError(res.data?.message || "Error creating LOTO");
       }
@@ -552,7 +552,7 @@ const CreateLOTO = () => {
 
   return (
     <div className="create-loto-container">
-      <BackButton to={getHomePath()} label={t('createLoto.backToHome')} />
+      <BackButton to={currentUser ? getHomePath() : "/technician-home"} label={t('common.back')} />
       
       
       
@@ -572,7 +572,7 @@ const CreateLOTO = () => {
             <ActionButton
               variant="secondary"
               icon="list"
-              onClick={() => navigate("/loto-list")}
+              onClick={() => navigate(getHomePath())}
             >
               My LOTOs
             </ActionButton>

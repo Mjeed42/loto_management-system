@@ -717,7 +717,7 @@ const LOTOdetail = () => {
 
                     {/* Detailed History */}
                     <div className="detailed-history">
-                      <h6>{t('lotoDetails.detailedHistory')}:</h6>
+                      <h6>{t('lotoDetailsHistory.detailedHistory')}:</h6>
                       <div className="history-list">
                         {handoverHistory.map((handover, index) => (
                           <div key={index} className="history-item">
@@ -734,34 +734,34 @@ const LOTOdetail = () => {
                                 {handover.handoverType?.replace('_', ' ').toUpperCase()}
                               </span>
                               <span className="created-by">
-                                Created by: {handover.createdByName}
+                                {t('lotoDetailsHistory.createdBy')}: {handover.createdByName}
                               </span>
                             </div>
                             {handover.handoverNotes && (
                               <div className="handover-notes">
-                                <strong>Notes:</strong> {handover.handoverNotes}
+                                <strong>{t('lotoDetailsHistory.notes')}:</strong> {handover.handoverNotes}
                               </div>
                             )}
                             
                             {/* Recipient Decision Status */}
                             <div className="recipient-decision-section">
                               <div className="recipient-status">
-                                <strong>Recipient Decision:</strong>
+                                <strong>{t('lotoDetailsHistory.recipientDecision')}:</strong>
                                 <span className={`recipient-badge ${handover.recipientStatus || 'pending'}`}>
-                                  {handover.recipientStatus === 'accepted' ? '✅ Accepted' : 
-                                   handover.recipientStatus === 'rejected' ? '❌ Rejected' : 
-                                   '⏳ Pending Decision'}
+                                  {handover.recipientStatus === 'accepted' ? `✅ ${t('lotoDetailsHistory.accepted')}` : 
+                                   handover.recipientStatus === 'rejected' ? `❌ ${t('lotoDetailsHistory.rejected')}` : 
+                                   `⏳ ${t('lotoDetailsHistory.pendingDecision')}`}
                                 </span>
                               </div>
                               
                               {handover.recipientStatus === 'accepted' && handover.recipientDecisionDate && (
                                 <div className="recipient-details">
                                   <span className="recipient-decision-info">
-                                    Accepted on {new Date(handover.recipientDecisionDate).toLocaleString()}
+                                    {t('lotoDetailsHistory.acceptedOn')} {new Date(handover.recipientDecisionDate).toLocaleString()}
                                   </span>
                                   {handover.recipientDecisionNotes && (
                                     <div className="recipient-decision-notes">
-                                      <strong>Decision Notes:</strong> {handover.recipientDecisionNotes}
+                                      <strong>{t('lotoDetailsHistory.decisionNotes')}:</strong> {handover.recipientDecisionNotes}
                                     </div>
                                   )}
                                 </div>
@@ -770,11 +770,11 @@ const LOTOdetail = () => {
                               {handover.recipientStatus === 'rejected' && handover.recipientDecisionDate && (
                                 <div className="recipient-details">
                                   <span className="recipient-decision-info">
-                                    Rejected on {new Date(handover.recipientDecisionDate).toLocaleString()}
+                                    {t('lotoDetailsHistory.rejectedOn')} {new Date(handover.recipientDecisionDate).toLocaleString()}
                                   </span>
                                   {handover.recipientDecisionNotes && (
                                     <div className="recipient-decision-notes">
-                                      <strong>Rejection Notes:</strong> {handover.recipientDecisionNotes}
+                                      <strong>{t('lotoDetailsHistory.rejectionNotes')}:</strong> {handover.recipientDecisionNotes}
                                     </div>
                                   )}
                                 </div>
@@ -803,23 +803,23 @@ const LOTOdetail = () => {
                             {/* Verification Status */}
                             <div className="verification-section">
                               <div className="verification-status">
-                                <strong>Supervisor Verification:</strong>
+                                <strong>{t('lotoDetailsHistory.supervisorVerification')}:</strong>
                                 <span className={`verification-badge ${handover.verificationStatus || 'pending'}`}>
-                                  {handover.verificationStatus === 'approved' ? '✅ Approved' : 
-                                   handover.verificationStatus === 'rejected' ? '❌ Rejected' : 
-                                   handover.recipientStatus === 'accepted' ? '⏳ Pending Verification' : 
-                                   '⏸️ Waiting for Recipient Decision'}
+                                  {handover.verificationStatus === 'approved' ? `✅ ${t('lotoDetailsHistory.approved')}` : 
+                                   handover.verificationStatus === 'rejected' ? `❌ ${t('lotoDetailsHistory.rejected')}` : 
+                                   handover.recipientStatus === 'accepted' ? `⏳ ${t('lotoDetailsHistory.pendingVerification')}` : 
+                                   `⏸️ ${t('lotoDetailsHistory.waitingForRecipientDecision')}`}
                                 </span>
                               </div>
                               
                               {handover.verificationStatus === 'approved' && handover.verifiedByName && (
                                 <div className="verification-details">
                                   <span className="verified-by">
-                                    Approved by {handover.verifiedByName} at {new Date(handover.verificationDate).toLocaleString()}
+                                    {t('lotoDetailsHistory.approvedBy')} {handover.verifiedByName} {t('lotoDetailsHistory.approvedAt')} {new Date(handover.verificationDate).toLocaleString()}
                                   </span>
                                   {handover.verificationNotes && (
                                     <div className="verification-notes">
-                                      <strong>Verification Notes:</strong> {handover.verificationNotes}
+                                      <strong>{t('lotoDetailsHistory.verificationNotes')}:</strong> {handover.verificationNotes}
                                     </div>
                                   )}
                                 </div>
@@ -828,16 +828,16 @@ const LOTOdetail = () => {
                               {handover.verificationStatus === 'rejected' && handover.verifiedByName && (
                                 <div className="verification-details">
                                   <span className="verified-by">
-                                    Rejected by {handover.verifiedByName} at {new Date(handover.verificationDate).toLocaleString()}
+                                    {t('lotoDetailsHistory.rejectedBy')} {handover.verifiedByName} {t('lotoDetailsHistory.rejectedAt')} {new Date(handover.verificationDate).toLocaleString()}
                                   </span>
                                   {handover.rejectionReason && (
                                     <div className="rejection-reason">
-                                      <strong>Rejection Reason:</strong> {handover.rejectionReason}
+                                      <strong>{t('lotoDetailsHistory.rejectionReason')}:</strong> {handover.rejectionReason}
                                     </div>
                                   )}
                                   {handover.verificationNotes && (
                                     <div className="verification-notes">
-                                      <strong>Verification Notes:</strong> {handover.verificationNotes}
+                                      <strong>{t('lotoDetailsHistory.verificationNotes')}:</strong> {handover.verificationNotes}
                                     </div>
                                   )}
                                 </div>
@@ -866,7 +866,7 @@ const LOTOdetail = () => {
                               {/* Assigned Verifier for Pending Handovers */}
                               {(!handover.verificationStatus || handover.verificationStatus === 'pending') && handover.assignedVerifierName && (
                                 <div className="assigned-verifier">
-                                  <strong>Assigned Verifier:</strong> {handover.assignedVerifierName}
+                                  <strong>{t('lotoDetailsHistory.assignedVerifier')}:</strong> {handover.assignedVerifierName}
                                 </div>
                               )}
                             </div>

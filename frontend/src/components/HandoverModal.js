@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import Button from './Button';
 import Icon from './Icon';
 
 const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) => {
+  const { t } = useTranslation();
   const [selectedUser, setSelectedUser] = useState('');
   const [selectedUserName, setSelectedUserName] = useState('');
   const [handoverNotes, setHandoverNotes] = useState('');
@@ -14,11 +16,11 @@ const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) =>
   const [loading, setLoading] = useState(false);
 
   const handoverTypes = [
-    { value: 'shift_change', label: 'Shift Change', description: 'End of shift handover' },
-    { value: 'break_coverage', label: 'Break Coverage', description: 'Temporary coverage during break' },
-    { value: 'maintenance_handover', label: 'Maintenance Handover', description: 'Handover for maintenance work' },
-    { value: 'emergency', label: 'Emergency', description: 'Emergency situation handover' },
-    { value: 'other', label: 'Other', description: 'Other reason' },
+    { value: 'shift_change', label: t('handoverModal.shiftChange'), description: t('handoverModal.shiftChangeDesc') },
+    { value: 'break_coverage', label: t('handoverModal.breakCoverage'), description: t('handoverModal.breakCoverageDesc') },
+    { value: 'maintenance_handover', label: t('handoverModal.maintenanceHandover'), description: t('handoverModal.maintenanceHandoverDesc') },
+    { value: 'emergency', label: t('handoverModal.emergency'), description: t('handoverModal.emergencyDesc') },
+    { value: 'other', label: t('handoverModal.other'), description: t('handoverModal.otherDesc') },
   ];
 
   // Fetch users when modal opens
@@ -96,12 +98,12 @@ const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) =>
 
   const handleConfirm = () => {
     if (!selectedUser) {
-      alert('Please select a user to handover to.');
+      alert(t('handoverModal.pleaseSelectUser'));
       return;
     }
 
     if (selectedUser === currentUser?.id) {
-      alert('Cannot handover to yourself.');
+      alert(t('handoverModal.cannotHandoverToSelf'));
       return;
     }
 
@@ -132,7 +134,7 @@ const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) =>
     <div className="modal-overlay">
       <div className="modal-container handover-modal">
         <div className="modal-header">
-          <h3>Create Handover</h3>
+          <h3>{t('handoverModal.createHandover')}</h3>
           <button className="modal-close" onClick={handleClose}>
             <Icon name="x" />
           </button>
@@ -140,14 +142,14 @@ const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) =>
         
         <div className="modal-body">
           <div className="handover-info">
-            <p><strong>LOTO:</strong> {lotoData?.serialNumber}</p>
-            <p><strong>Isolated Part:</strong> {lotoData?.isolatedPart}</p>
-            <p><strong>Current Responsible:</strong> {lotoData?.currentResponsibleName || `${lotoData?.isolator?.firstName} ${lotoData?.isolator?.lastName}`}</p>
+            <p><strong>{t('handoverModal.loto')}:</strong> {lotoData?.serialNumber}</p>
+            <p><strong>{t('handoverModal.isolatedPart')}:</strong> {lotoData?.isolatedPart}</p>
+            <p><strong>{t('handoverModal.currentResponsible')}:</strong> {lotoData?.currentResponsibleName || `${lotoData?.isolator?.firstName} ${lotoData?.isolator?.lastName}`}</p>
           </div>
 
           <div className="form-group">
             <label htmlFor="handoverType">
-              Handover Type <span className="required">*</span>
+              {t('handoverModal.handoverType')} <span className="required">*</span>
             </label>
             <select
               id="handoverType"
@@ -166,10 +168,10 @@ const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) =>
 
           <div className="form-group">
             <label htmlFor="toUser">
-              Handover To <span className="required">*</span>
+              {t('handoverModal.handoverTo')} <span className="required">*</span>
             </label>
             {loading ? (
-              <div className="loading-text">Loading technicians...</div>
+              <div className="loading-text">{t('handoverModal.loadingTechnicians')}</div>
             ) : (
               <>
                 {/* Searchable Dropdown - Same as HandoverLOTO.js */}
@@ -184,7 +186,7 @@ const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) =>
                   {/* Search Input */}
                   <input
                     type="text"
-                    placeholder="Search technicians..."
+                    placeholder={t('handoverModal.searchTechnicians')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{
@@ -237,7 +239,7 @@ const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) =>
                         ))
                       ) : (
                         <div style={{ padding: "10px", color: "#666" }}>
-                          No technicians found
+                          {t('handoverModal.noTechniciansFound')}
                         </div>
                       )}
                     </div>
@@ -254,7 +256,7 @@ const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) =>
                         color: "#495057",
                       }}
                     >
-                      Selected: {selectedUserName}
+{t('handoverModal.selected')}: {selectedUserName}
                     </div>
                   )}
                 </div>
@@ -264,13 +266,13 @@ const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) =>
 
           <div className="form-group">
             <label htmlFor="handoverNotes">
-              Handover Notes
+              {t('handoverModal.handoverNotes')}
             </label>
             <textarea
               id="handoverNotes"
               value={handoverNotes}
               onChange={(e) => setHandoverNotes(e.target.value)}
-              placeholder="Add notes about the handover (optional)..."
+              placeholder={t('handoverModal.handoverNotesPlaceholder')}
               rows="4"
               className="form-control"
             />
@@ -279,11 +281,11 @@ const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) =>
 
         <div className="modal-footer">
           <Button variant="secondary" onClick={handleClose}>
-            Cancel
+            {t('handoverModal.cancel')}
           </Button>
           <Button variant="primary" onClick={handleConfirm} disabled={loading}>
             <Icon name="check" />
-            Create Handover
+            {t('handoverModal.createHandover')}
           </Button>
         </div>
       </div>

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Icon from "./Icon";
 
 const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed like GitHub
@@ -29,21 +31,21 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
     const items = [
       { 
         path: currentUser.role === "technician" ? "/technician-home" : "/Home", 
-        label: "Home", 
+        label: t('sidebar.home'), 
         icon: "home",
-        description: "Dashboard"
+        description: t('sidebar.dashboard')
       },
       { 
         path: "/create-loto", 
-        label: "Create LOTO", 
+        label: t('sidebar.createLoto'), 
         icon: "plus",
-        description: "New LOTO"
+        description: t('sidebar.newLoto')
       },
       { 
         path: "/loto-list", 
-        label: currentUser.role === "technician" ? "My LOTOs" : "All LOTOs", 
+        label: currentUser.role === "technician" ? t('sidebar.myLotos') : t('sidebar.allLotos'), 
         icon: "list",
-        description: "LOTO List"
+        description: t('sidebar.lotoList')
       }
     ];
 
@@ -51,9 +53,9 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
     if (currentUser.role !== "technician") {
       items.push({
         path: "/notifications", 
-        label: "Notifications", 
+        label: t('sidebar.notifications'), 
         icon: "notification",
-        description: "Alerts"
+        description: t('sidebar.alerts')
       });
     }
 
@@ -62,21 +64,21 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
       items.push(
         { 
           path: "/admin", 
-          label: "Admin", 
+          label: t('sidebar.admin'), 
           icon: "settings",
-          description: "Settings"
+          description: t('sidebar.settings')
         },
         { 
           path: "/data-export", 
-          label: "Reports", 
+          label: t('sidebar.reports'), 
           icon: "download",
-          description: "Export"
+          description: t('sidebar.export')
         },
         { 
           path: "/monitoring", 
-          label: "Monitoring", 
+          label: t('sidebar.monitoring'), 
           icon: "chart",
-          description: "Analytics"
+          description: t('sidebar.analytics')
         }
       );
     }
@@ -128,7 +130,7 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
             </div>
             {(!isCollapsed || mobileOpen) && (
               <div className="brand-text">
-                <h3>LOTO Management</h3>
+                <h3>{t('sidebar.lotoManagement')}</h3>
               
               </div>
             )}
@@ -138,7 +140,7 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
           <button 
             className="sidebar-close-btn"
             onClick={toggleMobileSidebar}
-            title="Close sidebar"
+            title={t('sidebar.closeSidebar')}
           >
             <Icon name="x" />
           </button>
@@ -147,7 +149,7 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
           <button 
             className="sidebar-toggle desktop-only"
             onClick={toggleSidebar}
-            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isCollapsed ? t('sidebar.expandSidebar') : t('sidebar.collapseSidebar')}
           >
             <Icon name={isCollapsed ? "chevron-right" : "chevron-left"} />
           </button>
@@ -163,7 +165,7 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
               <span className="user-name">
                 {currentUser.firstName} {currentUser.lastName}
               </span>
-              <span className="user-role">{currentUser.role}</span>
+              <span className="user-role">{t(`user.${currentUser.role}`)}</span>
             </div>
           )}
         </div>
@@ -211,14 +213,14 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
               // Hard refresh to reset app state
               window.location.href = "/";
             }}
-            title={isCollapsed ? "Logout" : "Sign out of system"}
+            title={isCollapsed ? t('sidebar.logout') : t('sidebar.signOut')}
           >
             <div className="nav-icon">
               <Icon name="logout" />
             </div>
             {(!isCollapsed || mobileOpen) && (
               <div className="nav-content">
-                <span className="nav-label">Logout</span>
+                <span className="nav-label">{t('sidebar.logout')}</span>
               </div>
             )}
           </button>

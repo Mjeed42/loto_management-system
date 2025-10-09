@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "./Button";
 import Icon from "./Icon";
 import NotificationBadge from "./NotificationBadge";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 const Header = ({ currentUser, onToggleSidebar }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
@@ -18,24 +20,25 @@ const Header = ({ currentUser, onToggleSidebar }) => {
   const getPageTitle = () => {
     const path = location.pathname;
     const titleMap = {
-      "/Home": "Home",
-      "/loto-list": "My LOTOs",
-      "/create-loto": "Create LOTO",
-      "/admin": "Admin Panel",
-      "/data-export": "Data Export",
-      "/monitoring": "Monitoring",
-      "/notifications": "Notifications"
+      "/Home": t('header.home'),
+      "/technician-home": t('header.home'),
+      "/loto-list": t('header.myLotos'),
+      "/create-loto": t('header.createLoto'),
+      "/admin": t('header.adminPanel'),
+      "/data-export": t('header.dataExport'),
+      "/monitoring": t('header.monitoring'),
+      "/notifications": t('header.notifications')
     };
 
     // Handle LOTO detail pages
     if (path.startsWith("/loto/")) {
-      if (path.includes("/update")) return "Update LOTO";
-      if (path.includes("/handover")) return "Handover LOTO";
-      if (path.includes("/complete")) return "Complete LOTO";
-      return "LOTO Details";
+      if (path.includes("/update")) return t('header.updateLoto');
+      if (path.includes("/handover")) return t('header.handoverLoto');
+      if (path.includes("/complete")) return t('header.completeLoto');
+      return t('header.lotoDetails');
     }
 
-    return titleMap[path] || "LOTO Management";
+    return titleMap[path] || t('header.lotoManagementTitle');
   };
 
   const handleLogout = () => {
@@ -94,7 +97,7 @@ const Header = ({ currentUser, onToggleSidebar }) => {
                 <Icon name="lock" />
               </div>
               <div className="brand-title">
-                <h1>LOTO Management</h1>
+                <h1>{t('header.lotoManagement')}</h1>
                 
               </div>
             </div>
@@ -111,7 +114,7 @@ const Header = ({ currentUser, onToggleSidebar }) => {
         <button 
           className="sidebar-mobile-toggle"
           onClick={onToggleSidebar}
-          title="Open sidebar"
+          title={t('header.openSidebar')}
         >
           <Icon name="menu" />
         </button>
@@ -144,7 +147,7 @@ const Header = ({ currentUser, onToggleSidebar }) => {
             >
               <div className="dropdown-header">
                 <Icon name="notification" />
-                <span>Notifications</span>
+                <span>{t('header.notifications')}</span>
               </div>
               <div className="dropdown-divider"></div>
               <button
@@ -155,7 +158,7 @@ const Header = ({ currentUser, onToggleSidebar }) => {
                 }}
               >
                 <Icon name="list" />
-                <span>View All Notifications</span>
+                <span>{t('header.viewAllNotifications')}</span>
               </button>
             </div>
           </div>
@@ -173,7 +176,7 @@ const Header = ({ currentUser, onToggleSidebar }) => {
                 <span className="user-name">
                   {currentUser.firstName} {currentUser.lastName}
                 </span>
-                <span className="user-role">{currentUser.role}</span>
+                <span className="user-role">{t(`user.${currentUser.role}`)}</span>
               </div>
               <Icon name="chevron-down" className="chevron" />
             </button>
@@ -187,7 +190,7 @@ const Header = ({ currentUser, onToggleSidebar }) => {
                   <span className="user-name">
                     {currentUser.firstName} {currentUser.lastName}
                   </span>
-                  <span className="user-role">{currentUser.role}</span>
+                  <span className="user-role">{t(`user.${currentUser.role}`)}</span>
                 </div>
               </div>
               <div className="dropdown-divider"></div>
@@ -195,12 +198,12 @@ const Header = ({ currentUser, onToggleSidebar }) => {
               <button
                 className="dropdown-item"
                 onClick={() => {
-                  navigate("/Home");
+                  navigate(currentUser.role === "technician" ? "/technician-home" : "/Home");
                   setUserDropdownOpen(false);
                 }}
               >
                 <Icon name="Home" />
-                <span>Home</span>
+                <span>{t('header.home')}</span>
               </button>
 
               <button
@@ -211,7 +214,7 @@ const Header = ({ currentUser, onToggleSidebar }) => {
                 }}
               >
                 <Icon name="list" />
-                <span>My LOTOs</span>
+                <span>{t('header.myLotos')}</span>
               </button>
 
               {/* Admin Page Link */}
@@ -226,7 +229,7 @@ const Header = ({ currentUser, onToggleSidebar }) => {
                     }}
                   >
                     <Icon name="settings" />
-                    <span>Admin Page</span>
+                    <span>{t('header.adminPage')}</span>
                   </button>
                 </>
               )}
@@ -238,7 +241,7 @@ const Header = ({ currentUser, onToggleSidebar }) => {
                 onClick={handleLogout}
               >
                 <Icon name="logout" />
-                <span>Logout</span>
+                <span>{t('header.logout')}</span>
               </button>
             </div>
           </div>

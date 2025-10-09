@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Icon from "./Icon";
 
 const QuickActions = ({ currentUser, className = "" }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -11,36 +13,36 @@ const QuickActions = ({ currentUser, className = "" }) => {
   const getQuickActions = () => {
     const actions = [
       {
-        label: "Create New LOTO",
+        label: t('quickActions.createNewLoto'),
         icon: "plus",
         path: "/create-loto",
         color: "primary",
-        description: "Start a new lockout/tagout procedure"
+        description: t('quickActions.createNewLotoDesc')
       },
       {
-        label: "My LOTOs",
+        label: t('quickActions.myLotos'),
         icon: "list",
         path: "/loto-list",
         color: "info",
-        description: "View all your LOTO requests"
+        description: t('quickActions.myLotosDesc')
       }
     ];
 
     if (currentUser.role === "admin") {
       actions.push(
         {
-          label: "Admin Dashboard",
+          label: t('quickActions.adminDashboard'),
           icon: "settings",
           path: "/admin",
           color: "warning",
-          description: "Access administrative functions"
+          description: t('quickActions.adminDashboardDesc')
         },
         {
-          label: "Export Data",
+          label: t('quickActions.exportData'),
           icon: "download",
           path: "/data-export",
           color: "success",
-          description: "Export LOTO data and reports"
+          description: t('quickActions.exportDataDesc')
         }
       );
     }
@@ -56,7 +58,7 @@ const QuickActions = ({ currentUser, className = "" }) => {
       <button
         className={`quick-actions-fab ${isOpen ? "open" : ""}`}
         onClick={() => setIsOpen(!isOpen)}
-        title="Quick Actions"
+        title={t('quickActions.title')}
       >
         <Icon name={isOpen ? "x" : "zap"} />
       </button>
@@ -65,7 +67,7 @@ const QuickActions = ({ currentUser, className = "" }) => {
       <div className={`quick-actions-menu ${isOpen ? "open" : ""}`}>
         <div className="quick-actions-header">
           <Icon name="zap" />
-          <span>Quick Actions</span>
+          <span>{t('quickActions.title')}</span>
         </div>
         
         {quickActions.map((action, index) => (

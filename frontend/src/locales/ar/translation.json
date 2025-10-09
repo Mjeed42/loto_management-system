@@ -144,5 +144,28 @@
     "arabic": "العربية",
     "selectLanguage": "اختر اللغة",
     "changeLanguage": "تغيير اللغة"
+  },
+  "sidebar": {
+    "home": "الرئيسية",
+    "dashboard": "لوحة التحكم",
+    "createLoto": "إنشاء LOTO",
+    "newLoto": "LOTO جديد",
+    "myLotos": "LOTO الخاصة بي",
+    "allLotos": "جميع LOTO",
+    "lotoList": "قائمة LOTO",
+    "notifications": "الإشعارات",
+    "alerts": "التنبيهات",
+    "admin": "الإدارة",
+    "settings": "الإعدادات",
+    "reports": "التقارير",
+    "export": "تصدير",
+    "monitoring": "المراقبة",
+    "analytics": "التحليلات",
+    "lotoManagement": "إدارة LOTO",
+    "closeSidebar": "إغلاق الشريط الجانبي",
+    "expandSidebar": "توسيع الشريط الجانبي",
+    "collapseSidebar": "طي الشريط الجانبي",
+    "logout": "تسجيل الخروج",
+    "signOut": "الخروج من النظام"
   }
 }

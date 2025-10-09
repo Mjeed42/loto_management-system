@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Button from "../components/Button";
+import BackButton from "../components/BackButton";
 import RejectLOTOModal from "../components/RejectLOTOModal";
 import StatusChangeModal from "../components/StatusChangeModal";
 import HandoverModal from "../components/HandoverModal";
@@ -31,6 +32,9 @@ const LOTOList = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterSupervisor, setFilterSupervisor] = useState("all"); // New supervisor filter
   const [activeFilter, setActiveFilter] = useState(null); // Track which stat card is active
+  const [currentPage, setCurrentPage] = useState(1); // Current page number
+  const [itemsPerPage] = useState(10); // Items per page for desktop
+  const [isMobile, setIsMobile] = useState(false); // Track mobile state
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedLotoForRejection, setSelectedLotoForRejection] = useState(null);
   const [statusChangeModalOpen, setStatusChangeModalOpen] = useState(false);
@@ -41,6 +45,19 @@ const LOTOList = () => {
   useEffect(() => {
     fetchLOTOs();
     fetchCurrentUser();
+  }, []);
+
+  // Detect mobile screen size and update items per page
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const fetchCurrentUser = async () => {
@@ -59,6 +76,14 @@ const LOTOList = () => {
     } catch (err) {
       console.log("Error fetching current user");
     }
+  };
+
+  // Get the correct home path based on user role
+  const getHomePath = () => {
+    if (currentUser?.role === "technician") {
+      return "/technician-home";
+    }
+    return "/Home";
   };
 
   const fetchLOTOs = async () => {
@@ -177,7 +202,18 @@ const LOTOList = () => {
     setFilterStatus("all");
     setFilterSupervisor("all");
     setSearchTerm("");
+    setCurrentPage(1); // Reset to first page when clearing filters
   };
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterSupervisor, activeFilter]);
+
+  // Reset to first page when switching between mobile/desktop
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [isMobile]);
 
   const handleVerify = async (lotoId) => {
     try {
@@ -485,57 +521,57 @@ const LOTOList = () => {
   // Helper function to get short status text for badges
   const getShortStatusText = (status) => {
     const statusMap = {
-      pending_verification_new: "PENDING",
-      active: "ACTIVE",
-      pending_handover_verification: "HANDOVER",
-      handed_over: "HANDED OVER",
-      completed: "COMPLETED",
-      rejected: "REJECTED"
+      pending_verification_new: t('lotoList.pendingVerification').toUpperCase(),
+      active: t('lotoList.active').toUpperCase(),
+      pending_handover_verification: t('lotoList.pendingHandover').toUpperCase(),
+      handed_over: t('lotoList.handedOver').toUpperCase(),
+      completed: t('lotoList.completed').toUpperCase(),
+      rejected: t('lotoList.rejected').toUpperCase()
     };
-    return statusMap[status] || status?.replace(/_/g, ' ').toUpperCase() || "UNKNOWN";
+    return statusMap[status] || status?.replace(/_/g, ' ').toUpperCase() || t('lotoList.unknown').toUpperCase();
   };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending_verification_new: {
-        text: "Pending Verification (New)",
+        text: t('lotoList.pendingVerification'),
         variant: "warning",
         icon: "⏳",
         color: "#f59e0b",
       },
       active: {
-        text: "Active",
+        text: t('lotoList.active'),
         variant: "success",
         icon: "⚡",
         color: "#22c55e",
       },
       pending_handover_verification: {
-        text: "Pending Handover Verification",
+        text: t('lotoList.pendingHandover'),
         variant: "info",
         icon: "🔄",
         color: "#0ea5e9",
       },
       handed_over: {
-        text: "Handed Over",
+        text: t('lotoList.handedOver'),
         variant: "primary",
         icon: "📋",
         color: "#3b82f6",
       },
       completed: {
-        text: "Completed",
+        text: t('lotoList.completed'),
         variant: "secondary",
         icon: "✅",
         color: "#166534",
       },
       rejected: {
-        text: "Rejected",
+        text: t('lotoList.rejected'),
         variant: "danger",
         icon: "❌",
         color: "#ef4444",
       },
     };
     const config = statusConfig[status] || {
-      text: status || "Unknown",
+      text: status || t('lotoList.unknown'),
       variant: "secondary",
       icon: "❓",
       color: "#6b7280",
@@ -608,6 +644,37 @@ const LOTOList = () => {
     return matchesSearch && matchesStatus && matchesSupervisor;
   });
 
+  // Dynamic items per page based on screen size
+  const dynamicItemsPerPage = isMobile ? 5 : itemsPerPage;
+  
+  // Pagination calculations
+  const totalItems = filteredLotos.length;
+  const totalPages = Math.ceil(totalItems / dynamicItemsPerPage);
+  const startIndex = (currentPage - 1) * dynamicItemsPerPage;
+  const endIndex = startIndex + dynamicItemsPerPage;
+  const currentPageItems = filteredLotos.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      // Scroll to top of the list
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1);
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center py-5">
@@ -619,8 +686,8 @@ const LOTOList = () => {
           <span className="visually-hidden">Loading...</span>
         </div>
         <div className="mt-3">
-          <h4 className="text-muted">Loading LOTOs...</h4>
-          <p className="text-muted">Please wait while we fetch your data</p>
+          <h4 className="text-muted">{t('loading.loadingLotos')}</h4>
+          <p className="text-muted">{t('loading.pleaseWaitFetch')}</p>
         </div>
       </div>
     );
@@ -657,31 +724,33 @@ const LOTOList = () => {
 
   return (
     <div className="cf-Home">
+      <BackButton to={currentUser ? getHomePath() : "/technician-home"} label={t('common.back')} />
+      
       {/* Header Section */}
-      <div className="cf-header">
-        <div className="cf-header-content">
-          <div className="cf-header-inner">
-            <div>
-              <h1 className="cf-header-title">
+      <div className="loto-header">
+        <div className="loto-header-container">
+          <div className="loto-header-content">
+            <div className="loto-header-text">
+              <h1 className="loto-header-title">
                 📋 {t('lotoList.title')}
               </h1>
-              <p className="cf-header-subtitle">{t('lotoList.subtitle')}</p>
+              <p className="loto-header-subtitle">{t('lotoList.subtitle')}</p>
             </div>
-            <div className="cf-header-actions">
+            <div className="loto-header-buttons">
               <button
-                className="cf-btn cf-btn-sm cf-btn-outline-secondary"
+                className="loto-btn loto-btn-refresh"
                 onClick={fetchLOTOs}
               >
-                🔄 Refresh
+                🔄 {t('common.refresh')}
               </button>
               <button
-                className="cf-btn cf-btn-sm cf-btn-outline-secondary"
+                className="loto-btn loto-btn-create"
                 onClick={() => navigate("/create-loto")}
               >
                 ➕ {t('navigation.createLoto')}
               </button>
               <button
-                className="cf-btn cf-btn-sm cf-btn-outline-secondary"
+                className="loto-btn loto-btn-home"
                 onClick={() => navigate(currentUser?.role === "technician" ? "/technician-home" : "/Home")}
               >
                 🏠 {t('common.home')}
@@ -694,7 +763,7 @@ const LOTOList = () => {
       {/* Main Content */}
       <div className="cf-main">
         {/* Statistics Dashboard */}
-        <div className="cf-grid cf-grid-cols-1 md:cf-grid-cols-2 lg:cf-grid-cols-3 cf-gap-4 cf-mb-4">
+        <div className="statistics-container">
           <div 
             className={`cf-stat-card ${activeFilter === "all" ? "cf-shadow-lg" : ""}`}
             onClick={() => handleStatCardClick("all")}
@@ -928,6 +997,31 @@ const LOTOList = () => {
           </div>
         )}
 
+        {/* Results Summary */}
+        {filteredLotos.length > 0 && (
+          <div className="cf-card cf-mb-3">
+            <div className="cf-card-body">
+              <div className="results-summary">
+                <span className="results-text">
+                  {t('lotoList.showingResults', { 
+                    start: startIndex + 1, 
+                    end: Math.min(endIndex, totalItems), 
+                    total: totalItems 
+                  })}
+                </span>
+                <div className="page-info-container">
+                  <span className="page-info">
+                    {t('lotoList.pageOf', { current: currentPage, total: totalPages })}
+                  </span>
+                  <span className="items-per-page-info">
+                    {isMobile ? t('lotoList.mobileView') : t('lotoList.desktopView')} ({dynamicItemsPerPage} {t('lotoList.perPage')})
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* LOTO Table - Desktop Only */}
         <div className="desktop-table-view">
           {filteredLotos.length === 0 && !loading ? (
@@ -970,18 +1064,18 @@ const LOTOList = () => {
                       <th>{t('lotoList.currentResponsible')}</th>
                       <th>{t('lotoList.isolator')}</th>
                       <th>{t('lotoList.energyTypes')}</th>
-                      <th>{t('lotoList.status')}</th>
+                      <th>{t('loto.status')}</th>
                       <th className="cf-text-center">{t('lotoList.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredLotos.map((loto, index) => (
+                    {currentPageItems.map((loto, index) => (
                       <tr
                         key={loto._id}
                         onClick={() => navigate(`/loto/${loto._id}`)}
                         style={{ cursor: "pointer" }}
                       >
-                        <td>{index + 1}</td>
+                        <td>{startIndex + index + 1}</td>
                         <td>{loto.serialNumber || "N/A"}</td>
                         <td>{loto.supervisorName || "N/A"}</td>
                         <td>
@@ -1145,13 +1239,13 @@ const LOTOList = () => {
                 </div>
                 <h3 className="cf-text-lg cf-font-semibold cf-text-primary cf-mb-2">
                   {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
-                    ? "No LOTOs Found"
-                    : "No LOTOs Created Yet"}
+                    ? t('lotoList.noLotosFound')
+                    : t('lotoList.noLotosCreatedYet')}
                 </h3>
                 <p className="cf-text-secondary cf-mb-4">
                   {searchTerm || filterStatus !== "all" || filterSupervisor !== "all"
-                    ? "Try adjusting your search or filter to find what you're looking for."
-                    : "Get started by creating your first LOTO."}
+                    ? t('lotoList.tryAdjustingSearch')
+                    : t('lotoList.getStartedCreating')}
                 </p>
                 {!(searchTerm || filterStatus !== "all" || filterSupervisor !== "all") && (
                   <button
@@ -1159,19 +1253,19 @@ const LOTOList = () => {
                     onClick={() => navigate("/create-loto")}
                     style={{ backgroundColor: "#3b82f6", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: "0.375rem" }}
                   >
-                    ➕ Create LOTO
+                    ➕ {t('navigation.createLoto')}
                   </button>
                 )}
               </div>
             </div>
           ) : (
-            filteredLotos.map((loto, index) => (
+            currentPageItems.map((loto, index) => (
             <div key={loto._id} className="loto-card" onClick={() => navigate(`/loto/${loto._id}`)}>
               {/* Card Header */}
               <div className="card-header">
                 <div className="serial-info">
                   <div className="serial-number">{loto.serialNumber || "N/A"}</div>
-                  <div className="row-number">#{index + 1}</div>
+                  <div className="row-number">#{startIndex + index + 1}</div>
                 </div>
                 <div className={`status-badge status-${loto.status}`}>
                   {getShortStatusText(loto.status)}
@@ -1181,14 +1275,14 @@ const LOTOList = () => {
               {/* Card Content */}
               <div className="card-content">
                 <div className="info-row">
-                  <div className="info-label">Authorized Supervisor</div>
+                  <div className="info-label">{t('lotoList.authorizedSupervisor')}</div>
                   <div className="info-value">
                     {loto.supervisorName || "N/A"}
                   </div>
                 </div>
                 
                 <div className="info-row">
-                  <div className="info-label">Current Responsible</div>
+                  <div className="info-label">{t('lotoList.currentResponsible')}</div>
                   <div className="info-value">
                     {loto.currentResponsibleName || 
                      (loto.isolator
@@ -1198,7 +1292,7 @@ const LOTOList = () => {
                 </div>
                 
                 <div className="info-row">
-                  <div className="info-label">Isolator</div>
+                  <div className="info-label">{t('lotoList.isolator')}</div>
                   <div className="info-value">
                     {loto.isolator
                       ? `${loto.isolator.firstName || ""} ${loto.isolator.lastName || ""}`
@@ -1207,7 +1301,7 @@ const LOTOList = () => {
                 </div>
                 
                 <div className="info-row">
-                  <div className="info-label">Energy Types</div>
+                  <div className="info-label">{t('lotoList.energyTypes')}</div>
                   <div className="info-value">
                     {loto.energyTypes && loto.energyTypes.length > 0 ? (
                       <div className="energy-types">
@@ -1253,6 +1347,79 @@ const LOTOList = () => {
           ))
           )}
         </div>
+
+        {/* Pagination Component */}
+        {totalPages > 1 && (
+          <div className="pagination-container">
+            <div className="pagination-wrapper">
+              {/* Previous Button */}
+              <button
+                className={`pagination-btn prev-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+              >
+                <span className="pagination-icon">‹</span>
+                <span className="pagination-text">{t('lotoList.previous')}</span>
+              </button>
+
+              {/* Page Numbers */}
+              <div className="pagination-numbers">
+                {/* First page */}
+                {currentPage > 3 && (
+                  <>
+                    <button
+                      className={`pagination-number ${currentPage === 1 ? 'active' : ''}`}
+                      onClick={() => goToPage(1)}
+                    >
+                      1
+                    </button>
+                    {currentPage > 4 && <span className="pagination-ellipsis">...</span>}
+                  </>
+                )}
+
+                {/* Pages around current page */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const startPage = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+                  const pageNum = startPage + i;
+                  if (pageNum > totalPages) return null;
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`pagination-number ${currentPage === pageNum ? 'active' : ''}`}
+                      onClick={() => goToPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                {/* Last page */}
+                {currentPage < totalPages - 2 && (
+                  <>
+                    {currentPage < totalPages - 3 && <span className="pagination-ellipsis">...</span>}
+                    <button
+                      className={`pagination-number ${currentPage === totalPages ? 'active' : ''}`}
+                      onClick={() => goToPage(totalPages)}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Next Button */}
+              <button
+                className={`pagination-btn next-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+              >
+                <span className="pagination-text">{t('lotoList.next')}</span>
+                <span className="pagination-icon">›</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Rejection Modal */}

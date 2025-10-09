@@ -71,3 +71,4 @@ echo "🎉 LOTO Backend deployment process completed!"
 echo "🔒 Running with production dependencies only"
 echo "🛡️  Security: Non-root user, health checks enabled"
 echo "⚡ Optimized for production performance"
+
