@@ -68,3 +68,5 @@ echo "🎉 LOTO Frontend deployment process completed!"
 echo "📊 Image size: ~59MB (96% smaller than before!)"
 echo "⚡ Optimized with nginx for production serving"
 
+
+
