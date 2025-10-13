@@ -16,9 +16,9 @@ const CreateLOTO = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [formData, setFormData] = useState({
     shift: "A",
-    location: "PKG", // Default location
+    location: "", // No default - user must select
     line: "", // Selected line
-    machine: "", // Selected machine
+    machines: [], // Selected machines (array for multiple selection)
     isolatedPart: "", // Final isolated part description
     reason: "",
     ptwNumber: "N/A",
@@ -37,6 +37,21 @@ const CreateLOTO = () => {
   const [showCustomMachine, setShowCustomMachine] = useState(false);
   const [customMachine, setCustomMachine] = useState("");
   
+  // Dynamic location data
+  const [allLocations, setAllLocations] = useState([]);
+  const [availableLocations, setAvailableLocations] = useState([]);
+  const [availableLines, setAvailableLines] = useState([]);
+  const [availableMachines, setAvailableMachines] = useState([]);
+  const [loadingLocations, setLoadingLocations] = useState(true);
+  
+  // Dynamic energy types data
+  const [availableEnergyTypes, setAvailableEnergyTypes] = useState([]);
+  const [loadingEnergyTypes, setLoadingEnergyTypes] = useState(true);
+  
+  // Dynamic labels from selected location hierarchy
+  const [currentLineLabel, setCurrentLineLabel] = useState("Line/Part");
+  const [currentMachineLabel, setCurrentMachineLabel] = useState("Machine/Equipment");
+  
   // Wizard state
   const [currentStep, setCurrentStep] = useState(1);
   const [stepValidation, setStepValidation] = useState({
@@ -49,6 +64,8 @@ const CreateLOTO = () => {
   useEffect(() => {
     fetchSupervisors();
     fetchCurrentUser();
+    fetchLocations();
+    fetchEnergyTypes();
   }, []);
 
   const fetchCurrentUser = async () => {
@@ -67,6 +84,128 @@ const CreateLOTO = () => {
       setCurrentUser(res.data.user);
     } catch (err) {
       console.log("Error fetching current user:", err);
+    }
+  };
+
+  // Fetch locations from API
+  const fetchLocations = async () => {
+    try {
+      setLoadingLocations(true);
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/locations",
+        config
+      );
+      
+      // Store all locations (only active ones should come from backend)
+      const allActiveLocations = (res.data.data || []).filter(loc => loc.isActive !== false);
+      setAllLocations(allActiveLocations);
+      
+      // Filter root locations (type = "location") and ensure they're active
+      const rootLocations = allActiveLocations.filter(loc => loc.type === "location");
+      setAvailableLocations(rootLocations);
+      
+      setLoadingLocations(false);
+    } catch (err) {
+      console.error("Error fetching locations:", err);
+      setLoadingLocations(false);
+    }
+  };
+
+  // Fetch lines for a specific location
+  const fetchLinesForLocation = async (locationId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/locations/${locationId}/children`,
+        config
+      );
+      
+      // Filter out inactive lines
+      const activeLines = (res.data.data || []).filter(line => line.isActive !== false);
+      setAvailableLines(activeLines);
+      
+      // Set dynamic label from first line's typeLabel
+      if (activeLines.length > 0 && activeLines[0].typeLabel) {
+        setCurrentLineLabel(activeLines[0].typeLabel);
+      } else {
+        setCurrentLineLabel("Line/Part");
+      }
+    } catch (err) {
+      console.error("Error fetching lines:", err);
+      setAvailableLines([]);
+      setCurrentLineLabel("Line/Part");
+    }
+  };
+
+  // Fetch machines for a specific line
+  const fetchMachinesForLine = async (lineId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        `https://loto-backend-643788243736.europe-west1.run.app/api/locations/${lineId}/children`,
+        config
+      );
+      
+      // Filter out inactive machines
+      const activeMachines = (res.data.data || []).filter(machine => machine.isActive !== false);
+      setAvailableMachines(activeMachines);
+      
+      // Set dynamic label from first machine's typeLabel
+      if (activeMachines.length > 0 && activeMachines[0].typeLabel) {
+        setCurrentMachineLabel(activeMachines[0].typeLabel);
+      } else {
+        setCurrentMachineLabel("Machine/Equipment");
+      }
+    } catch (err) {
+      console.error("Error fetching machines:", err);
+      setAvailableMachines([]);
+      setCurrentMachineLabel("Machine/Equipment");
+    }
+  };
+
+  // Fetch energy types from API
+  const fetchEnergyTypes = async () => {
+    try {
+      setLoadingEnergyTypes(true);
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        "https://loto-backend-643788243736.europe-west1.run.app/api/energy-types",
+        config
+      );
+      
+      // Filter out inactive energy types (only active ones should come from backend)
+      const activeEnergyTypes = (res.data.data || []).filter(et => et.isActive !== false);
+      setAvailableEnergyTypes(activeEnergyTypes);
+      setLoadingEnergyTypes(false);
+    } catch (err) {
+      console.error("Error fetching energy types:", err);
+      setAvailableEnergyTypes([]);
+      setLoadingEnergyTypes(false);
     }
   };
 
@@ -100,7 +239,7 @@ const CreateLOTO = () => {
       newValidation[2] = !!(
         formData.location &&
         formData.line &&
-        formData.machine
+        formData.machines.length > 0
       );
     }
 
@@ -111,9 +250,9 @@ const CreateLOTO = () => {
       newValidation[3] = !!(formData.reason);
     }
 
-    // Step 4: Energy Types - Validate that at least one energy type is selected with valid data
+    // Step 4: Energy Types - Validate that at least one energy type is selected
     newValidation[4] = formData.energyTypes && 
-      formData.energyTypes.some(et => et.type && et.isolationPoint.trim());
+      formData.energyTypes.some(et => et.type);
 
     setStepValidation(newValidation);
   };
@@ -165,7 +304,7 @@ const CreateLOTO = () => {
         if (!formData.location) return 'location';
         if (showCustomLocation && !customLocation) return 'customLocation';
         if (!showCustomLocation && !formData.line) return 'line';
-        if (!showCustomLocation && !formData.machine) return 'machine';
+        if (!showCustomLocation && formData.machines.length === 0) return 'machines';
         if (showCustomMachine && !customMachine) return 'customMachine';
         // Note: isolatedPart is now optional
         break;
@@ -177,7 +316,7 @@ const CreateLOTO = () => {
       case 4:
         // Energy Types validation
         if (formData.energyTypes.length === 0) return 'addEnergyType';
-        const firstEmptyEnergy = formData.energyTypes.findIndex(et => !et.type || !et.isolationPoint.trim());
+        const firstEmptyEnergy = formData.energyTypes.findIndex(et => !et.type);
         if (firstEmptyEnergy !== -1) return `energyType-${firstEmptyEnergy}`;
         break;
     }
@@ -245,8 +384,8 @@ const CreateLOTO = () => {
         case 'line':
           errorMessage = 'Please select a line/part';
           break;
-        case 'machine':
-          errorMessage = 'Please select a machine/equipment';
+        case 'machines':
+          errorMessage = 'Please select at least one machine/equipment';
           break;
         case 'customMachine':
           errorMessage = 'Please enter custom machine name';
@@ -262,7 +401,7 @@ const CreateLOTO = () => {
           break;
         default:
           if (fieldName.startsWith('energyType-')) {
-            errorMessage = 'Please complete this energy type configuration';
+            errorMessage = 'Please select an energy type';
           }
       }
       
@@ -346,7 +485,7 @@ const CreateLOTO = () => {
     shift,
     location,
     line,
-    machine,
+    machines,
     isolatedPart,
     reason,
     ptwNumber,
@@ -387,14 +526,23 @@ const CreateLOTO = () => {
       ...formData,
       location: selectedLocation,
       line: "",
-      machine: "",
+      machines: [],
     });
 
     if (selectedLocation === "Other") {
       setShowCustomLocation(true);
+      setAvailableLines([]);
+      setAvailableMachines([]);
     } else {
       setShowCustomLocation(false);
       setCustomLocation("");
+      
+      // Fetch lines for the selected location
+      const locationObj = availableLocations.find(loc => loc.code === selectedLocation);
+      if (locationObj) {
+        fetchLinesForLocation(locationObj._id);
+      }
+      setAvailableMachines([]);
     }
   };
 
@@ -404,19 +552,32 @@ const CreateLOTO = () => {
 
   const handleLineChange = (e) => {
     const selectedLine = e.target.value;
-    setFormData({ ...formData, line: selectedLine, machine: "" });
+    setFormData({ ...formData, line: selectedLine, machines: [] });
+    
+    // Fetch machines for the selected line
+    const lineObj = availableLines.find(line => line.code === selectedLine);
+    if (lineObj) {
+      fetchMachinesForLine(lineObj._id);
+    }
   };
 
-  const handleMachineChange = (e) => {
-    const selectedMachine = e.target.value;
-    setFormData({ ...formData, machine: selectedMachine });
+  const handleMachineToggle = (machineCode) => {
+    setFormData(prev => {
+      const isSelected = prev.machines.includes(machineCode);
+      const newMachines = isSelected
+        ? prev.machines.filter(m => m !== machineCode)
+        : [...prev.machines, machineCode];
+      
+      return { ...prev, machines: newMachines };
+    });
+  };
 
-    if (selectedMachine === "Other") {
-      setShowCustomMachine(true);
-    } else {
-      setShowCustomMachine(false);
-      setCustomMachine("");
-    }
+  const handleSelectAllMachines = () => {
+    const allMachineCodes = availableMachines.map(m => m.code);
+    setFormData(prev => ({
+      ...prev,
+      machines: prev.machines.length === allMachineCodes.length ? [] : allMachineCodes
+    }));
   };
 
   const handleCustomMachineChange = (e) => {
@@ -461,17 +622,7 @@ const CreateLOTO = () => {
         return;
       }
 
-      // Validate that all selected energy types have isolation points
-      const hasEmptyIsolationPoints = formData.energyTypes.some(
-        (energy) => !energy.isolationPoint.trim()
-      );
-      if (hasEmptyIsolationPoints) {
-        setError(
-          "Please provide isolation point reference for all selected energy types"
-        );
-        hideLoading();
-        return;
-      }
+      // Note: Isolation points are now optional, no validation needed
 
       // Prepare data to send with energy types
       const finalLocation =
@@ -479,14 +630,16 @@ const CreateLOTO = () => {
           ? customLocation
           : formData.location || "Other";
 
-      const finalMachine =
-        formData.machine === "Other" && customMachine ? customMachine : formData.machine || "N/A";
+      // Join multiple machines with comma
+      const finalMachines = formData.machines.length > 0 
+        ? formData.machines.join(', ') 
+        : "N/A";
 
       const dataToSend = {
         shift: formData.shift,
         location: finalLocation,
         line: formData.line || "N/A",
-        machine: formData.machine || "N/A",
+        machine: finalMachines, // Send comma-separated machines
         isolatedPart: formData.isolatedPart || "N/A",
         reason:
           formData.reason === "Other" && customReason
@@ -497,7 +650,7 @@ const CreateLOTO = () => {
         supervisor: formData.supervisor,
         // --- INCLUDE ENERGY TYPES IN DATA TO SEND ---
         energyTypes: formData.energyTypes.filter(
-          (et) => et.type && et.isolationPoint
+          (et) => et.type
         ),
         // --- END INCLUDE ENERGY TYPES ---
       };
@@ -537,21 +690,538 @@ const CreateLOTO = () => {
   const safeSupervisors = Array.isArray(supervisors) ? supervisors : [];
   const reasonOptions = ["Change over", "Shutdown", "Maintenance", "Other"];
 
-  // Energy type options with symbols
-  const energyTypeOptions = [
-    { name: "Electrical", symbol: "🔴" },
-    { name: "Water", symbol: "🔵" },
-    { name: "Air", symbol: "🟣" },
-    { name: "Gas", symbol: "🟡" },
-    { name: "Chemical", symbol: "🔺" },
-    { name: "Rotating Machine", symbol: "🔺" },
-    { name: "Mechanical", symbol: "🔵" },
-    { name: "Nitrogen", symbol: "🟢" },
-    { name: "Hydraulic Oil", symbol: "⚫" },
-  ];
+  // Dynamic energy type options from API (fallback to hardcoded if API fails)
+  const energyTypeOptions = availableEnergyTypes.length > 0 
+    ? availableEnergyTypes.map(et => ({
+        name: et.name,
+        symbol: et.symbol,
+        category: et.category,
+        hazardLevel: et.hazardLevel,
+        description: et.description
+      }))
+    : [
+        // Fallback hardcoded options if API fails
+        { name: "Electrical", symbol: "⚡", category: "electrical", hazardLevel: "high" },
+        { name: "Hydraulic Pressure", symbol: "💧", category: "hydraulic", hazardLevel: "high" },
+        { name: "Pneumatic Pressure", symbol: "💨", category: "pneumatic", hazardLevel: "medium" },
+        { name: "Steam", symbol: "🔥", category: "thermal", hazardLevel: "high" },
+        { name: "Hot Water", symbol: "🌡️", category: "thermal", hazardLevel: "medium" },
+        { name: "Mechanical", symbol: "⚙️", category: "mechanical", hazardLevel: "medium" },
+        { name: "Chemical", symbol: "🧪", category: "chemical", hazardLevel: "critical" },
+        { name: "Gravity", symbol: "⬇️", category: "mechanical", hazardLevel: "medium" },
+        { name: "Spring Energy", symbol: "🔄", category: "mechanical", hazardLevel: "medium" },
+        { name: "Kinetic Energy", symbol: "🏃", category: "mechanical", hazardLevel: "medium" },
+      ];
 
   return (
     <div className="create-loto-container">
+      <style jsx>{`
+        .machine-selection-container {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 1rem;
+          margin-top: 0.5rem;
+        }
+        
+        .select-all-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+          padding-bottom: 0.75rem;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .select-all-container button {
+          background: #3b82f6;
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 6px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+        
+        .select-all-container button:hover {
+          background: #2563eb;
+        }
+        
+        .selected-count {
+          font-size: 0.875rem;
+          color: #64748b;
+          font-weight: 500;
+        }
+        
+        .machine-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 0.75rem;
+          max-height: 300px;
+          overflow-y: auto;
+          padding: 0.5rem;
+          background: white;
+          border-radius: 6px;
+          border: 1px solid #e2e8f0;
+        }
+        
+        /* Mobile dropdown style */
+        .machine-dropdown {
+          display: none;
+        }
+        
+        @media (max-width: 768px) {
+          .machine-list {
+            display: none;
+          }
+          
+          .machine-dropdown {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.875rem;
+            color: #374151;
+          }
+          
+          .machine-dropdown:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+          
+          .select-all-container {
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: stretch;
+          }
+          
+          .select-all-container button {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+          }
+          
+          .selected-count {
+            text-align: center;
+            font-size: 0.8rem;
+          }
+        }
+        
+        .machine-checkbox-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .machine-checkbox-item:hover {
+          background: #f1f5f9;
+          border-color: #cbd5e1;
+        }
+        
+        .machine-checkbox {
+          width: 16px;
+          height: 16px;
+          accent-color: #3b82f6;
+          cursor: pointer;
+        }
+        
+        .machine-info {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+        
+        .machine-name {
+          font-weight: 500;
+          color: #1e293b;
+          font-size: 0.875rem;
+        }
+        
+        .machine-code {
+          font-size: 0.75rem;
+          color: #64748b;
+          font-weight: 400;
+        }
+        
+        .machine-checkbox-item:has(.machine-checkbox:checked) {
+          background: #eff6ff;
+          border-color: #3b82f6;
+        }
+        
+        .machine-checkbox-item:has(.machine-checkbox:checked) .machine-name {
+          color: #1e40af;
+          font-weight: 600;
+        }
+        
+        .machine-checkbox-item:has(.machine-checkbox:checked) .machine-code {
+          color: #3b82f6;
+        }
+        
+        /* Energy Types Loading and Warning Styles */
+        .loading-energy-types {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 200px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          margin: 1rem 0;
+        }
+        
+        .loading-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+        
+        .loading-spinner {
+          width: 32px;
+          height: 32px;
+          border: 3px solid #e2e8f0;
+          border-top: 3px solid #3b82f6;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        .no-energy-types-warning {
+          background: #fef3c7;
+          border: 1px solid #f59e0b;
+          border-radius: 6px;
+          padding: 1rem;
+          margin-top: 1rem;
+          text-align: center;
+        }
+        
+        .no-energy-types-warning p {
+          margin: 0.5rem 0;
+          color: #92400e;
+          font-size: 0.875rem;
+        }
+        
+        .no-energy-types-warning p:first-child {
+          font-weight: 600;
+        }
+        
+        /* Energy Types Section Styles */
+        .energy-types-container {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 1.5rem;
+          margin-top: 1rem;
+        }
+        
+        .energy-type-card {
+          background: white;
+          border: 2px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 1.5rem;
+          margin-bottom: 1rem;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+          position: relative;
+        }
+        
+        .energy-type-card:hover {
+          border-color: #3b82f6;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+        }
+        
+        .energy-type-card:last-child {
+          margin-bottom: 0;
+        }
+        
+        .energy-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+          padding-bottom: 0.75rem;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .energy-card-title {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-weight: 600;
+          color: #1e293b;
+          font-size: 1rem;
+        }
+        
+        .remove-energy-btn {
+          background: #fee2e2;
+          border: 1px solid #fca5a5;
+          border-radius: 8px;
+          padding: 0.5rem;
+          color: #dc2626;
+          cursor: pointer;
+          transition: background-color 0.15s ease, border-color 0.15s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .remove-energy-btn:hover {
+          background: #fecaca;
+          border-color: #f87171;
+          transform: none;
+        }
+        
+        .remove-energy-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          background: #f3f4f6;
+          border-color: #d1d5db;
+          color: #9ca3af;
+        }
+        
+        .energy-card-content {
+          display: grid;
+          gap: 1rem;
+        }
+        
+        .energy-card-content .form-field {
+          margin-bottom: 0;
+        }
+        
+        .energy-card-content .field-label {
+          font-weight: 500;
+          color: #374151;
+          margin-bottom: 0.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+        
+        .energy-card-content .field-input {
+          width: 100%;
+          padding: 0.75rem;
+          border: 2px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 0.875rem;
+          transition: border-color 0.2s, box-shadow 0.2s;
+          background: white;
+        }
+        
+        .energy-card-content .field-input:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .add-energy-btn {
+          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          padding: 1rem 1.5rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s ease, box-shadow 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          margin-top: 1rem;
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
+        
+        .add-energy-btn:hover {
+          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          box-shadow: 0 3px 8px rgba(59, 130, 246, 0.25);
+        }
+        
+        .add-first-energy-btn {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          padding: 1rem 2rem;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s ease, box-shadow 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.75rem;
+          margin-top: 1rem;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .add-first-energy-btn:hover {
+          background: linear-gradient(135deg, #059669 0%, #047857 100%);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .empty-state {
+          text-align: center;
+          padding: 2rem;
+          background: white;
+          border: 2px dashed #d1d5db;
+          border-radius: 12px;
+        }
+        
+        .empty-state h4 {
+          margin: 1rem 0 0.5rem 0;
+          color: #374151;
+          font-size: 1.125rem;
+        }
+        
+        .empty-state p {
+          margin: 0 0 1rem 0;
+          color: #6b7280;
+          font-size: 0.875rem;
+        }
+        
+        /* Energy Review Styles */
+        .energy-category {
+          color: #6b7280;
+          font-size: 0.875rem;
+          font-style: italic;
+        }
+        
+        .energy-hazard {
+          padding: 0.125rem 0.375rem;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          margin-left: 0.5rem;
+        }
+        
+        .energy-hazard.hazard-low {
+          background: #dcfce7;
+          color: #166534;
+          border: 1px solid #86efac;
+        }
+        
+        .energy-hazard.hazard-medium {
+          background: #fef3c7;
+          color: #92400e;
+          border: 1px solid #f59e0b;
+        }
+        
+        .energy-hazard.hazard-high {
+          background: #fed7aa;
+          color: #c2410c;
+          border: 1px solid #fb923c;
+        }
+        
+        .energy-hazard.hazard-critical {
+          background: #fee2e2;
+          color: #991b1b;
+          border: 1px solid #fca5a5;
+        }
+        
+        .energy-description {
+          margin-top: 0.5rem;
+          padding: 0.5rem;
+          background: #f9fafb;
+          border-radius: 4px;
+          font-size: 0.875rem;
+          color: #6b7280;
+        }
+        
+        .isolation-point-optional {
+          font-size: 0.75rem;
+          color: #6b7280;
+          font-weight: 400;
+        }
+        
+        .field-input.has-value {
+          border-color: #10b981;
+          background: #f0fdf4;
+        }
+        
+        .field-input.empty-value {
+          border-color: #f59e0b;
+          background: #fffbeb;
+        }
+        
+        .isolation-point-status {
+          margin-top: 0.5rem;
+        }
+        
+        .status-indicator {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+          padding: 0.25rem 0.5rem;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          font-weight: 500;
+        }
+        
+        .status-indicator.success {
+          background: #dcfce7;
+          color: #166534;
+          border: 1px solid #86efac;
+        }
+        
+        .status-indicator.warning {
+          background: #fef3c7;
+          color: #92400e;
+          border: 1px solid #f59e0b;
+        }
+        
+        .energy-type-card.invalid {
+          border-color: #ef4444;
+          background: #fef2f2;
+          animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+        
+        .energy-types-summary {
+          margin-top: 1rem;
+        }
+        
+        .energy-types-summary p {
+          margin: 0.5rem 0;
+          color: #374151;
+        }
+        
+        .energy-types-preview {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          margin: 0.75rem 0;
+          justify-content: center;
+        }
+        
+        .energy-type-preview {
+          background: #f0f9ff;
+          border: 1px solid #0ea5e9;
+          border-radius: 8px;
+          padding: 0.375rem 0.75rem;
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: #0369a1;
+        }
+      `}</style>
       <BackButton to={currentUser ? getHomePath() : "/technician-home"} label={t('common.back')} />
       
       
@@ -631,10 +1301,35 @@ const CreateLOTO = () => {
         </div>
       </div>
 
-      
+      {/* Mobile-First Header - Show only on mobile */}
+      <div className="create-loto-mobile-header d-md-none">
+        {/* Mobile Progress Indicator - Compact */}
+        <div className="mobile-progress-indicator">
+          <div className="progress-dots">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div
+                key={step}
+                className={`progress-dot ${currentStep >= step ? 'active' : ''} ${stepValidation[step] ? 'completed valid' : currentStep === step ? 'invalid' : ''}`}
+                onClick={() => goToStep(step)}
+              >
+                {stepValidation[step] ? <Icon name="check" size="xs" /> : step}
+              </div>
+            ))}
+          </div>
+          <div className="progress-text">
+            {t('createLoto.stepOf')} {currentStep} {t('createLoto.of')} 5: {
+              currentStep === 1 ? t('createLoto.step1Title') :
+              currentStep === 2 ? t('createLoto.step2Title') :
+              currentStep === 3 ? t('createLoto.step3Title') :
+              currentStep === 4 ? t('createLoto.step4Title') :
+              t('createLoto.step5Title')
+            }
+          </div>
+        </div>
+      </div>
 
       {/* Main Form */}
-      <div className="create-loto-form">
+      <form onSubmit={onSubmit} className="create-loto-form">
         
         {/* Step 1: Basic Information */}
         {currentStep === 1 && (
@@ -733,14 +1428,16 @@ const CreateLOTO = () => {
                           onChange={handleLocationChange}
                   className="field-input location-select"
                           required
+                          disabled={loadingLocations}
                         >
-                          <option value="">-- Select Location --</option>
-                          <option value="PKG">PKG</option>
-                          <option value="Process">Process</option>
-                          <option value="Utility">Utility</option>
-                          <option value="WH-FG">WH-FG</option>
-                          <option value="WH-RM">WH-RM</option>
-                          <option value="Project">Project</option>
+                          <option value="">
+                            {loadingLocations ? "Loading locations..." : "-- Select Location --"}
+                          </option>
+                          {availableLocations.map((loc) => (
+                            <option key={loc._id} value={loc.code}>
+                              {loc.name}
+                            </option>
+                          ))}
                           <option value="Other">Other</option>
                         </select>
                       </div>
@@ -772,7 +1469,7 @@ const CreateLOTO = () => {
                     <label className="field-label">
                       <Icon name="zap" size="sm" />
                       <span>
-                        {["PKG", "Process"].includes(location) ? t('createLoto.productionLine') : t('createLoto.equipmentPart')}
+                        {currentLineLabel}
                       </span>
                             </label>
                             <select
@@ -781,83 +1478,96 @@ const CreateLOTO = () => {
                               onChange={handleLineChange}
                       className="field-input"
                               required
+                              disabled={!location || location === "Other" || availableLines.length === 0}
                             >
                               <option value="">
-                        -- Select {["PKG", "Process"].includes(location) ? "Line" : "Part"} --
+                        {availableLines.length === 0 
+                          ? `No ${currentLineLabel.toLowerCase()} available` 
+                          : `-- Select ${currentLineLabel} --`}
                               </option>
-
-                              {location === "PKG" && (
-                                <>
-                                  <option value="A">A</option>
-                                  <option value="B">B</option>
-                                  <option value="C">C</option>
-                                  <option value="D">D</option>
-                                  <option value="Multi-Bag">Multi-Bag</option>
-                                </>
-                              )}
-                              {location === "Process" && (
-                                <>
-                                  <option value="PC">PC</option>
-                                  <option value="TC">TC</option>
-                                  <option value="FCP">FCP</option>
-                                  <option value="RBS">RBS</option>
-                                  <option value="CKF">CKF</option>
-                                </>
-                              )}
-                              {location === "Utility" && (
-                                <>
-                                  <option value="Chiller">Chiller</option>
-                                  <option value="AC">AC</option>
-                                  <option value="Pump">Pump</option>
-                                  <option value="Gate">Gate</option>
-                                  <option value="Other">Other</option>
-                                </>
-                              )}
-                              {location === "WH-FG" && (
-                                <>
-                                  <option value="Gate">Gate</option>
-                          <option value="Dock Leveler">Dock Leveler</option>
-                          <option value="Crate Dumper">Crate Dumper</option>
-                          <option value="Pallet Inverter">Pallet Inverter</option>
-                                  <option value="Banker">Banker</option>
-                                  <option value="Other">Other</option>
-                                </>
-                              )}
-                              {location === "WH-RM" && (
-                                <>
-                                  <option value="Gate">Gate</option>
-                          <option value="Dock Leveler">Dock Leveler</option>
-                          <option value="Crate Dumper">Crate Dumper</option>
-                          <option value="Pallet Inverter">Pallet Inverter</option>
-                                  <option value="Banker">Banker</option>
-                                  <option value="Other">Other</option>
-                                </>
-                              )}
-                              {location === "Project" && (
-                                <>
-                                  <option value="Other">Other</option>
-                                </>
-                              )}
+                              {availableLines.map((lineItem) => (
+                                <option key={lineItem._id} value={lineItem.code}>
+                                  {lineItem.name}
+                                </option>
+                              ))}
                             </select>
                           </div>
 
-                          {/* Step 3: Machine/Part Selection */}
+                          {/* Step 3: Machine/Part Selection (Multi-select) */}
                           {line && (
                     <div className="hierarchy-step">
                       <label className="field-label">
                         <Icon name="settings" size="sm" />
-                        <span>{t('createLoto.machineEquipment')}</span>
+                        <span>{currentMachineLabel} (Select one or more)</span>
                               </label>
-                              <select
-                                name="machine"
-                                value={machine}
-                                onChange={handleMachineChange}
-                        className="field-input"
-                                required
-                              >
-                        <option value="">-- Select Machine/Part --</option>
+                              
+                              {availableMachines.length === 0 ? (
+                                <div className="no-machines-message">
+                                  No {currentMachineLabel.toLowerCase()} available
+                                </div>
+                              ) : (
+                                <div className="machine-selection-container">
+                                  {/* Select All Button */}
+                                  <div className="select-all-container">
+                                    <button
+                                      type="button"
+                                      className="select-all-btn"
+                                      onClick={handleSelectAllMachines}
+                                    >
+                                      {machines.length === availableMachines.length ? '☑ Deselect All' : '☐ Select All'}
+                                    </button>
+                                    <span className="selected-count">
+                                      {machines.length} of {availableMachines.length} selected
+                                    </span>
+                                  </div>
 
-                        {/* PKG Line A Machines */}
+                                  {/* Machine Dropdown for Mobile */}
+                                  <select
+                                    className="machine-dropdown"
+                                    multiple
+                                    size={Math.min(availableMachines.length, 8)}
+                                    value={machines}
+                                    onChange={(e) => {
+                                      const selectedValues = Array.from(e.target.selectedOptions, option => option.value);
+                                      setFormData({ ...formData, machines: selectedValues });
+                                    }}
+                                  >
+                                    {availableMachines.map((machineItem) => (
+                                      <option key={machineItem._id} value={machineItem.code}>
+                                        {machineItem.name} ({machineItem.code})
+                                      </option>
+                                    ))}
+                                  </select>
+
+                                  {/* Machine Checkboxes for Desktop */}
+                                  <div className="machine-list">
+                                    {availableMachines.map((machineItem) => (
+                                      <label 
+                                        key={machineItem._id} 
+                                        className="machine-checkbox-item"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          className="machine-checkbox"
+                                          checked={machines.includes(machineItem.code)}
+                                          onChange={() => handleMachineToggle(machineItem.code)}
+                                        />
+                                        <span className="machine-info">
+                                          <span className="machine-name">{machineItem.name}</span>
+                                          <span className="machine-code">({machineItem.code})</span>
+                                        </span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                    </div>
+                  )}
+
+                  {/* Custom Machine Input - PLACEHOLDER TO REMOVE */}
+                  {false && (
+                    <div>
+                        {/* PKG Line A Machines - OLD HARDCODED VERSION */}
                                 {location === "PKG" && line === "A" && (
                                   <>
                                     <option value="DA01">DA01</option>
@@ -1211,31 +1921,12 @@ const CreateLOTO = () => {
                             <option value="Other">Other</option>
                           </>
                         )}
-                      </select>
                     </div>
                   )}
 
-                      {/* Custom Machine Input */}
-                      {showCustomMachine && (
-                    <div className="hierarchy-step">
-                      <label className="field-label">
-                        <Icon name="edit" size="sm" />
-                        <span>{t('createLoto.customMachine')}</span>
-                          </label>
-                          <input
-                            type="text"
-                            name="customMachine"
-                            value={customMachine}
-                            onChange={handleCustomMachineChange}
-                        placeholder="Enter custom machine name"
-                        className="field-input"
-                            required
-                          />
-                        </div>
-                      )}
 
                       {/* Display Selected Location Path */}
-                      {(location || line || machine) && (
+                      {(location || line || machines.length > 0) && (
                     <div className="hierarchy-step">
                       <div className="location-path">
                         <Icon name="map-pin" size="sm" />
@@ -1245,7 +1936,7 @@ const CreateLOTO = () => {
                                 ? customLocation
                                 : location}
                               {line && ` > ${line}`}
-                              {machine && ` > ${machine}`}
+                              {machines.length > 0 && ` > ${machines.join(', ')}`}
                             </span>
                           </div>
                         </div>
@@ -1365,29 +2056,56 @@ const CreateLOTO = () => {
             </div>
             <div className="section-title">
               <h3>{t('createLoto.energyTypesToIsolate')}</h3>
-              <p>Select all energy sources that need to be locked out</p>
+              <p>Select all energy sources that need to be locked out. Isolation points are optional but recommended for safety.</p>
             </div>
           </div>
           
           <div className="section-content">
             <div className="energy-types-container">
-              {formData.energyTypes.length === 0 ? (
+              {loadingEnergyTypes ? (
+                <div className="loading-energy-types">
+                  <div className="loading-state">
+                    <div className="loading-spinner"></div>
+                    <p>Loading available energy types...</p>
+                  </div>
+                </div>
+              ) : formData.energyTypes.length === 0 ? (
                 <div className="empty-energy-types">
                   <div className="empty-state">
                     <Icon name="zap" size="lg" />
                     <h4>{t('createLoto.noEnergyTypesAdded')}</h4>
-                    <p>{t('createLoto.clickButtonDesc')}</p>
-                    <button
-                      type="button"
-                      className="add-first-energy-btn"
-                      onClick={addEnergyType}
-                    >
-                      <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                        <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <span>{t('createLoto.addEnergyType')}</span>
-                    </button>
+                    <p>Add energy sources that need to be locked out during this LOTO procedure. You can specify isolation points for better safety documentation.</p>
+                    {availableEnergyTypes.length === 0 ? (
+                      <div className="no-energy-types-warning">
+                        <p>⚠️ No energy types are currently available.</p>
+                        <p>Contact your administrator to add energy types to the system.</p>
+                      </div>
+                    ) : (
+                      <div className="energy-types-summary">
+                        <p><strong>Available Energy Types:</strong> {availableEnergyTypes.length}</p>
+                        <div className="energy-types-preview">
+                          {availableEnergyTypes.slice(0, 3).map((et, idx) => (
+                            <span key={idx} className="energy-type-preview">
+                              {et.symbol} {et.name}
+                            </span>
+                          ))}
+                          {availableEnergyTypes.length > 3 && (
+                            <span className="energy-type-preview">+{availableEnergyTypes.length - 3} more</span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="add-first-energy-btn"
+                          onClick={addEnergyType}
+                        >
+                          <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                            <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <span>{t('createLoto.addEnergyType')}</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -1426,7 +2144,7 @@ const CreateLOTO = () => {
                                 <option value="">Select energy type</option>
                                 {energyTypeOptions.map((et) => (
                                   <option key={et.name} value={et.name}>
-                                    {et.symbol} {et.name}
+                                    {et.symbol} {et.name} {et.category ? `(${et.category})` : ''} {et.hazardLevel ? `[${et.hazardLevel.toUpperCase()}]` : ''}
                                   </option>
                                 ))}
                               </select>
@@ -1435,6 +2153,7 @@ const CreateLOTO = () => {
                     <div className="form-field">
                       <label className="field-label">
                         <span>{t('createLoto.isolationPointReference')}</span>
+                        <span className="isolation-point-optional">(Optional)</span>
                               </label>
                               <input
                                 type="text"
@@ -1442,10 +2161,19 @@ const CreateLOTO = () => {
                                 onChange={(e) =>
                           handleEnergyTypeChange(index, "isolationPoint", e.target.value)
                         }
-                        placeholder="e.g., Panel A-Switch 3, Valve B-12"
-                        className="field-input"
-                                required
+                        placeholder="e.g., Panel A-Switch 3, Valve B-12 (optional)"
+                        className={`field-input ${energy.isolationPoint ? 'has-value' : 'empty-value'}`}
                               />
+                              {energy.isolationPoint && (
+                                <div className="isolation-point-status">
+                                  <span className="status-indicator success">✓ Isolation point specified</span>
+                                </div>
+                              )}
+                              {!energy.isolationPoint && (
+                                <div className="isolation-point-status">
+                                  <span className="status-indicator warning">⚠ No isolation point specified</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1517,9 +2245,9 @@ const CreateLOTO = () => {
                         <span className="review-value">{formData.line}</span>
                       </div>
                       <div className="review-item">
-                        <span className="review-label">Machine:</span>
+                        <span className="review-label">Machine(s):</span>
                         <span className="review-value">
-                          {showCustomMachine ? customMachine : formData.machine}
+                          {formData.machines.length > 0 ? formData.machines.join(', ') : 'None selected'}
                         </span>
                       </div>
                     </>
@@ -1555,17 +2283,33 @@ const CreateLOTO = () => {
                 <div className="review-section ">
                   <h4><Icon name="zap" size="sm" /> {t('createLoto.energyTypesToIsolate')}</h4>
                   <div className="energy-review-grid">
-                    {formData.energyTypes.filter(et => et.type && et.isolationPoint.trim()).length > 0 ? (
-                      formData.energyTypes.filter(et => et.type && et.isolationPoint.trim()).map((energy, index) => (
-                        <div key={index} className="energy-review-item">
-                          <div className="energy-type">
-                            {energyTypeOptions.find(eto => eto.name === energy.type)?.symbol} {energy.type}
+                    {formData.energyTypes.filter(et => et.type).length > 0 ? (
+                      formData.energyTypes.filter(et => et.type).map((energy, index) => {
+                        const energyTypeInfo = energyTypeOptions.find(eto => eto.name === energy.type);
+                        return (
+                          <div key={index} className="energy-review-item">
+                            <div className="energy-type">
+                              {energyTypeInfo?.symbol} {energy.type}
+                              {energyTypeInfo?.category && (
+                                <span className="energy-category"> ({energyTypeInfo.category})</span>
+                              )}
+                              {energyTypeInfo?.hazardLevel && (
+                                <span className={`energy-hazard hazard-${energyTypeInfo.hazardLevel}`}>
+                                  [{energyTypeInfo.hazardLevel.toUpperCase()}]
+                                </span>
+                              )}
+                            </div>
+                            <div className="isolation-point">
+                              <strong>Isolation Point:</strong> {energy.isolationPoint || 'Not specified'}
+                            </div>
+                            {energyTypeInfo?.description && (
+                              <div className="energy-description">
+                                <strong>Description:</strong> {energyTypeInfo.description}
+                              </div>
+                            )}
                           </div>
-                          <div className="isolation-point">
-                            <strong>Isolation Point:</strong> {energy.isolationPoint}
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <div className="no-energy-types">
                         <p>⚠️ No energy types have been configured yet.</p>
@@ -1578,34 +2322,6 @@ const CreateLOTO = () => {
             </div>
           </div>
         )}
-        {/* Mobile-First Header - Show only on mobile */}
-      <div className="create-loto-mobile-header d-md-none">
-        
-        
-        {/* Mobile Progress Indicator - Compact */}
-        <div className="mobile-progress-indicator">
-          <div className="progress-dots">
-            {[1, 2, 3, 4, 5].map((step) => (
-              <div
-                key={step}
-                className={`progress-dot ${currentStep >= step ? 'active' : ''} ${stepValidation[step] ? 'completed valid' : currentStep === step ? 'invalid' : ''}`}
-                onClick={() => goToStep(step)}
-              >
-                {stepValidation[step] ? <Icon name="check" size="xs" /> : step}
-              </div>
-            ))}
-          </div>
-          <div className="progress-text">
-            {t('createLoto.stepOf')} {currentStep} {t('createLoto.of')} 5: {
-              currentStep === 1 ? t('createLoto.step1Title') :
-              currentStep === 2 ? t('createLoto.step2Title') :
-              currentStep === 3 ? t('createLoto.step3Title') :
-              currentStep === 4 ? t('createLoto.step4Title') :
-              t('createLoto.step5Title')
-            }
-          </div>
-        </div>
-      </div>
 
         {/* Navigation Buttons */}
         <div className="wizard-navigation">
@@ -1634,10 +2350,9 @@ const CreateLOTO = () => {
 
             {currentStep === 5 && (
               <button
-                type="button"
+                type="submit"
                 className="nav-btn btn-success submit-btn"
-                onClick={onSubmit}
-                disabled={!stepValidation[1] || !stepValidation[2] || !stepValidation[3] || formData.energyTypes.filter(et => et.type && et.isolationPoint.trim()).length === 0}
+                disabled={!stepValidation[1] || !stepValidation[2] || !stepValidation[3] || formData.energyTypes.filter(et => et.type).length === 0}
               >
                 <Icon name="check" size="sm" />
                 <span>{t('createLoto.createLotoProcedure')}</span>
@@ -1654,7 +2369,7 @@ const CreateLOTO = () => {
             </button>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

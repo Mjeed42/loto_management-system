@@ -142,8 +142,37 @@ const lotoSchema = new mongoose.Schema(
         "handed_over",                   // LOTO successfully handed over
         "completed",                     // LOTO work completed
         "rejected",                      // LOTO rejected by supervisor
+        "rejected_handover_snapshot",    // Read-only snapshot of rejected handover
+        "handed_over_snapshot",          // Read-only snapshot for sender after successful handover
       ],
       default: "pending_verification_new",
+    },
+    // Snapshot fields - for rejected handover copies
+    isSnapshot: {
+      type: Boolean,
+      default: false,
+    },
+    originalLotoId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "LOTO",
+    },
+    snapshotReason: {
+      type: String,
+      enum: [
+        "handover_rejected_by_recipient",
+        "handover_rejected_by_supervisor",
+        "handover_completed_sender_copy"  // Sender's copy after successful handover
+      ],
+    },
+    snapshotCreatedAt: {
+      type: Date,
+    },
+    snapshotCreatedFor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    snapshotCreatedForName: {
+      type: String,
     },
     actualFinishTime: {
       type: Date,
@@ -330,6 +359,12 @@ const lotoSchema = new mongoose.Schema(
     },
     completedBy: {
       type: String,
+    },
+    completedByName: {
+      type: String,
+    },
+    completedAt: {
+      type: Date,
     },
     workSummary: {
       type: String,

@@ -126,6 +126,11 @@ const LOTOList = () => {
           status: loto.status || "pending",
           expectedDuration: loto.expectedDuration || 0,
           energyTypes: Array.isArray(loto.energyTypes) ? loto.energyTypes : [],
+          isSnapshot: loto.isSnapshot || false,
+          originalLotoId: loto.originalLotoId || null,
+          snapshotReason: loto.snapshotReason || null,
+          snapshotCreatedAt: loto.snapshotCreatedAt || null,
+          snapshotCreatedForName: loto.snapshotCreatedForName || null,
         }));
 
       setLotos(validatedLotos);
@@ -568,6 +573,18 @@ const LOTOList = () => {
         variant: "danger",
         icon: "❌",
         color: "#ef4444",
+      },
+      rejected_handover_snapshot: {
+        text: t('lotoList.rejectedHandoverSnapshot') || "Rejected Handover (Snapshot)",
+        variant: "warning",
+        icon: "📸",
+        color: "#f59e0b",
+      },
+      handed_over_snapshot: {
+        text: t('lotoList.handedOverSnapshot') || "Handed Over (Snapshot)",
+        variant: "info",
+        icon: "📤",
+        color: "#3b82f6",
       },
     };
     const config = statusConfig[status] || {
@@ -1076,15 +1093,36 @@ const LOTOList = () => {
                         style={{ cursor: "pointer" }}
                       >
                         <td>{startIndex + index + 1}</td>
-                        <td>{loto.serialNumber || "N/A"}</td>
+                        <td>
+                          {loto.serialNumber || "N/A"}
+                          {loto.isSnapshot && (
+                            <span 
+                              style={{
+                                marginLeft: '8px',
+                                padding: '2px 6px',
+                                background: '#fef3c7',
+                                color: '#f59e0b',
+                                borderRadius: '4px',
+                                fontSize: '0.7rem',
+                                fontWeight: 'bold',
+                                border: '1px solid #fbbf24'
+                              }}
+                              title="This is a read-only snapshot of a rejected handover"
+                            >
+                              📸 SNAPSHOT
+                            </span>
+                          )}
+                        </td>
                         <td>{loto.supervisorName || "N/A"}</td>
                         <td>
-                          {loto.currentResponsibleName || 
-                           (loto.isolator
-                             ? `${loto.isolator.firstName || ""} ${
-                                 loto.isolator.lastName || ""
-                               }`
-                             : "N/A")}
+                          {loto.isSnapshot 
+                            ? (loto.snapshotCreatedForName || "Snapshot")
+                            : (loto.currentResponsibleName || 
+                               (loto.isolator
+                                 ? `${loto.isolator.firstName || ""} ${
+                                     loto.isolator.lastName || ""
+                                   }`
+                                 : "N/A"))}
                         </td>
                         <td>
                           {loto.isolator

@@ -136,151 +136,214 @@ const DataExport = () => {
   const formatLOTOData = (lotos, users = []) => {
     return lotos.map((loto) => {
       const formattedLoto = {
+        // === BASIC INFORMATION ===
         "Serial Number": loto.serialNumber,
         "Date Created": new Date(loto.date).toLocaleDateString(),
         "Time Created": new Date(loto.date).toLocaleTimeString(),
         "Shift": loto.shift,
         "Status": loto.status,
         "Isolator Name": loto.isolatorName,
-        "Location": loto.location,
+        
+        // === LOCATION DETAILS ===
+        "Location": loto.location || "N/A",
         "Line": loto.line || "N/A",
         "Machine": loto.machine || "N/A",
-        "Isolated Part": loto.isolatedPart,
-        "Reason": loto.reason,
-        "PTW Number": loto.ptwNumber,
-        "Expected Duration (hours)": loto.expectedDuration,
+        "Isolated Part": loto.isolatedPart || "N/A",
+        
+        // === WORK DETAILS ===
+        "Reason": loto.reason || "N/A",
+        "PTW Number": loto.ptwNumber || "N/A",
+        "Expected Duration (hours)": loto.expectedDuration || "N/A",
+        "Authorized Supervisor": loto.supervisorName || "None assigned",
       };
 
-      // Add supervisor information if available
-      if (loto.supervisorName) {
-        formattedLoto["Authorized Supervisor"] = loto.supervisorName;
-      } else {
-        formattedLoto["Authorized Supervisor"] = "None assigned";
-      }
-
-      // Add initial verification information (for new LOTO)
+      // === INITIAL VERIFICATION (for new LOTO) ===
       if (loto.verifiedBy) {
         const verifier = users.find((user) => user._id === loto.verifiedBy._id);
         formattedLoto["Initial Verified By"] = verifier 
           ? `${verifier.firstName} ${verifier.lastName}` 
           : `${loto.verifiedBy.firstName} ${loto.verifiedBy.lastName}`;
         formattedLoto["Initial Verified At"] = new Date(loto.verifiedAt).toLocaleString();
-        formattedLoto["Verification Type"] = "Initial LOTO Verification";
       } else {
-        formattedLoto["Initial Verified By"] = loto.status === "pending_verification_new" ? "Pending initial verification" : "Not verified";
+        formattedLoto["Initial Verified By"] = loto.status === "pending_verification_new" ? "Pending verification" : "Not verified";
         formattedLoto["Initial Verified At"] = "N/A";
-        formattedLoto["Verification Type"] = loto.status === "pending_verification_new" ? "Awaiting Initial Verification" : "No Initial Verification";
       }
 
-      // Add handover information
-      if (loto.handoverTo) {
-        const handoverUser = users.find((user) => user._id === loto.handoverTo._id);
-        formattedLoto["Current Handover To"] = handoverUser 
-          ? `${handoverUser.firstName} ${handoverUser.lastName}` 
-          : `${loto.handoverTo.firstName} ${loto.handoverTo.lastName}`;
-      } else {
-        formattedLoto["Current Handover To"] = "N/A";
-      }
+      // === CURRENT RESPONSIBILITY ===
+      formattedLoto["Current Responsible Person"] = loto.currentResponsibleName || loto.isolatorName;
 
-      // Add handover history if available
+      // === HANDOVER HISTORY ===
       if (loto.handoverHistory && loto.handoverHistory.length > 0) {
         formattedLoto["Total Handovers"] = loto.handoverHistory.length;
         
         // Create handover chain
-        const handoverChain = [`${loto.isolator.firstName} ${loto.isolator.lastName}`];
+        const handoverChain = [loto.isolatorName];
         loto.handoverHistory.forEach(handover => {
-          handoverChain.push(`${handover.toUserName}`);
+          handoverChain.push(handover.toUserName);
         });
-        formattedLoto["Handover Chain"] = handoverChain.join(" → ");
+        formattedLoto["Responsibility Chain"] = handoverChain.join(" → ");
         
-        // Create handover history summary with verification details
-        const handoverSummary = loto.handoverHistory.map((handover, index) => {
-          const status = handover.status || "unknown";
-          const fromName = handover.fromUserName || "Unknown";
-          const toName = handover.toUserName || "Unknown";
-          const date = handover.handoverDate ? new Date(handover.handoverDate).toLocaleString() : "Unknown";
-          const handoverType = handover.handoverType || "other";
-          const createdBy = handover.createdByName || "Unknown";
+        // Create separate columns for each handover (up to 5 handovers)
+        const maxHandovers = 5; // Support up to 5 handovers in separate columns
+        
+        for (let i = 0; i < maxHandovers; i++) {
+          const handoverNum = i + 1;
+          const handover = loto.handoverHistory[i];
           
-          let summary = `${index + 1}. ${fromName} → ${toName} | ${date} | Type: ${handoverType.replace('_', ' ').toUpperCase()} | Created by: ${createdBy}`;
-          if (handover.handoverNotes) {
-            summary += ` | Notes: ${handover.handoverNotes}`;
-          }
-          
-          // Add recipient decision details
-          const recipientStatus = handover.recipientStatus || "pending";
-          if (recipientStatus === "accepted") {
-            summary += `\n  Recipient Decision: ✅ Accepted on ${handover.recipientDecisionDate ? new Date(handover.recipientDecisionDate).toLocaleString() : "Unknown"}`;
-            if (handover.recipientDecisionNotes) {
-              summary += ` | Decision Notes: ${handover.recipientDecisionNotes}`;
-            }
-          } else if (recipientStatus === "rejected") {
-            summary += `\n  Recipient Decision: ❌ Rejected on ${handover.recipientDecisionDate ? new Date(handover.recipientDecisionDate).toLocaleString() : "Unknown"}`;
-            if (handover.recipientDecisionNotes) {
-              summary += ` | Rejection Notes: ${handover.recipientDecisionNotes}`;
-            }
-          } else {
-            summary += `\n  Recipient Decision: ⏳ Pending`;
-          }
-          
-          // Add handover verification details (distinct from initial LOTO verification)
-          const verificationStatus = handover.verificationStatus || "pending";
-          if (verificationStatus === "approved") {
-            summary += `\n  Handover Verification: ✅ Approved by ${handover.verifiedByName || "Unknown"} at ${handover.verificationDate ? new Date(handover.verificationDate).toLocaleString() : "Unknown"}`;
-            if (handover.verificationNotes) {
-              summary += ` | Handover Verification Notes: ${handover.verificationNotes}`;
-            }
-          } else if (verificationStatus === "rejected") {
-            summary += `\n  Handover Verification: ❌ Rejected by ${handover.verifiedByName || "Unknown"} at ${handover.verificationDate ? new Date(handover.verificationDate).toLocaleString() : "Unknown"}`;
-            if (handover.rejectionReason) {
-              summary += ` | Handover Rejection Reason: ${handover.rejectionReason}`;
-            }
-            if (handover.verificationNotes) {
-              summary += ` | Handover Verification Notes: ${handover.verificationNotes}`;
-            }
-          } else {
-            if (recipientStatus === "accepted") {
-              summary += `\n  Handover Verification: ⏳ Pending Handover Verification`;
-              if (handover.assignedVerifierName) {
-                summary += ` | Assigned Handover Verifier: ${handover.assignedVerifierName}`;
-              }
+          if (handover) {
+            // Overall Status Summary (Quick View)
+            const recipientStatus = handover.recipientStatus || "pending";
+            const verificationStatus = handover.verificationStatus || "pending";
+            
+            let overallStatus = "";
+            if (verificationStatus === "approved") {
+              overallStatus = "✅ COMPLETED";
+            } else if (verificationStatus === "rejected") {
+              overallStatus = "❌ REJECTED BY SUPERVISOR";
+            } else if (recipientStatus === "rejected") {
+              overallStatus = "❌ REJECTED BY RECIPIENT";
+            } else if (recipientStatus === "accepted") {
+              overallStatus = "⏳ AWAITING SUPERVISOR";
             } else {
-              summary += `\n  Handover Verification: ⏸️ Waiting for Recipient Decision`;
+              overallStatus = "⏳ AWAITING RECIPIENT";
             }
+            
+            formattedLoto[`Handover ${handoverNum} | Status`] = overallStatus;
+            
+            // Basic Transfer Information
+            formattedLoto[`Handover ${handoverNum} | From`] = handover.fromUserName || "Unknown";
+            formattedLoto[`Handover ${handoverNum} | To`] = handover.toUserName || "Unknown";
+            formattedLoto[`Handover ${handoverNum} | Transfer Date`] = handover.handoverDate 
+              ? new Date(handover.handoverDate).toLocaleString() 
+              : "Unknown";
+            formattedLoto[`Handover ${handoverNum} | Type`] = handover.handoverType 
+              ? handover.handoverType.replace('_', ' ').toUpperCase() 
+              : "OTHER";
+            formattedLoto[`Handover ${handoverNum} | Initiated By`] = handover.createdByName || "Unknown";
+            formattedLoto[`Handover ${handoverNum} | Transfer Notes`] = handover.handoverNotes || "—";
+            
+            // Recipient Decision Details
+            formattedLoto[`Handover ${handoverNum} | Recipient Decision`] = 
+              recipientStatus === "accepted" ? "✅ ACCEPTED" :
+              recipientStatus === "rejected" ? "❌ REJECTED" :
+              "⏳ PENDING";
+            
+            formattedLoto[`Handover ${handoverNum} | Recipient Decision Date`] = 
+              handover.recipientDecisionDate 
+                ? new Date(handover.recipientDecisionDate).toLocaleString()
+                : "—";
+            
+            formattedLoto[`Handover ${handoverNum} | Recipient Notes`] = 
+              handover.recipientDecisionNotes || "—";
+            
+            // Supervisor Verification Details
+            formattedLoto[`Handover ${handoverNum} | Supervisor Verification`] = 
+              verificationStatus === "approved" ? "✅ APPROVED" :
+              verificationStatus === "rejected" ? "❌ REJECTED" :
+              recipientStatus === "accepted" ? "⏳ PENDING" :
+              "⏸️ ON HOLD";
+            
+            formattedLoto[`Handover ${handoverNum} | Verified By`] = handover.verifiedByName || "—";
+            formattedLoto[`Handover ${handoverNum} | Verification Date`] = 
+              handover.verificationDate 
+                ? new Date(handover.verificationDate).toLocaleString()
+                : "—";
+            
+            formattedLoto[`Handover ${handoverNum} | Supervisor Notes`] = handover.verificationNotes || "—";
+            formattedLoto[`Handover ${handoverNum} | Rejection Reason`] = handover.rejectionReason || "—";
+            formattedLoto[`Handover ${handoverNum} | Assigned Verifier`] = handover.assignedVerifierName || "—";
+          } else {
+            // Empty columns for handovers that don't exist
+            formattedLoto[`Handover ${handoverNum} | Status`] = "—";
+            formattedLoto[`Handover ${handoverNum} | From`] = "—";
+            formattedLoto[`Handover ${handoverNum} | To`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Transfer Date`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Type`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Initiated By`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Transfer Notes`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Recipient Decision`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Recipient Decision Date`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Recipient Notes`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Supervisor Verification`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Verified By`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Verification Date`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Supervisor Notes`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Rejection Reason`] = "—";
+            formattedLoto[`Handover ${handoverNum} | Assigned Verifier`] = "—";
           }
-          
-          return summary;
-        }).join("\n");
+        }
         
-        formattedLoto["Detailed Handover History"] = handoverSummary;
+        // If more than 5 handovers, add a note
+        if (loto.handoverHistory.length > maxHandovers) {
+          formattedLoto["Additional Handovers Note"] = 
+            `⚠️ This LOTO has ${loto.handoverHistory.length} handovers. Only the first ${maxHandovers} are shown in separate columns. See full chain in "Responsibility Chain" column.`;
+        } else {
+          formattedLoto["Additional Handovers Note"] = "—";
+        }
       } else {
         formattedLoto["Total Handovers"] = 0;
-        formattedLoto["Handover Chain"] = `${loto.isolator.firstName} ${loto.isolator.lastName}`;
-        formattedLoto["Detailed Handover History"] = "No handovers recorded";
+        formattedLoto["Responsibility Chain"] = loto.isolatorName;
+        
+        // Empty handover columns
+        for (let i = 1; i <= 5; i++) {
+          formattedLoto[`Handover ${i} | Status`] = "—";
+          formattedLoto[`Handover ${i} | From`] = "—";
+          formattedLoto[`Handover ${i} | To`] = "—";
+          formattedLoto[`Handover ${i} | Transfer Date`] = "—";
+          formattedLoto[`Handover ${i} | Type`] = "—";
+          formattedLoto[`Handover ${i} | Initiated By`] = "—";
+          formattedLoto[`Handover ${i} | Transfer Notes`] = "—";
+          formattedLoto[`Handover ${i} | Recipient Decision`] = "—";
+          formattedLoto[`Handover ${i} | Recipient Decision Date`] = "—";
+          formattedLoto[`Handover ${i} | Recipient Notes`] = "—";
+          formattedLoto[`Handover ${i} | Supervisor Verification`] = "—";
+          formattedLoto[`Handover ${i} | Verified By`] = "—";
+          formattedLoto[`Handover ${i} | Verification Date`] = "—";
+          formattedLoto[`Handover ${i} | Supervisor Notes`] = "—";
+          formattedLoto[`Handover ${i} | Rejection Reason`] = "—";
+          formattedLoto[`Handover ${i} | Assigned Verifier`] = "—";
+        }
+        formattedLoto["Additional Handovers Note"] = "No handovers - Original isolator still responsible";
       }
 
-      // Add energy types if requested
+      // === ENERGY TYPES ===
       if (exportOptions.includeEnergyTypes && loto.energyTypes && loto.energyTypes.length > 0) {
-        formattedLoto["Energy Types"] = loto.energyTypes.map(energy => 
-          `${energy.type} (${energy.isolationPoint})`
-        ).join("; ");
+        formattedLoto["Energy Types Count"] = loto.energyTypes.length;
+        formattedLoto["Energy Types Detail"] = loto.energyTypes.map((energy, idx) => 
+          `${idx + 1}. ${energy.type} - Isolation Point: ${energy.isolationPoint}`
+        ).join("\n");
       } else {
-        formattedLoto["Energy Types"] = "None specified";
+        formattedLoto["Energy Types Count"] = 0;
+        formattedLoto["Energy Types Detail"] = "None specified";
       }
 
-      // Add notes if requested
+      // === NOTES ===
       if (exportOptions.includeNotes) {
         formattedLoto["Handover Notes"] = loto.handoverNotes || "N/A";
         formattedLoto["Completion Notes"] = loto.completionNotes || "N/A";
       }
 
-      // Add completion information
-      if (loto.actualFinishTime) {
-        formattedLoto["Actual Finish Time"] = new Date(loto.actualFinishTime).toLocaleTimeString();
-        formattedLoto["Actual Finish Date"] = new Date(loto.actualFinishDate).toLocaleDateString();
+      // === COMPLETION INFORMATION ===
+      if (loto.status === "completed") {
+        formattedLoto["Completed By"] = loto.completedByName || "Unknown";
+        formattedLoto["Completed At"] = loto.completedAt ? new Date(loto.completedAt).toLocaleString() : "N/A";
+        formattedLoto["Actual Finish Date"] = loto.actualFinishDate ? new Date(loto.actualFinishDate).toLocaleDateString() : "N/A";
+        formattedLoto["Actual Finish Time"] = loto.actualFinishTime ? new Date(loto.actualFinishTime).toLocaleTimeString() : "N/A";
       } else {
-        formattedLoto["Actual Finish Time"] = "N/A";
+        formattedLoto["Completed By"] = "Not completed";
+        formattedLoto["Completed At"] = "N/A";
         formattedLoto["Actual Finish Date"] = "N/A";
+        formattedLoto["Actual Finish Time"] = "N/A";
+      }
+
+      // === REJECTION INFORMATION ===
+      if (loto.status === "rejected") {
+        formattedLoto["Rejected By"] = loto.rejectedBy ? `${loto.rejectedBy.firstName} ${loto.rejectedBy.lastName}` : "Unknown";
+        formattedLoto["Rejected At"] = loto.rejectedAt ? new Date(loto.rejectedAt).toLocaleString() : "N/A";
+        formattedLoto["Rejection Notes"] = loto.rejectionNotes || "N/A";
+        formattedLoto["Rejected Fields"] = loto.rejectedFields && loto.rejectedFields.length > 0 
+          ? loto.rejectedFields.join(", ") 
+          : "N/A";
       }
 
       return formattedLoto;
@@ -291,34 +354,99 @@ const DataExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     
-    // Set column widths - simplified without redundant handover columns
+    // Set column widths to match new multi-column structure
     const columns = [
+      // Basic Information
       { wch: 20 }, // Serial Number
       { wch: 12 }, // Date Created
       { wch: 12 }, // Time Created
       { wch: 8 },  // Shift
-      { wch: 12 }, // Status
+      { wch: 15 }, // Status
       { wch: 20 }, // Isolator Name
-      { wch: 15 }, // Location
+      
+      // Location Details
+      { wch: 20 }, // Location
       { wch: 15 }, // Line
-      { wch: 15 }, // Machine
-      { wch: 20 }, // Isolated Part
-      { wch: 20 }, // Reason
+      { wch: 20 }, // Machine
+      { wch: 25 }, // Isolated Part
+      
+      // Work Details
+      { wch: 25 }, // Reason
       { wch: 15 }, // PTW Number
-      { wch: 15 }, // Expected Duration
+      { wch: 12 }, // Expected Duration
       { wch: 20 }, // Authorized Supervisor
+      
+      // Verification
       { wch: 20 }, // Initial Verified By
       { wch: 20 }, // Initial Verified At
-      { wch: 20 }, // Verification Type
-      { wch: 20 }, // Current Handover To
-      { wch: 8 },  // Total Handovers
-      { wch: 50 }, // Handover Chain
-      { wch: 80 }, // Detailed Handover History (wider for comprehensive data)
-      { wch: 30 }, // Energy Types
-      { wch: 20 }, // Handover Notes
-      { wch: 20 }, // Completion Notes
-      { wch: 15 }, // Actual Finish Time
+      
+      // Current Responsibility
+      { wch: 25 }, // Current Responsible Person
+      
+      // Handover Summary
+      { wch: 10 }, // Total Handovers
+      { wch: 60 }, // Responsibility Chain
+      
+      // Handover 1 (16 columns per handover - now includes Status as first column)
+      { wch: 25 }, // Status (Overall)
+      { wch: 20 }, // From
+      { wch: 20 }, // To
+      { wch: 22 }, // Transfer Date
+      { wch: 20 }, // Type
+      { wch: 20 }, // Initiated By
+      { wch: 35 }, // Transfer Notes
+      { wch: 18 }, // Recipient Decision
+      { wch: 22 }, // Recipient Decision Date
+      { wch: 35 }, // Recipient Notes
+      { wch: 25 }, // Supervisor Verification
+      { wch: 20 }, // Verified By
+      { wch: 22 }, // Verification Date
+      { wch: 35 }, // Supervisor Notes
+      { wch: 35 }, // Rejection Reason
+      { wch: 20 }, // Assigned Verifier
+      
+      // Handover 2 (16 columns)
+      { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, 
+      { wch: 20 }, { wch: 35 }, { wch: 18 }, { wch: 22 }, { wch: 35 }, 
+      { wch: 25 }, { wch: 20 }, { wch: 22 }, { wch: 35 }, { wch: 35 }, { wch: 20 },
+      
+      // Handover 3 (16 columns)
+      { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, 
+      { wch: 20 }, { wch: 35 }, { wch: 18 }, { wch: 22 }, { wch: 35 }, 
+      { wch: 25 }, { wch: 20 }, { wch: 22 }, { wch: 35 }, { wch: 35 }, { wch: 20 },
+      
+      // Handover 4 (16 columns)
+      { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, 
+      { wch: 20 }, { wch: 35 }, { wch: 18 }, { wch: 22 }, { wch: 35 }, 
+      { wch: 25 }, { wch: 20 }, { wch: 22 }, { wch: 35 }, { wch: 35 }, { wch: 20 },
+      
+      // Handover 5 (16 columns)
+      { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, 
+      { wch: 20 }, { wch: 35 }, { wch: 18 }, { wch: 22 }, { wch: 35 }, 
+      { wch: 25 }, { wch: 20 }, { wch: 22 }, { wch: 35 }, { wch: 35 }, { wch: 20 },
+      
+      // Additional Handovers Note
+      { wch: 50 }, // Additional Handovers Note
+      
+      // Energy Types
+      { wch: 10 }, // Energy Types Count
+      { wch: 50 }, // Energy Types Detail
+      
+      // Notes
+      { wch: 30 }, // Handover Notes
+      { wch: 30 }, // Completion Notes
+      
+      // Completion Information
+      { wch: 25 }, // Completed By
+      { wch: 20 }, // Completed At
       { wch: 15 }, // Actual Finish Date
+      { wch: 15 }, // Actual Finish Time
+      
+      // Rejection Information (if applicable)
+      { wch: 20 }, // Rejected By
+      { wch: 20 }, // Rejected At
+      { wch: 30 }, // Rejection Notes
+      { wch: 25 }, // Rejected Fields
     ];
     
     worksheet["!cols"] = columns;
@@ -364,21 +492,145 @@ const DataExport = () => {
     }
   };
 
-  const exportToExcelWithMultipleSheets = (lotoData, adminActionsData) => {
+  const formatHandoverDetailsTable = (lotos) => {
+    // Create a flat table of all handovers across all LOTOs
+    const handoverDetails = [];
+    
+    lotos.forEach(loto => {
+      if (loto.handoverHistory && loto.handoverHistory.length > 0) {
+        loto.handoverHistory.forEach((handover, index) => {
+          const recipientStatus = handover.recipientStatus || "pending";
+          const verificationStatus = handover.verificationStatus || "pending";
+          
+          let overallStatus = "";
+          if (verificationStatus === "approved") {
+            overallStatus = "✅ COMPLETED";
+          } else if (verificationStatus === "rejected") {
+            overallStatus = "❌ REJECTED BY SUPERVISOR";
+          } else if (recipientStatus === "rejected") {
+            overallStatus = "❌ REJECTED BY RECIPIENT";
+          } else if (recipientStatus === "accepted") {
+            overallStatus = "⏳ AWAITING SUPERVISOR";
+          } else {
+            overallStatus = "⏳ AWAITING RECIPIENT";
+          }
+          
+          handoverDetails.push({
+            // Link to main LOTO
+            "LOTO Serial Number": loto.serialNumber,
+            "LOTO Status": loto.status,
+            "LOTO Location": loto.location || "N/A",
+            
+            // Handover Sequence
+            "Handover Number": index + 1,
+            "Overall Status": overallStatus,
+            
+            // Transfer Information
+            "From (Name)": handover.fromUserName || "Unknown",
+            "To (Name)": handover.toUserName || "Unknown",
+            "Transfer Date": handover.handoverDate 
+              ? new Date(handover.handoverDate).toLocaleString() 
+              : "Unknown",
+            "Handover Type": handover.handoverType 
+              ? handover.handoverType.replace('_', ' ').toUpperCase() 
+              : "OTHER",
+            "Initiated By": handover.createdByName || "Unknown",
+            "Transfer Notes": handover.handoverNotes || "—",
+            
+            // Recipient Decision
+            "Recipient Decision": recipientStatus === "accepted" ? "✅ ACCEPTED" :
+                                recipientStatus === "rejected" ? "❌ REJECTED" :
+                                "⏳ PENDING",
+            "Recipient Decision Date": handover.recipientDecisionDate 
+              ? new Date(handover.recipientDecisionDate).toLocaleString()
+              : "—",
+            "Recipient Notes": handover.recipientDecisionNotes || "—",
+            
+            // Supervisor Verification
+            "Supervisor Verification": verificationStatus === "approved" ? "✅ APPROVED" :
+                                      verificationStatus === "rejected" ? "❌ REJECTED" :
+                                      recipientStatus === "accepted" ? "⏳ PENDING" :
+                                      "⏸️ ON HOLD",
+            "Verified By": handover.verifiedByName || "—",
+            "Verification Date": handover.verificationDate 
+              ? new Date(handover.verificationDate).toLocaleString()
+              : "—",
+            "Supervisor Notes": handover.verificationNotes || "—",
+            "Rejection Reason": handover.rejectionReason || "—",
+            "Assigned Verifier": handover.assignedVerifierName || "—",
+          });
+        });
+      }
+    });
+    
+    return handoverDetails;
+  };
+
+  const exportToExcelWithMultipleSheets = (lotoData, adminActionsData, rawLotos) => {
     const workbook = XLSX.utils.book_new();
     
-    // Create LOTO sheet
+    // Create LOTO Summary sheet (without individual handover columns)
     const lotoSheet = XLSX.utils.json_to_sheet(lotoData);
-    XLSX.utils.book_append_sheet(workbook, lotoSheet, "LOTO Records");
+    XLSX.utils.book_append_sheet(workbook, lotoSheet, "LOTO Summary");
     
-    // Create Admin Actions sheet
-    const adminActionsSheet = XLSX.utils.json_to_sheet(adminActionsData);
-    XLSX.utils.book_append_sheet(workbook, adminActionsSheet, "Admin Actions");
+    // Create Handover Details sheet (nested table)
+    const handoverDetails = formatHandoverDetailsTable(rawLotos);
+    if (handoverDetails.length > 0) {
+      const handoverSheet = XLSX.utils.json_to_sheet(handoverDetails);
+      
+      // Set column widths for handover details
+      const handoverColumns = [
+        { wch: 20 }, // LOTO Serial Number
+        { wch: 15 }, // LOTO Status
+        { wch: 20 }, // LOTO Location
+        { wch: 10 }, // Handover Number
+        { wch: 25 }, // Overall Status
+        { wch: 25 }, // From
+        { wch: 25 }, // To
+        { wch: 22 }, // Transfer Date
+        { wch: 25 }, // Type
+        { wch: 25 }, // Initiated By
+        { wch: 40 }, // Transfer Notes
+        { wch: 18 }, // Recipient Decision
+        { wch: 22 }, // Recipient Decision Date
+        { wch: 40 }, // Recipient Notes
+        { wch: 25 }, // Supervisor Verification
+        { wch: 25 }, // Verified By
+        { wch: 22 }, // Verification Date
+        { wch: 40 }, // Supervisor Notes
+        { wch: 40 }, // Rejection Reason
+        { wch: 25 }, // Assigned Verifier
+      ];
+      handoverSheet["!cols"] = handoverColumns;
+      
+      XLSX.utils.book_append_sheet(workbook, handoverSheet, "Handover Details");
+    }
+    
+    // Create Admin Actions sheet if provided
+    if (adminActionsData && adminActionsData.length > 0) {
+      const adminActionsSheet = XLSX.utils.json_to_sheet(adminActionsData);
+      XLSX.utils.book_append_sheet(workbook, adminActionsSheet, "Admin Actions");
+    }
     
     // Export
     const timestamp = new Date().toISOString().split('T')[0];
     const filename = `LOTO_Export_${timestamp}.xlsx`;
     XLSX.writeFile(workbook, filename);
+  };
+
+  const convertToCSV = (data) => {
+    if (!data || data.length === 0) return "";
+    
+    const headers = Object.keys(data[0]).join(",");
+    const rows = data.map(row => 
+      Object.values(row).map(value => 
+        typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))
+          ? `"${value.replace(/"/g, '""')}"` 
+          : value
+      ).join(",")
+    );
+    
+    return [headers, ...rows].join("\n");
   };
 
   const exportToCSVWithMultipleSheets = (lotoData, adminActionsData) => {
@@ -504,9 +756,10 @@ const DataExport = () => {
       // Export based on format
       if (exportOptions.format === "excel") {
         if (formattedAdminActions.length > 0) {
-          exportToExcelWithMultipleSheets(formattedData, formattedAdminActions);
+          exportToExcelWithMultipleSheets(formattedData, formattedAdminActions, filteredLOTOs);
         } else {
-          exportToExcel(formattedData);
+          // Always use multi-sheet export for Excel to include Handover Details
+          exportToExcelWithMultipleSheets(formattedData, [], filteredLOTOs);
         }
       } else {
         if (formattedAdminActions.length > 0) {
@@ -516,10 +769,26 @@ const DataExport = () => {
         }
       }
 
+      // Count total handovers for success message
+      const totalHandovers = filteredLOTOs.reduce((sum, loto) => 
+        sum + (loto.handoverHistory?.length || 0), 0
+      );
+      
       const adminActionsCount = formattedAdminActions.length;
-      const successMessage = adminActionsCount > 0 
-        ? `Successfully exported ${filteredLOTOs.length} LOTO records and ${adminActionsCount} admin actions to ${exportOptions.format.toUpperCase()} format.`
-        : `Successfully exported ${filteredLOTOs.length} LOTO records to ${exportOptions.format.toUpperCase()} format.`;
+      
+      let successMessage = "";
+      if (exportOptions.format === "excel") {
+        successMessage = `✅ Successfully exported to Excel with multiple sheets:\n`;
+        successMessage += `  📄 LOTO Summary: ${filteredLOTOs.length} records\n`;
+        successMessage += `  📄 Handover Details: ${totalHandovers} handover records\n`;
+        if (adminActionsCount > 0) {
+          successMessage += `  📄 Admin Actions: ${adminActionsCount} actions`;
+        }
+      } else {
+        successMessage = adminActionsCount > 0 
+          ? `Successfully exported ${filteredLOTOs.length} LOTO records and ${adminActionsCount} admin actions to CSV format.`
+          : `Successfully exported ${filteredLOTOs.length} LOTO records to CSV format.`;
+      }
       
       setSuccess(successMessage);
     } catch (err) {

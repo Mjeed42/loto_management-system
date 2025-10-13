@@ -29,6 +29,8 @@ import AdminHome from "./pages/AdminHome";
 import DataExport from "./pages/DataExport";
 import TranslationTest from "./components/TranslationTest";
 import MonitoringDashboard from "./pages/MonitoringDashboard";
+import LocationManagement from "./pages/LocationManagement";
+import EnergyTypesManagement from "./pages/EnergyTypesManagement";
 
 
 // AppContent component that has access to useLocation
@@ -103,6 +105,8 @@ const AppContent = ({ currentUser, fetchCurrentUser, isLoading }) => {
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/data-export" element={<DataExport />} />
             <Route path="/monitoring" element={<MonitoringDashboard />} />
+            <Route path="/location-management" element={<LocationManagement />} />
+            <Route path="/energy-types-management" element={<EnergyTypesManagement />} />
             <Route path="/test-translation" element={<TranslationTest />} />
           </Routes>
         </main>

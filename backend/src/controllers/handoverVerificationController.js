@@ -59,17 +59,99 @@ exports.recipientDecision = async (req, res) => {
     if (action === "accept") {
       // Status remains pending_handover_verification until supervisor approves
       // No status change needed here
+      
+      // Delete any previous rejection snapshots this user has for this LOTO
+      try {
+        const deletedSnapshots = await LOTO.deleteMany({
+          originalLotoId: loto._id,
+          snapshotCreatedFor: handover.toUser,
+          isSnapshot: true,
+          status: "rejected_handover_snapshot"
+        });
+        
+        if (deletedSnapshots.deletedCount > 0) {
+          console.log(`🗑️ Deleted ${deletedSnapshots.deletedCount} old snapshot(s) - ${handover.toUserName} accepted handover`);
+        }
+      } catch (cleanupError) {
+        console.error("❌ Error cleaning up old snapshots:", cleanupError);
+        // Continue even if cleanup fails
+      }
     } else {
-      // If rejected by recipient, return to active status with the person who initiated this handover
+      // If rejected by recipient, create a snapshot for the recipient and return original to sender
+      
+      // Delete any previous snapshots from this user for this LOTO (to avoid duplicates)
+      try {
+        const existingSnapshots = await LOTO.find({
+          originalLotoId: loto._id,
+          snapshotCreatedFor: handover.toUser,
+          isSnapshot: true,
+          status: "rejected_handover_snapshot"
+        });
+        
+        if (existingSnapshots.length > 0) {
+          await LOTO.deleteMany({
+            _id: { $in: existingSnapshots.map(s => s._id) }
+          });
+          console.log(`🗑️ Deleted ${existingSnapshots.length} old snapshot(s) for ${handover.toUserName} - creating new one`);
+        }
+      } catch (cleanupError) {
+        console.error("❌ Error cleaning up old snapshots:", cleanupError);
+        // Continue with snapshot creation even if cleanup fails
+      }
+      
+      // Create a snapshot copy for the recipient (person who rejected it)
+      const snapshotData = loto.toObject();
+      delete snapshotData._id;
+      delete snapshotData.__v;
+      
+      // Generate more readable serial number
+      const timestamp = new Date().toISOString().split('T')[0]; // 2025-01-12
+      const userInitials = handover.toUserName.split(' ').map(n => n[0]).join(''); // BA for Bashaer Al
+      
+      // Modify snapshot to be read-only
+      snapshotData.isSnapshot = true;
+      snapshotData.originalLotoId = loto._id;
+      snapshotData.snapshotReason = "handover_rejected_by_recipient";
+      snapshotData.snapshotCreatedAt = new Date();
+      snapshotData.snapshotCreatedFor = handover.toUser;
+      snapshotData.snapshotCreatedForName = handover.toUserName;
+      snapshotData.status = "rejected_handover_snapshot";
+      snapshotData.serialNumber = `${loto.serialNumber}-SNAPSHOT-${userInitials}-${timestamp}`;
+      // DON'T set currentResponsible on snapshots - they're read-only and filtered by snapshotCreatedFor
+      snapshotData.currentResponsible = null;
+      snapshotData.currentResponsibleName = null;
+      
+      try {
+        const snapshot = new LOTO(snapshotData);
+        await snapshot.save();
+        console.log(`📸 Snapshot created for ${handover.toUserName}: ${snapshot.serialNumber}`);
+      } catch (snapshotError) {
+        console.error("❌ Error creating snapshot:", snapshotError);
+        // Continue with the original LOTO update even if snapshot fails
+      }
+      
+      // Return original LOTO to the person who initiated this handover
       loto.status = "active";
-      // Return LOTO to the person who initiated this handover (fromUser)
       loto.currentResponsible = handover.fromUser;
       loto.currentResponsibleName = handover.fromUserName;
       
+      // Clear handover fields since rejection returns to original state
+      loto.handoverTo = null;
+      loto.handoverNotes = null;
+      
       console.log(`🔄 Handover rejected by ${handover.toUserName}, returning LOTO to ${handover.fromUserName}`);
+      console.log(`🔍 Debug - Setting currentResponsible:`, {
+        fromUser: handover.fromUser,
+        fromUserName: handover.fromUserName,
+        toUser: handover.toUser,
+        toUserName: handover.toUserName,
+        currentResponsible: loto.currentResponsible,
+        currentResponsibleName: loto.currentResponsibleName
+      });
     }
 
     await loto.save();
+    console.log(`✅ LOTO saved. Current responsible is now: ${loto.currentResponsibleName}`);
 
     // Populate the updated LOTO
     const updatedLOTO = await LOTO.findById(id)
@@ -170,10 +252,66 @@ exports.verifyHandover = async (req, res) => {
 
     if (action === "reject") {
       handover.rejectionReason = rejectionReason || "";
+      
+      // Delete any previous snapshots from this user for this LOTO (to avoid duplicates)
+      try {
+        const existingSnapshots = await LOTO.find({
+          originalLotoId: loto._id,
+          snapshotCreatedFor: handover.toUser,
+          isSnapshot: true,
+          status: "rejected_handover_snapshot"
+        });
+        
+        if (existingSnapshots.length > 0) {
+          await LOTO.deleteMany({
+            _id: { $in: existingSnapshots.map(s => s._id) }
+          });
+          console.log(`🗑️ Deleted ${existingSnapshots.length} old snapshot(s) for ${handover.toUserName} - supervisor rejection`);
+        }
+      } catch (cleanupError) {
+        console.error("❌ Error cleaning up old snapshots:", cleanupError);
+        // Continue with snapshot creation even if cleanup fails
+      }
+      
+      // Create a snapshot copy for the recipient (person who would have received it)
+      const snapshotData = loto.toObject();
+      delete snapshotData._id;
+      delete snapshotData.__v;
+      
+      // Generate more readable serial number
+      const timestamp = new Date().toISOString().split('T')[0]; // 2025-01-12
+      const userInitials = handover.toUserName.split(' ').map(n => n[0]).join(''); // BA for Bashaer Al
+      
+      // Modify snapshot to be read-only
+      snapshotData.isSnapshot = true;
+      snapshotData.originalLotoId = loto._id;
+      snapshotData.snapshotReason = "handover_rejected_by_supervisor";
+      snapshotData.snapshotCreatedAt = new Date();
+      snapshotData.snapshotCreatedFor = handover.toUser;
+      snapshotData.snapshotCreatedForName = handover.toUserName;
+      snapshotData.status = "rejected_handover_snapshot";
+      snapshotData.serialNumber = `${loto.serialNumber}-SNAPSHOT-${userInitials}-${timestamp}`;
+      // DON'T set currentResponsible on snapshots - they're read-only and filtered by snapshotCreatedFor
+      snapshotData.currentResponsible = null;
+      snapshotData.currentResponsibleName = null;
+      
+      try {
+        const snapshot = new LOTO(snapshotData);
+        await snapshot.save();
+        console.log(`📸 Snapshot created for ${handover.toUserName}: ${snapshot.serialNumber}`);
+      } catch (snapshotError) {
+        console.error("❌ Error creating snapshot:", snapshotError);
+        // Continue with the original LOTO update even if snapshot fails
+      }
+      
       // If rejected by supervisor, return LOTO to the person who initiated this handover
       loto.status = "active";
       loto.currentResponsible = handover.fromUser;
       loto.currentResponsibleName = handover.fromUserName;
+      
+      // Clear handover fields since rejection returns to original state
+      loto.handoverTo = null;
+      loto.handoverNotes = null;
       
       console.log(`🔄 Handover rejected by supervisor, returning LOTO to ${handover.fromUserName}`);
     } else {
@@ -181,6 +319,28 @@ exports.verifyHandover = async (req, res) => {
       loto.status = "active"; // Return to active status with new owner
       loto.currentResponsible = handover.toUser;
       loto.currentResponsibleName = handover.toUserName;
+      
+      // Clear handover fields since handover is complete
+      loto.handoverTo = null;
+      loto.handoverNotes = null;
+      
+      // Delete any previous rejection snapshots this user has for this LOTO
+      // (in case they rejected before, then accepted, and now it's approved)
+      try {
+        const deletedSnapshots = await LOTO.deleteMany({
+          originalLotoId: loto._id,
+          snapshotCreatedFor: handover.toUser,
+          isSnapshot: true,
+          status: "rejected_handover_snapshot"
+        });
+        
+        if (deletedSnapshots.deletedCount > 0) {
+          console.log(`🗑️ Deleted ${deletedSnapshots.deletedCount} old snapshot(s) - ${handover.toUserName} handover approved`);
+        }
+      } catch (cleanupError) {
+        console.error("❌ Error cleaning up old snapshots:", cleanupError);
+        // Continue even if cleanup fails
+      }
     }
 
     await loto.save();

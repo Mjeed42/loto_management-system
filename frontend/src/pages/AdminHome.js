@@ -544,6 +544,20 @@ const AdminHome = () => {
                 Export
               </ActionButton>
               <ActionButton
+                variant="secondary"
+                onClick={() => navigate("/location-management")}
+                icon="map-pin"
+              >
+                Locations
+              </ActionButton>
+              <ActionButton
+                variant="secondary"
+                onClick={() => navigate("/energy-types-management")}
+                icon="zap"
+              >
+                Energy Types
+              </ActionButton>
+              <ActionButton
                 variant="primary"
                 onClick={() => navigate("/Home")}
                 icon="home"

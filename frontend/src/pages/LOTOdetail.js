@@ -446,13 +446,90 @@ const LOTOdetail = () => {
     currentUser && loto.handoverTo && loto.handoverTo._id === currentUser.id;
   const isIsolator =
     currentUser && loto.isolator && loto.isolator._id === currentUser.id;
-  const canVerify =
-    currentUser &&
-    (currentUser.role === "admin" || 
-     (currentUser.role === "supervisor" && loto.supervisor && loto.supervisor._id === currentUser.id));
+  
+  // CRITICAL: Check if user is the CURRENT RESPONSIBLE (after handovers)
+  // This ensures only the current responsible person can perform actions
+  const isCurrentResponsible = (() => {
+    if (!currentUser) return false;
+    
+    // Primary check: by ID if available
+    if (loto.currentResponsible && loto.currentResponsible._id) {
+      return loto.currentResponsible._id === currentUser.id;
+    }
+    
+    // Fallback check: by name if ID is missing (backend issue)
+    if (loto.currentResponsibleName && currentUser.firstName && currentUser.lastName) {
+      const currentUserName = `${currentUser.firstName} ${currentUser.lastName}`.trim();
+      const responsibleName = loto.currentResponsibleName.trim();
+      return currentUserName.toLowerCase() === responsibleName.toLowerCase();
+    }
+    
+    // Final fallback: if no handover history, check if user is the isolator
+    if (!loto.handoverHistory || loto.handoverHistory.length === 0) {
+      return isIsolator;
+    }
+    
+    return false;
+  })();
+  
+  const canVerify = (() => {
+    if (!currentUser) return false;
+    
+    // Admins can always verify
+    if (currentUser.role === "admin") return true;
+    
+    // For supervisors, check if they are the assigned supervisor
+    if (currentUser.role === "supervisor") {
+      // Primary check: by ID if supervisor is populated
+      if (loto.supervisor && loto.supervisor._id) {
+        return loto.supervisor._id === currentUser.id;
+      }
+      
+      // Fallback check: by name if ID is not populated (backend issue)
+      if (loto.supervisorName && currentUser.firstName && currentUser.lastName) {
+        const currentUserName = `${currentUser.firstName} ${currentUser.lastName}`.trim();
+        const supervisorName = loto.supervisorName.trim();
+        return currentUserName.toLowerCase() === supervisorName.toLowerCase();
+      }
+    }
+    
+    return false;
+  })();
+  
   const isAdmin = currentUser && currentUser.role === "admin";
   const isTechnician = currentUser && currentUser.role === "technician";
   const isSupervisor = currentUser && currentUser.role === "supervisor";
+
+  // Debug logging
+  console.log('🔍 LOTOdetail Permission Debug:', {
+    currentUser: currentUser ? {
+      id: currentUser.id,
+      role: currentUser.role,
+      name: `${currentUser.firstName} ${currentUser.lastName}`
+    } : null,
+    loto: {
+      status: loto.status,
+      currentResponsibleName: loto.currentResponsibleName,
+      currentResponsible_id: loto.currentResponsible?._id,
+      isolator: loto.isolator ? `${loto.isolator.firstName} ${loto.isolator.lastName}` : null,
+      supervisorName: loto.supervisorName,
+      supervisor_id: loto.supervisor?._id
+    },
+    permissions: {
+      isCurrentResponsible,
+      isIsolator,
+      isAdmin,
+      isTechnician,
+      isSupervisor,
+      canVerify
+    },
+    buttonConditions: {
+      activeButtons: loto.status === "active" && isCurrentResponsible && !isAdmin,
+      verifyButtons: loto.status === "pending_verification_new" && canVerify,
+      rejectedEditButton: loto.status === "rejected" && isCurrentResponsible && !isAdmin,
+      pendingUpdateButton: loto.status === "pending_verification_new" && isCurrentResponsible
+    }
+  });
 
   return (
     <div className="loto-details-container animate-fade-in">
@@ -904,6 +981,11 @@ const LOTOdetail = () => {
                     <span className="finish-time">{new Date(loto.actualFinishTime).toLocaleTimeString()}</span>
                     <span className="finish-date">{new Date(loto.actualFinishDate).toLocaleDateString()}</span>
                   </div>
+                  {loto.completedByName && (
+                    <div className="completed-by-details">
+                      <strong>{t('lotoDetails.completedBy')}:</strong> {loto.completedByName}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1130,7 +1212,7 @@ const LOTOdetail = () => {
             )}
 
             {/* Edit Rejected LOTO */}
-            {loto.status === "rejected" && isIsolator && isTechnician && (
+            {loto.status === "rejected" && isCurrentResponsible && !isAdmin && (
               <div className="action-group edit-group">
                 <div className="action-header">
                   <h5>{t('lotoDetails.editRequired')}</h5>
@@ -1148,12 +1230,12 @@ const LOTOdetail = () => {
               </div>
             )}
 
-            {/* Technician Actions */}
-            {loto.status === "active" && isIsolator && isTechnician && (
+            {/* Current Responsible User Actions */}
+            {loto.status === "active" && isCurrentResponsible && !isAdmin && (
               <div className="action-group technician-group">
                 <div className="action-header">
-                  <h5>{t('lotoDetails.technicianActions')}</h5>
-                  <p>{t('lotoDetails.technicianActionsDesc')}</p>
+                  <h5>🔧 {t('lotoDetails.currentResponsibleActions')}</h5>
+                  <p>{t('lotoDetails.actionsForCurrentResponsible')}</p>
                 </div>
                 <div className="action-buttons">
                   <button className="action-button info" onClick={() => handleHandover(loto)}>
@@ -1173,8 +1255,8 @@ const LOTOdetail = () => {
               </div>
             )}
 
-            {/* Update Button for Isolator (Pending) */}
-            {loto.status === "pending_verification_new" && isIsolator && (
+            {/* Update Button for Current Responsible (Pending) */}
+            {loto.status === "pending_verification_new" && isCurrentResponsible && (
               <div className="action-group update-group">
                 <div className="action-header">
                   <h5>{t('lotoDetails.updateRequired')}</h5>
@@ -1193,7 +1275,7 @@ const LOTOdetail = () => {
             )}
 
             {/* Supervisor/Admin Full Actions */}
-            {loto.status === "active" && isIsolator && (isSupervisor || currentUser?.role === "admin") && (
+            {loto.status === "active" && isCurrentResponsible && (isSupervisor || currentUser?.role === "admin") && (
               <div className="action-group supervisor-group">
                 <div className="action-header">
                   <h5>{currentUser?.role === "admin" ? t('lotoDetails.adminActions') : t('lotoDetails.supervisorActions')}</h5>

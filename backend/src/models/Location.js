@@ -18,6 +18,18 @@ const locationSchema = new mongoose.Schema(
       required: true,
       enum: ["location", "line", "machine", "utility", "process"],
     },
+    typeLabel: {
+      type: String,
+      trim: true,
+      // Custom display name for this level (e.g., "Department", "Section", "Line", "Equipment")
+      // If not provided, defaults to the type value
+    },
+    section: {
+      type: String,
+      trim: true,
+      // Category/section for grouping similar hierarchies (e.g., "Production Lines", "Utilities", "Warehouses")
+      // Only used for root locations (type === "location")
+    },
     parent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Location",

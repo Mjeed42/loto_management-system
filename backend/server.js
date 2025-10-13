@@ -24,6 +24,7 @@ app.use("/api/admin", require("./src/routes/admin"));
 app.use("/api/auth", require("./src/routes/auth"));
 // Add after other routes
 app.use("/api/locations", require("./src/routes/locations"));
+app.use("/api/energy-types", require("./src/routes/energyTypes"));
 
 // Database Connection - MongoDB Atlas with DEBUG
 console.log("=== MONGODB CONNECTION DEBUG ===");

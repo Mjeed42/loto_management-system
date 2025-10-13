@@ -130,7 +130,14 @@ exports.getLOTOs = async (req, res) => {
 
     // Technicians only see their own LOTOs
     if (req.user.role === "technician") {
-      query.$or = [{ isolator: req.user.id }, { handoverTo: req.user.id }];
+      query.$or = [
+        { isolator: req.user.id },
+        { handoverTo: req.user.id },
+        { currentResponsible: req.user.id },  // Include LOTOs where user is current responsible
+        { snapshotCreatedFor: req.user.id },  // Include snapshots created for this user
+        { "handoverHistory.fromUser": req.user.id },  // Include LOTOs where user was in handover chain (sender)
+        { "handoverHistory.toUser": req.user.id }     // Include LOTOs where user was in handover chain (recipient)
+      ];
     }
 
     const lotos = await LOTO.find(query)
@@ -138,6 +145,8 @@ exports.getLOTOs = async (req, res) => {
       .populate("verifiedBy", "firstName lastName username")
       .populate("rejectedBy", "firstName lastName username")
       .populate("handoverTo", "firstName lastName username")
+      .populate("currentResponsible", "firstName lastName username")  // Populate currentResponsible
+      .populate("snapshotCreatedFor", "firstName lastName username")  // Populate snapshotCreatedFor
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -161,9 +170,12 @@ exports.getLOTO = async (req, res) => {
   try {
     const loto = await LOTO.findById(req.params.id)
       .populate("isolator", "firstName lastName username")
+      .populate("supervisor", "firstName lastName username")  // Add supervisor
       .populate("verifiedBy", "firstName lastName username")
       .populate("rejectedBy", "firstName lastName username")
-      .populate("handoverTo", "firstName lastName username");
+      .populate("handoverTo", "firstName lastName username")
+      .populate("currentResponsible", "firstName lastName username")
+      .populate("snapshotCreatedFor", "firstName lastName username");
 
     if (!loto) {
       return res.status(404).json({
@@ -173,10 +185,20 @@ exports.getLOTO = async (req, res) => {
     }
 
     // Check if user has permission to view this LOTO
+    // Check if user is in the handover chain
+    const isInHandoverChain = loto.handoverHistory && loto.handoverHistory.some(
+      handover => 
+        handover.fromUser?.toString() === req.user.id || 
+        handover.toUser?.toString() === req.user.id
+    );
+
     if (
       req.user.role === "technician" &&
       loto.isolator._id.toString() !== req.user.id &&
-      loto.handoverTo?._id.toString() !== req.user.id
+      loto.handoverTo?._id.toString() !== req.user.id &&
+      loto.currentResponsible?._id.toString() !== req.user.id &&  // Add currentResponsible check
+      loto.snapshotCreatedFor?._id.toString() !== req.user.id &&  // Add snapshotCreatedFor check
+      !isInHandoverChain  // Add handover chain check
     ) {
       return res.status(403).json({
         success: false,
@@ -494,17 +516,40 @@ exports.completeLOTO = async (req, res) => {
     console.log("User ID:", req.user.id);
     console.log("LOTO Isolator:", loto.isolator.toString());
 
-    // Only the isolator or handover recipient can complete
+    // Determine the current responsible person
+    let currentResponsibleId = loto.isolator.toString();
+    
+    // Check if there are any approved handovers
+    if (loto.handoverHistory && loto.handoverHistory.length > 0) {
+      // Find the last approved handover
+      const approvedHandovers = loto.handoverHistory.filter(
+        h => h.recipientStatus === 'accepted' && h.verificationStatus === 'approved'
+      );
+      
+      if (approvedHandovers.length > 0) {
+        const lastApprovedHandover = approvedHandovers[approvedHandovers.length - 1];
+        // Convert to string for comparison (toUser is ObjectId)
+        currentResponsibleId = lastApprovedHandover.toUser.toString();
+      }
+    }
+
+    console.log("Current Responsible ID:", currentResponsibleId);
+    console.log("Request User ID:", req.user.id);
+    console.log("IDs match:", currentResponsibleId === req.user.id);
+
+    // Only the current responsible person (from handover chain) or admin can complete
     if (
-      loto.isolator.toString() !== req.user.id &&
-      loto.handoverTo?.toString() !== req.user.id &&
+      currentResponsibleId !== req.user.id &&
       req.user.role !== "admin"
     ) {
+      console.log("Authorization failed - not current responsible person");
       return res.status(403).json({
         success: false,
-        message: "Not authorized to complete this LOTO",
+        message: "Not authorized to complete this LOTO. Only the current responsible person can complete it.",
       });
     }
+    
+    console.log("Authorization passed - user can complete");
 
     const { actualFinishTime, actualFinishDate, completionNotes } = req.body;
 
@@ -516,6 +561,11 @@ exports.completeLOTO = async (req, res) => {
 
     // Update LOTO
     loto.status = "completed";
+    
+    // Set who completed the LOTO
+    loto.completedBy = req.user.id;
+    loto.completedByName = `${req.user.firstName} ${req.user.lastName}`;
+    loto.completedAt = new Date();
 
     // Handle date/time properly
     if (actualFinishTime) {
@@ -1240,11 +1290,23 @@ exports.addHandover = async (req, res) => {
     // Determine the current responsible user
     let fromUser, fromUserName;
     if (loto.handoverHistory && loto.handoverHistory.length > 0) {
-      // Get the last handover's "toUser" as the current responsible
-      const lastHandover = loto.handoverHistory[loto.handoverHistory.length - 1];
-      fromUser = lastHandover.toUser;
-      fromUserName = lastHandover.toUserName;
-      console.log("Debug - Using last handover:", { fromUser, fromUserName });
+      // Get the last APPROVED handover's "toUser" as the current responsible
+      // Filter for approved handovers only (ignore rejected ones)
+      const approvedHandovers = loto.handoverHistory.filter(
+        h => h.recipientStatus === 'accepted' && h.verificationStatus === 'approved'
+      );
+      
+      if (approvedHandovers.length > 0) {
+        const lastApprovedHandover = approvedHandovers[approvedHandovers.length - 1];
+        fromUser = lastApprovedHandover.toUser;
+        fromUserName = lastApprovedHandover.toUserName;
+        console.log("Debug - Using last approved handover:", { fromUser, fromUserName });
+      } else {
+        // If no approved handovers, fall back to isolator
+        fromUser = loto.isolator._id;
+        fromUserName = `${loto.isolator.firstName || 'Unknown'} ${loto.isolator.lastName || 'User'}`;
+        console.log("Debug - No approved handovers, using isolator:", { fromUser, fromUserName });
+      }
     } else {
       // If no handover history, the isolator is the current responsible
       if (!loto.isolator || !loto.isolator._id) {
