@@ -48,3 +48,4 @@ energyTypeSchema.index({ isActive: 1 });
 module.exports = mongoose.model("EnergyType", energyTypeSchema);
 
 
+

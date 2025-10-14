@@ -110,3 +110,4 @@ const seedEnergyTypes = async () => {
 seedEnergyTypes();
 
 
+

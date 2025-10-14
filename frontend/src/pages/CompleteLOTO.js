@@ -75,9 +75,6 @@ const CompleteLOTO = () => {
     }
   };
 
-  // Determine min date: admins can choose any date, regular users cannot pick past dates
-  const minDate = currentUser?.role === "admin" ? null : today;
-
   return (
     <div style={{ maxWidth: "600px", margin: "20px auto", padding: "20px" }}>
       <div
@@ -125,7 +122,6 @@ const CompleteLOTO = () => {
             name="actualFinishDate"
             value={formData.actualFinishDate}
             onChange={onChange}
-            min={minDate} // prevent past dates for regular users
             style={{
               width: "100%",
               padding: "10px",

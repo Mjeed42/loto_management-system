@@ -49,3 +49,4 @@ router.put("/:id/toggle-visibility", toggleEnergyTypeVisibility);
 module.exports = router;
 
 
+
