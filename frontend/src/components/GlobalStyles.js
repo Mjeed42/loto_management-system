@@ -5851,8 +5851,8 @@ const GlobalStyles = () => (
     .status-indicator {
       width: 8px;
       height: 8px;
-      border-radius: 50%;
-      background: #10b981;
+      
+      
     }
     
     .status-healthy .status-indicator {

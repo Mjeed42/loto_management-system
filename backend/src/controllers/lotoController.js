@@ -47,9 +47,44 @@ exports.createLOTO = async (req, res) => {
       expectedDuration,
       supervisor,
       energyTypes,
+      customCreatedAt, // Custom creation time
     } = req.body;
 
-    // Destructure line and machine from location if available
+    // Validate custom creation time if provided
+    let validatedCreatedAt = null;
+    if (customCreatedAt) {
+      const customDate = new Date(customCreatedAt);
+      const now = new Date();
+      
+      // Check if the date is valid
+      if (isNaN(customDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid custom creation time format",
+        });
+      }
+      
+      // Check if the date is in the future
+      if (customDate > now) {
+        return res.status(400).json({
+          success: false,
+          message: "Custom creation time cannot be in the future",
+        });
+      }
+      
+      // For non-admin users, check 48-hour limit
+      if (req.user.role !== "admin") {
+        const hoursDifference = (now - customDate) / (1000 * 60 * 60);
+        if (hoursDifference > 48) {
+          return res.status(400).json({
+            success: false,
+            message: "Custom creation time cannot be more than 48 hours in the past (admin-only feature for older dates)",
+          });
+        }
+      }
+      
+      validatedCreatedAt = customDate;
+    }
 
     const serialNumber = await generateSerialNumber();
 
@@ -69,11 +104,17 @@ exports.createLOTO = async (req, res) => {
       expectedDuration: parseFloat(expectedDuration),
       status: "pending_verification_new",
     };
+    
+    // Set custom creation time if provided and validated
+    if (validatedCreatedAt) {
+      lotoData.date = validatedCreatedAt;
+      lotoData.customCreatedAt = true; // Flag to indicate this was manually set
+    }
     // --- ADD ENERGY TYPES TO LOTO DATA ---
     if (energyTypes && Array.isArray(energyTypes)) {
-      // Filter out any empty energy types
+      // Filter out any empty energy types (isolation point is optional)
       const filteredEnergyTypes = energyTypes.filter(
-        (et) => et.type && et.isolationPoint
+        (et) => et.type  // Only type is required, isolationPoint is optional
       );
       if (filteredEnergyTypes.length > 0) {
         lotoData.energyTypes = filteredEnergyTypes;
@@ -419,7 +460,7 @@ exports.updateLOTO = async (req, res) => {
     if (allowedFields.includes("energyTypes") && energyTypes !== undefined) {
       if (energyTypes && Array.isArray(energyTypes)) {
         const filteredEnergyTypes = energyTypes.filter(
-          (et) => et.type && et.isolationPoint
+          (et) => et.type  // Only type is required, isolationPoint is optional
         );
         if (filteredEnergyTypes.length > 0) {
           loto.energyTypes = filteredEnergyTypes;
@@ -1088,8 +1129,16 @@ exports.changeLOTOStatus = async (req, res) => {
 
     const { status, notes, additionalData } = req.body;
 
-    // Validate status
-    const validStatuses = ["pending_verification_new", "active", "completed", "pending_handover_verification", "rejected"];
+    // Validate status - Include all non-snapshot statuses that can be manually set
+    const validStatuses = [
+      "pending_verification_new",
+      "active",
+      "pending_handover_verification",
+      "handed_over",
+      "completed",
+      "rejected"
+    ];
+    
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,

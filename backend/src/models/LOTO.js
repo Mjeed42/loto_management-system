@@ -11,6 +11,11 @@ const lotoSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    customCreatedAt: {
+      type: Boolean,
+      default: false,
+      // Flag to indicate if the creation time was manually set by user
+    },
     shift: {
       type: String,
       required: true,
@@ -287,21 +292,12 @@ const lotoSchema = new mongoose.Schema(
         type: {
           type: String,
           required: true,
-          enum: [
-            "Electrical",
-            "Water",
-            "Air",
-            "Gas",
-            "Chemical",
-            "Rotating Machine",
-            "Mechanical",
-            "Nitrogen",
-            "Hydraulic Oil",
-          ],
+          // No enum - energy types are dynamic from EnergyType collection
         },
         isolationPoint: {
           type: String,
-          required: true,
+          required: false, // Isolation point is optional
+          default: "",
         },
       },
     ],

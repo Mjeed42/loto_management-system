@@ -627,9 +627,25 @@ const LOTOdetail = () => {
                   <span className="info-label">{t('lotoDetails.serialNumber')}</span>
                   <span className="info-value">{loto.serialNumber}</span>
                 </div>
-                <div className="info-item">
-                  <span className="info-label">{t('lotoDetails.createdAt')}</span>
-                  <span className="info-value">{new Date(loto.date).toLocaleString()}</span>
+                <div className={`info-item ${loto.customCreatedAt ? 'custom-time-highlight' : ''}`}>
+                  <span className="info-label">
+                    {t('lotoDetails.createdAt')}
+                    {loto.customCreatedAt && (
+                      <span className="custom-time-badge" title="This LOTO was created with a custom timestamp">
+                        🕒 Backdated
+                      </span>
+                    )}
+                  </span>
+                  <span className="info-value">
+                    {new Date(loto.date).toLocaleString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">{t('lotoDetails.shift')}</span>
@@ -1121,50 +1137,17 @@ const LOTOdetail = () => {
               </div>
             )}
 
-            {/* Admin Full Control */}
+            {/* Admin Full Control - Comprehensive Actions */}
             {isAdmin && (
               <div className="action-group admin-group">
                 <div className="action-header">
                   <h5>🔧 {t('lotoDetails.adminActions')}</h5>
-                  <p>Full administrative control over this LOTO.</p>
+                  <p>{t('lotoDetails.fullAdministrativeControl')}</p>
                 </div>
                 <div className="action-button-container">
-                  {loto.status === "pending_verification_new" && (
-                    <>
-                      <button className="action-button success" onClick={handleVerify}>
-                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                          <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        <span>{t('lotoDetails.verify')}</span>
-                      </button>
-                      <button className="action-button danger" onClick={() => handleReject(loto)}>
-                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                          <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                        <span>{t('lotoDetails.reject')}</span>
-                      </button>
-                    </>
-                  )}
-                  {loto.status === "pending_handover_verification" && (
-                    <>
-                      <button className="action-button success" onClick={handleApproveHandover}>
-                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                          <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        <span>{t('lotoDetails.approve')}</span>
-                      </button>
-                      <button className="action-button danger" onClick={handleRejectHandover}>
-                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                          <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                        <span>{t('lotoDetails.reject')}</span>
-                      </button>
-                    </>
-                  )}
-                  {loto.status === "rejected" && (
-                    <button className="action-button warning" onClick={handleUpdate}>
+                  {/* Edit Button - Always available for admins */}
+                  {loto.status !== "completed" && (
+                    <button className="action-button primary" onClick={handleUpdate}>
                       <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1172,31 +1155,67 @@ const LOTOdetail = () => {
                       <span>{t('lotoDetails.edit')}</span>
                     </button>
                   )}
-                  {loto.status === "active" && (
-                    <>
-                      <button className="action-button info" onClick={() => handleHandover(loto)}>
-                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        <span>{t('lotoDetails.handover')}</span>
-                      </button>
-                      <button className="action-button success" onClick={handleComplete}>
-                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                          <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        <span>{t('lotoDetails.complete')}</span>
-                      </button>
-                    </>
+
+                  {/* Verify Button - For pending verification */}
+                  {loto.status === "pending_verification_new" && (
+                    <button className="action-button success" onClick={handleVerify}>
+                      <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>{t('lotoDetails.verify')}</span>
+                    </button>
                   )}
-                  
-                  {/* Handover Button - Available for Current Responsible User or Admin */}
-                  {(isAdmin || (currentUser && loto.currentResponsible && currentUser.id === loto.currentResponsible._id)) && (
+
+                  {/* Reject Button - For pending statuses */}
+                  {(loto.status === "pending_verification_new" || loto.status.includes("pending")) && loto.status !== "completed" && (
+                    <button className="action-button danger" onClick={() => handleReject(loto)}>
+                      <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      <span>{t('lotoDetails.reject')}</span>
+                    </button>
+                  )}
+
+                  {/* Approve Handover - For pending handover verification */}
+                  {loto.status === "pending_handover_verification" && (
+                    <button className="action-button success" onClick={handleApproveHandover}>
+                      <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>{t('lotoDetails.approve')} {t('lotoDetails.handover')}</span>
+                    </button>
+                  )}
+
+                  {/* Reject Handover - For pending handover verification */}
+                  {loto.status === "pending_handover_verification" && (
+                    <button className="action-button danger" onClick={handleRejectHandover}>
+                      <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      <span>{t('lotoDetails.reject')} {t('lotoDetails.handover')}</span>
+                    </button>
+                  )}
+
+                  {/* Handover Button - For active and non-completed LOTOs */}
+                  {loto.status !== "completed" && (
                     <button className="action-button info" onClick={() => handleHandover(loto)}>
                       <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                       <span>{t('lotoDetails.handover')}</span>
+                    </button>
+                  )}
+
+                  {/* Complete Button - For active LOTOs */}
+                  {(loto.status === "active" || loto.status === "handed_over") && (
+                    <button className="action-button success" onClick={handleComplete}>
+                      <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>{t('lotoDetails.complete')}</span>
                     </button>
                   )}
                   
@@ -1206,6 +1225,15 @@ const LOTOdetail = () => {
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                     <span>{t('lotoDetails.statusChange')}</span>
+                  </button>
+
+                  {/* Delete Button - Always Available for Admins */}
+                  <button className="action-button danger" onClick={handleDelete}>
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <polyline points="3,6 5,6 21,6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>{t('lotoDetails.delete')}</span>
                   </button>
                 </div>
               </div>
@@ -1364,25 +1392,6 @@ const LOTOdetail = () => {
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Delete Button for Admins */}
-            {currentUser?.role === "admin" && (
-              <div className="action-group delete-group">
-                <div className="action-header">
-                  <h5>{t('lotoDetails.dangerZone')}</h5>
-                  <p>{t('lotoDetails.dangerZoneDesc')}</p>
-                </div>
-                <div className="action-button-container">
-                  <button className="action-button danger" onClick={handleDelete}>
-                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                      <polyline points="3,6 5,6 21,6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span>{t('lotoDetails.delete')}</span>
-                  </button>
                 </div>
               </div>
             )}

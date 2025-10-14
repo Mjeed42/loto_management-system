@@ -37,6 +37,10 @@ const CreateLOTO = () => {
   const [showCustomMachine, setShowCustomMachine] = useState(false);
   const [customMachine, setCustomMachine] = useState("");
   
+  // Custom creation time
+  const [useCustomCreationTime, setUseCustomCreationTime] = useState(false);
+  const [customCreationTime, setCustomCreationTime] = useState("");
+  
   // Dynamic location data
   const [allLocations, setAllLocations] = useState([]);
   const [availableLocations, setAvailableLocations] = useState([]);
@@ -217,20 +221,66 @@ const CreateLOTO = () => {
     return "/Home";
   };
 
+  // Validate custom creation time based on user role
+  const isValidCreationTime = (timeString) => {
+    if (!timeString) return false;
+    
+    const selectedTime = new Date(timeString);
+    const now = new Date();
+    
+    // Check if the selected time is in the future
+    if (selectedTime > now) {
+      return false;
+    }
+    
+    // Admin can select any past time
+    if (currentUser?.role === "admin") {
+      return true;
+    }
+    
+    // For regular users/technicians: limit to 48 hours in the past
+    const hoursDifference = (now - selectedTime) / (1000 * 60 * 60);
+    return hoursDifference <= 48;
+  };
+
+  // Get the minimum allowed datetime for the input (48 hours ago for non-admins, no limit for admins)
+  const getMinDateTime = () => {
+    if (currentUser?.role === "admin") {
+      return ""; // No minimum for admins
+    }
+    
+    // 48 hours ago for regular users
+    const fortyEightHoursAgo = new Date();
+    fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
+    return fortyEightHoursAgo.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+  };
+
+  // Get the maximum allowed datetime (current time)
+  const getMaxDateTime = () => {
+    return new Date().toISOString().slice(0, 16);
+  };
+
   // Validate current step and update validation state
   useEffect(() => {
     validateCurrentStep();
-  }, [formData, customReason, customLocation, customMachine, currentStep]);
+  }, [formData, customReason, customLocation, customMachine, currentStep, useCustomCreationTime, customCreationTime]);
 
   const validateCurrentStep = () => {
     const newValidation = { ...stepValidation };
 
     // Step 1: Basic Information
-    newValidation[1] = !!(
+    let step1Valid = !!(
       formData.shift &&
       formData.expectedDuration &&
       parseFloat(formData.expectedDuration) >= 0.5
     );
+    
+    // If custom creation time is enabled, validate it
+    if (useCustomCreationTime) {
+      step1Valid = step1Valid && !!customCreationTime && isValidCreationTime(customCreationTime);
+    }
+    
+    newValidation[1] = step1Valid;
 
     // Step 2: Location Selection
     if (showCustomLocation) {
@@ -298,6 +348,8 @@ const CreateLOTO = () => {
         // Basic Information validation
         if (!formData.shift) return 'shift';
         if (!formData.expectedDuration || parseFloat(formData.expectedDuration) < 0.5) return 'expectedDuration';
+        if (useCustomCreationTime && !customCreationTime) return 'customCreationTime';
+        if (useCustomCreationTime && customCreationTime && !isValidCreationTime(customCreationTime)) return 'customCreationTime';
         break;
       case 2:
         // Location Selection validation
@@ -374,6 +426,13 @@ const CreateLOTO = () => {
           break;
         case 'expectedDuration':
           errorMessage = 'Please enter expected duration (minimum 0.5 hours)';
+          break;
+        case 'customCreationTime':
+          if (currentUser?.role === "admin") {
+            errorMessage = 'Please select a valid creation time (cannot be in the future)';
+          } else {
+            errorMessage = 'Please select a valid creation time (maximum 48 hours in the past)';
+          }
           break;
         case 'location':
           errorMessage = 'Please select a location';
@@ -601,6 +660,19 @@ const CreateLOTO = () => {
     setCustomReason(e.target.value);
   };
 
+  // Handler for custom creation time toggle
+  const handleCustomCreationTimeToggle = (e) => {
+    setUseCustomCreationTime(e.target.checked);
+    if (!e.target.checked) {
+      setCustomCreationTime("");
+    }
+  };
+
+  // Handler for custom creation time input
+  const handleCustomCreationTimeChange = (e) => {
+    setCustomCreationTime(e.target.value);
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     showLoading("Creating LOTO...");
@@ -653,6 +725,11 @@ const CreateLOTO = () => {
           (et) => et.type
         ),
         // --- END INCLUDE ENERGY TYPES ---
+        // --- INCLUDE CUSTOM CREATION TIME IF SET ---
+        ...(useCustomCreationTime && customCreationTime && {
+          customCreatedAt: new Date(customCreationTime).toISOString()
+        }),
+        // --- END CUSTOM CREATION TIME ---
       };
 
       console.log("Sending LOTO creation request:", dataToSend);
@@ -716,6 +793,122 @@ const CreateLOTO = () => {
   return (
     <div className="create-loto-container">
       <style jsx>{`
+        /* Custom Creation Time Styles */
+        .custom-time-toggle {
+          margin-bottom: 1rem;
+        }
+        
+        .checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          cursor: pointer;
+          padding: 1rem;
+          background: #f8fafc;
+          border: 2px solid #e2e8f0;
+          border-radius: 8px;
+          transition: all 0.2s ease;
+        }
+        
+        .checkbox-label:hover {
+          background: #f1f5f9;
+          border-color: #cbd5e1;
+        }
+        
+        .checkbox-input {
+          width: 20px;
+          height: 20px;
+          cursor: pointer;
+          accent-color: #3b82f6;
+        }
+        
+        .checkbox-text {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-weight: 500;
+          color: #1e293b;
+          font-size: 0.9rem;
+        }
+        
+        .time-limit-hint {
+          font-size: 0.75rem;
+          color: #64748b;
+          font-weight: 400;
+          font-style: italic;
+        }
+        
+        .custom-time-input-wrapper {
+          margin-top: 1rem;
+          padding: 1rem;
+          background: #eff6ff;
+          border: 2px solid #3b82f6;
+          border-radius: 8px;
+          animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .custom-time-input-wrapper .field-label {
+          margin-bottom: 0.5rem;
+          color: #1e40af;
+          font-weight: 600;
+        }
+        
+        .custom-time-input-wrapper .field-input {
+          background: white;
+          border: 2px solid #3b82f6;
+        }
+        
+        .custom-time-input-wrapper .field-input:focus {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        .time-help-text {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-top: 0.75rem;
+          margin-bottom: 0;
+          padding: 0.75rem;
+          background: white;
+          border-radius: 6px;
+          font-size: 0.8rem;
+          color: #475569;
+          line-height: 1.5;
+        }
+        
+        .highlight-custom-time {
+          background: #eff6ff;
+          border-left: 4px solid #3b82f6;
+          padding: 0.75rem;
+          margin: 0.5rem 0;
+          border-radius: 6px;
+        }
+        
+        .highlight-custom-time .review-label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #1e40af;
+          font-weight: 600;
+        }
+        
+        .highlight-custom-time .review-value {
+          color: #1e40af;
+          font-weight: 600;
+        }
+        
         .machine-selection-container {
           background: #f8fafc;
           border: 1px solid #e2e8f0;
@@ -1395,6 +1588,61 @@ const CreateLOTO = () => {
                   placeholder="Enter PTW number or leave as N/A"
                   className="field-input"
                 />
+              </div>
+
+              {/* Custom Creation Time Field */}
+              <div className="form-field full-width">
+                <div className="custom-time-toggle">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={useCustomCreationTime}
+                      onChange={handleCustomCreationTimeToggle}
+                      className="checkbox-input"
+                    />
+                    <span className="checkbox-text">
+                      <Icon name="clock" size="sm" />
+                      Set actual LOTO creation time
+                      {currentUser?.role === "admin" ? (
+                        <span className="time-limit-hint"> (No time limit - Admin)</span>
+                      ) : (
+                        <span className="time-limit-hint"> (Maximum 48 hours ago)</span>
+                      )}
+                    </span>
+                  </label>
+                </div>
+                
+                {useCustomCreationTime && (
+                  <div className="custom-time-input-wrapper">
+                    <label className="field-label">
+                      <Icon name="calendar" size="sm" />
+                      <span>Actual Creation Date & Time</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="customCreationTime"
+                      value={customCreationTime}
+                      onChange={handleCustomCreationTimeChange}
+                      min={getMinDateTime()}
+                      max={getMaxDateTime()}
+                      className="field-input"
+                      required={useCustomCreationTime}
+                    />
+                    <p className="time-help-text">
+                      {currentUser?.role === "admin" ? (
+                        <>
+                          <Icon name="info" size="sm" />
+                          As an admin, you can set any past time. If left unchecked, the current time will be used.
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="info" size="sm" />
+                          Select when you physically applied the LOTO (up to 48 hours ago). If left unchecked, the current time will be used.
+                        </>
+                      )}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2227,6 +2475,24 @@ const CreateLOTO = () => {
                     <span className="review-label">{t('createLoto.ptwNumber')}:</span>
                     <span className="review-value">{formData.ptwNumber || "N/A"}</span>
                   </div>
+                  {useCustomCreationTime && customCreationTime && (
+                    <div className="review-item highlight-custom-time">
+                      <span className="review-label">
+                        <Icon name="clock" size="sm" />
+                        Actual Creation Time:
+                      </span>
+                      <span className="review-value">
+                        {new Date(customCreationTime).toLocaleString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true
+                        })}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Location Review */}

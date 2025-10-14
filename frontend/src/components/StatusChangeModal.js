@@ -10,10 +10,11 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, lotoData, currentStatus
   const [fetchingSupervisors, setFetchingSupervisors] = useState(false);
 
   const statusOptions = [
-    { value: 'pending', label: 'Pending', description: 'Awaiting supervisor verification' },
+    { value: 'pending_verification_new', label: 'Pending Verification (New)', description: 'Awaiting supervisor verification' },
     { value: 'active', label: 'Active', description: 'Maintenance in progress' },
+    { value: 'pending_handover_verification', label: 'Pending Handover Verification', description: 'Waiting for handover verification' },
+    { value: 'handed_over', label: 'Handed Over', description: 'LOTO successfully handed over to another user' },
     { value: 'completed', label: 'Completed', description: 'Work completed and LOTO closed' },
-    { value: 'pending_handover', label: 'Pending Handover', description: 'Waiting for handover acceptance' },
     { value: 'rejected', label: 'Rejected', description: 'LOTO rejected - requires modification' },
   ];
 
@@ -28,22 +29,38 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, lotoData, currentStatus
     setFetchingSupervisors(true);
     try {
       const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
+      
+      // Fetch all users (technicians and supervisors) for handover
       const res = await fetch(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/users/supervisors",
-        config
+        "https://loto-backend-643788243736.europe-west1.run.app/api/users",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       const data = await res.json();
-      if (data.success) {
-        setSupervisors(data.data);
+      
+      // Filter for technicians and supervisors only
+      let users = [];
+      if (data.success && Array.isArray(data.data)) {
+        users = data.data.filter(user => 
+          user.role === 'technician' || user.role === 'supervisor'
+        );
+      } else if (Array.isArray(data.data?.users)) {
+        users = data.data.users.filter(user => 
+          user.role === 'technician' || user.role === 'supervisor'
+        );
+      } else if (Array.isArray(data.users)) {
+        users = data.users.filter(user => 
+          user.role === 'technician' || user.role === 'supervisor'
+        );
       }
+      
+      setSupervisors(users);
     } catch (error) {
-      console.error("Error fetching supervisors:", error);
+      console.error("Error fetching users:", error);
+      setSupervisors([]);
     } finally {
       setFetchingSupervisors(false);
     }
@@ -54,26 +71,28 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, lotoData, currentStatus
     switch (status) {
       case 'active':
         return [
-          { name: 'assignedTechnician', label: 'Assigned Technician', type: 'text', required: true },
-          { name: 'workStartTime', label: 'Work Start Time', type: 'datetime-local', required: true },
+          { name: 'assignedTechnician', label: 'Assigned Technician', type: 'text', required: false },
+          { name: 'workStartTime', label: 'Work Start Time', type: 'datetime-local', required: false },
           { name: 'estimatedCompletion', label: 'Estimated Completion', type: 'datetime-local', required: false }
         ];
       case 'completed':
         return [
-          { name: 'completionTime', label: 'Completion Time', type: 'datetime-local', required: true },
-          { name: 'completedBy', label: 'Completed By', type: 'text', required: true },
-          { name: 'workSummary', label: 'Work Summary', type: 'textarea', required: true }
+          { name: 'completionTime', label: 'Completion Time', type: 'datetime-local', required: false },
+          { name: 'completedBy', label: 'Completed By', type: 'text', required: false },
+          { name: 'workSummary', label: 'Work Summary', type: 'textarea', required: false }
         ];
-      case 'pending_handover':
+      case 'pending_handover_verification':
         return [
-          { name: 'handoverTo', label: 'Handover To', type: 'select', required: true, options: supervisors },
-          { name: 'handoverReason', label: 'Handover Reason', type: 'textarea', required: true }
+          { name: 'handoverTo', label: 'Handover To', type: 'select', required: false, options: supervisors },
+          { name: 'handoverReason', label: 'Handover Reason', type: 'textarea', required: false }
         ];
       case 'rejected':
         return [
           { name: 'rejectionReason', label: 'Rejection Reason', type: 'textarea', required: true },
-          { name: 'rejectedFields', label: 'Fields Requiring Correction', type: 'checkbox-group', required: true }
+          { name: 'rejectedFields', label: 'Fields Requiring Correction', type: 'checkbox-group', required: false }
         ];
+      case 'pending_verification_new':
+        return [];
       default:
         return [];
     }
