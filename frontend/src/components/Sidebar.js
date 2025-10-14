@@ -69,16 +69,34 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
           description: t('sidebar.settings')
         },
         { 
+          path: "/monitoring", 
+          label: t('sidebar.monitoring'), 
+          icon: "chart",
+          description: t('sidebar.analytics')
+        },
+        { 
           path: "/data-export", 
           label: t('sidebar.reports'), 
           icon: "download",
           description: t('sidebar.export')
         },
         { 
-          path: "/monitoring", 
-          label: t('sidebar.monitoring'), 
-          icon: "chart",
-          description: t('sidebar.analytics')
+          path: "/database-export", 
+          label: "Database Export", 
+          icon: "database",
+          description: "Export all MongoDB collections"
+        },
+        { 
+          path: "/location-management", 
+          label: "Location Management", 
+          icon: "map-pin",
+          description: "Manage locations, lines, and machines"
+        },
+        { 
+          path: "/energy-types-management", 
+          label: "Energy Types", 
+          icon: "zap",
+          description: "Manage energy isolation types"
         }
       );
     }

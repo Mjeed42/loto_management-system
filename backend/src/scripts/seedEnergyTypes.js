@@ -108,3 +108,5 @@ const seedEnergyTypes = async () => {
 
 // Run the seeder
 seedEnergyTypes();
+
+

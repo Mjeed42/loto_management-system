@@ -134,15 +134,33 @@ const DataExport = () => {
   };
 
   const formatLOTOData = (lotos, users = []) => {
+    // First, find the maximum number of handovers across all LOTOs (DYNAMIC)
+    const maxHandoversInData = lotos.reduce((max, loto) => {
+      const handoverCount = loto.handoverHistory?.length || 0;
+      return Math.max(max, handoverCount);
+    }, 0);
+    
+    // Use the actual maximum, with a reasonable minimum of 3 for consistency
+    // This makes the export DYNAMIC - it automatically adjusts to your data!
+    const dynamicMaxHandovers = Math.max(maxHandoversInData, 3);
+    
+    console.log(`📊 Export Info: Found maximum of ${maxHandoversInData} handovers in dataset. Creating ${dynamicMaxHandovers} handover history column sets.`);
+    
     return lotos.map((loto) => {
       const formattedLoto = {
         // === BASIC INFORMATION ===
         "Serial Number": loto.serialNumber,
         "Date Created": new Date(loto.date).toLocaleDateString(),
         "Time Created": new Date(loto.date).toLocaleTimeString(),
+        "Full DateTime Created": new Date(loto.date).toLocaleString(),
         "Shift": loto.shift,
         "Status": loto.status,
         "Isolator Name": loto.isolatorName,
+        "Isolator ID": loto.isolator?._id || loto.isolator || "N/A",
+        
+        // === TIMESTAMPS (System Fields) ===
+        "Record Created At": loto.createdAt ? new Date(loto.createdAt).toLocaleString() : "N/A",
+        "Last Updated At": loto.updatedAt ? new Date(loto.updatedAt).toLocaleString() : "N/A",
         
         // === LOCATION DETAILS ===
         "Location": loto.location || "N/A",
@@ -155,6 +173,20 @@ const DataExport = () => {
         "PTW Number": loto.ptwNumber || "N/A",
         "Expected Duration (hours)": loto.expectedDuration || "N/A",
         "Authorized Supervisor": loto.supervisorName || "None assigned",
+        "Supervisor ID": loto.supervisor?._id || loto.supervisor || "N/A",
+        
+        // === WORK TRACKING ===
+        "Assigned Technician": loto.assignedTechnician || "N/A",
+        "Work Start Time": loto.workStartTime ? new Date(loto.workStartTime).toLocaleString() : "N/A",
+        "Estimated Completion": loto.estimatedCompletion ? new Date(loto.estimatedCompletion).toLocaleString() : "N/A",
+        "Work Summary": loto.workSummary || "N/A",
+        
+        // === SNAPSHOT INFORMATION ===
+        "Is Snapshot": loto.isSnapshot ? "Yes" : "No",
+        "Snapshot Reason": loto.snapshotReason || "N/A",
+        "Snapshot Created At": loto.snapshotCreatedAt ? new Date(loto.snapshotCreatedAt).toLocaleString() : "N/A",
+        "Snapshot Created For": loto.snapshotCreatedForName || "N/A",
+        "Original LOTO ID": loto.originalLotoId || "N/A",
       };
 
       // === INITIAL VERIFICATION (for new LOTO) ===
@@ -171,8 +203,8 @@ const DataExport = () => {
 
       // === CURRENT RESPONSIBILITY ===
       formattedLoto["Current Responsible Person"] = loto.currentResponsibleName || loto.isolatorName;
-
-      // === HANDOVER HISTORY ===
+      
+      // === HANDOVER SUMMARY (Basic Info Only - Details at End) ===
       if (loto.handoverHistory && loto.handoverHistory.length > 0) {
         formattedLoto["Total Handovers"] = loto.handoverHistory.length;
         
@@ -182,128 +214,9 @@ const DataExport = () => {
           handoverChain.push(handover.toUserName);
         });
         formattedLoto["Responsibility Chain"] = handoverChain.join(" → ");
-        
-        // Create separate columns for each handover (up to 5 handovers)
-        const maxHandovers = 5; // Support up to 5 handovers in separate columns
-        
-        for (let i = 0; i < maxHandovers; i++) {
-          const handoverNum = i + 1;
-          const handover = loto.handoverHistory[i];
-          
-          if (handover) {
-            // Overall Status Summary (Quick View)
-            const recipientStatus = handover.recipientStatus || "pending";
-            const verificationStatus = handover.verificationStatus || "pending";
-            
-            let overallStatus = "";
-            if (verificationStatus === "approved") {
-              overallStatus = "✅ COMPLETED";
-            } else if (verificationStatus === "rejected") {
-              overallStatus = "❌ REJECTED BY SUPERVISOR";
-            } else if (recipientStatus === "rejected") {
-              overallStatus = "❌ REJECTED BY RECIPIENT";
-            } else if (recipientStatus === "accepted") {
-              overallStatus = "⏳ AWAITING SUPERVISOR";
-            } else {
-              overallStatus = "⏳ AWAITING RECIPIENT";
-            }
-            
-            formattedLoto[`Handover ${handoverNum} | Status`] = overallStatus;
-            
-            // Basic Transfer Information
-            formattedLoto[`Handover ${handoverNum} | From`] = handover.fromUserName || "Unknown";
-            formattedLoto[`Handover ${handoverNum} | To`] = handover.toUserName || "Unknown";
-            formattedLoto[`Handover ${handoverNum} | Transfer Date`] = handover.handoverDate 
-              ? new Date(handover.handoverDate).toLocaleString() 
-              : "Unknown";
-            formattedLoto[`Handover ${handoverNum} | Type`] = handover.handoverType 
-              ? handover.handoverType.replace('_', ' ').toUpperCase() 
-              : "OTHER";
-            formattedLoto[`Handover ${handoverNum} | Initiated By`] = handover.createdByName || "Unknown";
-            formattedLoto[`Handover ${handoverNum} | Transfer Notes`] = handover.handoverNotes || "—";
-            
-            // Recipient Decision Details
-            formattedLoto[`Handover ${handoverNum} | Recipient Decision`] = 
-              recipientStatus === "accepted" ? "✅ ACCEPTED" :
-              recipientStatus === "rejected" ? "❌ REJECTED" :
-              "⏳ PENDING";
-            
-            formattedLoto[`Handover ${handoverNum} | Recipient Decision Date`] = 
-              handover.recipientDecisionDate 
-                ? new Date(handover.recipientDecisionDate).toLocaleString()
-                : "—";
-            
-            formattedLoto[`Handover ${handoverNum} | Recipient Notes`] = 
-              handover.recipientDecisionNotes || "—";
-            
-            // Supervisor Verification Details
-            formattedLoto[`Handover ${handoverNum} | Supervisor Verification`] = 
-              verificationStatus === "approved" ? "✅ APPROVED" :
-              verificationStatus === "rejected" ? "❌ REJECTED" :
-              recipientStatus === "accepted" ? "⏳ PENDING" :
-              "⏸️ ON HOLD";
-            
-            formattedLoto[`Handover ${handoverNum} | Verified By`] = handover.verifiedByName || "—";
-            formattedLoto[`Handover ${handoverNum} | Verification Date`] = 
-              handover.verificationDate 
-                ? new Date(handover.verificationDate).toLocaleString()
-                : "—";
-            
-            formattedLoto[`Handover ${handoverNum} | Supervisor Notes`] = handover.verificationNotes || "—";
-            formattedLoto[`Handover ${handoverNum} | Rejection Reason`] = handover.rejectionReason || "—";
-            formattedLoto[`Handover ${handoverNum} | Assigned Verifier`] = handover.assignedVerifierName || "—";
-          } else {
-            // Empty columns for handovers that don't exist
-            formattedLoto[`Handover ${handoverNum} | Status`] = "—";
-            formattedLoto[`Handover ${handoverNum} | From`] = "—";
-            formattedLoto[`Handover ${handoverNum} | To`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Transfer Date`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Type`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Initiated By`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Transfer Notes`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Recipient Decision`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Recipient Decision Date`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Recipient Notes`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Supervisor Verification`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Verified By`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Verification Date`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Supervisor Notes`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Rejection Reason`] = "—";
-            formattedLoto[`Handover ${handoverNum} | Assigned Verifier`] = "—";
-          }
-        }
-        
-        // If more than 5 handovers, add a note
-        if (loto.handoverHistory.length > maxHandovers) {
-          formattedLoto["Additional Handovers Note"] = 
-            `⚠️ This LOTO has ${loto.handoverHistory.length} handovers. Only the first ${maxHandovers} are shown in separate columns. See full chain in "Responsibility Chain" column.`;
-        } else {
-          formattedLoto["Additional Handovers Note"] = "—";
-        }
       } else {
         formattedLoto["Total Handovers"] = 0;
         formattedLoto["Responsibility Chain"] = loto.isolatorName;
-        
-        // Empty handover columns
-        for (let i = 1; i <= 5; i++) {
-          formattedLoto[`Handover ${i} | Status`] = "—";
-          formattedLoto[`Handover ${i} | From`] = "—";
-          formattedLoto[`Handover ${i} | To`] = "—";
-          formattedLoto[`Handover ${i} | Transfer Date`] = "—";
-          formattedLoto[`Handover ${i} | Type`] = "—";
-          formattedLoto[`Handover ${i} | Initiated By`] = "—";
-          formattedLoto[`Handover ${i} | Transfer Notes`] = "—";
-          formattedLoto[`Handover ${i} | Recipient Decision`] = "—";
-          formattedLoto[`Handover ${i} | Recipient Decision Date`] = "—";
-          formattedLoto[`Handover ${i} | Recipient Notes`] = "—";
-          formattedLoto[`Handover ${i} | Supervisor Verification`] = "—";
-          formattedLoto[`Handover ${i} | Verified By`] = "—";
-          formattedLoto[`Handover ${i} | Verification Date`] = "—";
-          formattedLoto[`Handover ${i} | Supervisor Notes`] = "—";
-          formattedLoto[`Handover ${i} | Rejection Reason`] = "—";
-          formattedLoto[`Handover ${i} | Assigned Verifier`] = "—";
-        }
-        formattedLoto["Additional Handovers Note"] = "No handovers - Original isolator still responsible";
       }
 
       // === ENERGY TYPES ===
@@ -325,25 +238,183 @@ const DataExport = () => {
 
       // === COMPLETION INFORMATION ===
       if (loto.status === "completed") {
-        formattedLoto["Completed By"] = loto.completedByName || "Unknown";
+        formattedLoto["Completed By"] = loto.completedByName || loto.completedBy || "Unknown";
         formattedLoto["Completed At"] = loto.completedAt ? new Date(loto.completedAt).toLocaleString() : "N/A";
+        formattedLoto["Completion Time"] = loto.completionTime ? new Date(loto.completionTime).toLocaleString() : "N/A";
         formattedLoto["Actual Finish Date"] = loto.actualFinishDate ? new Date(loto.actualFinishDate).toLocaleDateString() : "N/A";
         formattedLoto["Actual Finish Time"] = loto.actualFinishTime ? new Date(loto.actualFinishTime).toLocaleTimeString() : "N/A";
       } else {
         formattedLoto["Completed By"] = "Not completed";
         formattedLoto["Completed At"] = "N/A";
+        formattedLoto["Completion Time"] = "N/A";
         formattedLoto["Actual Finish Date"] = "N/A";
         formattedLoto["Actual Finish Time"] = "N/A";
       }
 
-      // === REJECTION INFORMATION ===
+      // === CURRENT REJECTION INFORMATION ===
       if (loto.status === "rejected") {
-        formattedLoto["Rejected By"] = loto.rejectedBy ? `${loto.rejectedBy.firstName} ${loto.rejectedBy.lastName}` : "Unknown";
-        formattedLoto["Rejected At"] = loto.rejectedAt ? new Date(loto.rejectedAt).toLocaleString() : "N/A";
-        formattedLoto["Rejection Notes"] = loto.rejectionNotes || "N/A";
-        formattedLoto["Rejected Fields"] = loto.rejectedFields && loto.rejectedFields.length > 0 
+        formattedLoto["Current Rejected By"] = loto.rejectedBy ? `${loto.rejectedBy.firstName} ${loto.rejectedBy.lastName}` : "Unknown";
+        formattedLoto["Current Rejected At"] = loto.rejectedAt ? new Date(loto.rejectedAt).toLocaleString() : "N/A";
+        formattedLoto["Current Rejection Notes"] = loto.rejectionNotes || "N/A";
+        formattedLoto["Current Rejected Fields"] = loto.rejectedFields && loto.rejectedFields.length > 0 
           ? loto.rejectedFields.join(", ") 
           : "N/A";
+      } else {
+        formattedLoto["Current Rejected By"] = "N/A";
+        formattedLoto["Current Rejected At"] = "N/A";
+        formattedLoto["Current Rejection Notes"] = "N/A";
+        formattedLoto["Current Rejected Fields"] = "N/A";
+      }
+      
+      // === REJECTION HISTORY (Complete History) ===
+      if (loto.rejectionHistory && loto.rejectionHistory.length > 0) {
+        formattedLoto["Total Rejections in History"] = loto.rejectionHistory.length;
+        
+        // Format full rejection history
+        const rejectionHistoryDetails = loto.rejectionHistory.map((rejection, idx) => {
+          return `[${idx + 1}] Rejected by: ${rejection.rejectedByName || "Unknown"} | ` +
+                 `Date: ${rejection.rejectedAt ? new Date(rejection.rejectedAt).toLocaleString() : "Unknown"} | ` +
+                 `Notes: ${rejection.rejectionNotes || "None"} | ` +
+                 `Fields: ${rejection.rejectedFields && rejection.rejectedFields.length > 0 ? rejection.rejectedFields.join(", ") : "N/A"} | ` +
+                 `Resolved: ${rejection.resolvedAt ? new Date(rejection.resolvedAt).toLocaleString() : "Not yet"}`;
+        }).join("\n");
+        
+        formattedLoto["Rejection History Details"] = rejectionHistoryDetails;
+      } else {
+        formattedLoto["Total Rejections in History"] = 0;
+        formattedLoto["Rejection History Details"] = "No rejection history";
+      }
+      
+      // === HANDOVER-TO INFORMATION ===
+      formattedLoto["Handover To User"] = loto.handoverTo || "N/A";
+      formattedLoto["Handover Reason"] = loto.handoverReason || "N/A";
+      
+      // === STATUS HISTORY (Complete History) ===
+      if (loto.statusHistory && loto.statusHistory.length > 0) {
+        formattedLoto["Total Status Changes"] = loto.statusHistory.length;
+        
+        // Format full status history
+        const statusHistoryDetails = loto.statusHistory.map((statusChange, idx) => {
+          return `[${idx + 1}] Changed by: ${statusChange.changedByName || "Unknown"} | ` +
+                 `Date: ${statusChange.changedAt ? new Date(statusChange.changedAt).toLocaleString() : "Unknown"} | ` +
+                 `From: ${statusChange.oldStatus} → To: ${statusChange.newStatus} | ` +
+                 `Notes: ${statusChange.notes || "None"}` +
+                 (statusChange.additionalData ? ` | Additional Data: ${JSON.stringify(statusChange.additionalData)}` : "");
+        }).join("\n");
+        
+        formattedLoto["Status History Details"] = statusHistoryDetails;
+      } else {
+        formattedLoto["Total Status Changes"] = 0;
+        formattedLoto["Status History Details"] = "No status change history";
+      }
+
+      // ==========================================
+      // === HANDOVER HISTORY (DETAILED - AT END) ===
+      // ==========================================
+      if (loto.handoverHistory && loto.handoverHistory.length > 0) {
+        // Create columns for all handovers up to the dynamic maximum
+        for (let i = 0; i < dynamicMaxHandovers; i++) {
+          const handoverNum = i + 1;
+          const handover = loto.handoverHistory[i];
+          
+          if (handover) {
+            // Overall Status Summary (Quick View)
+            const recipientStatus = handover.recipientStatus || "pending";
+            const verificationStatus = handover.verificationStatus || "pending";
+            
+            let overallStatus = "";
+            if (verificationStatus === "approved") {
+              overallStatus = "✅ COMPLETED";
+            } else if (verificationStatus === "rejected") {
+              overallStatus = "❌ REJECTED BY SUPERVISOR";
+            } else if (recipientStatus === "rejected") {
+              overallStatus = "❌ REJECTED BY RECIPIENT";
+            } else if (recipientStatus === "accepted") {
+              overallStatus = "⏳ AWAITING SUPERVISOR";
+            } else {
+              overallStatus = "⏳ AWAITING RECIPIENT";
+            }
+            
+            formattedLoto[`History ${handoverNum} - Overall Status`] = overallStatus;
+            formattedLoto[`History ${handoverNum} - From`] = handover.fromUserName || "Unknown";
+            formattedLoto[`History ${handoverNum} - To`] = handover.toUserName || "Unknown";
+            formattedLoto[`History ${handoverNum} - Transfer Date`] = handover.handoverDate 
+              ? new Date(handover.handoverDate).toLocaleString() 
+              : "Unknown";
+            formattedLoto[`History ${handoverNum} - Type`] = handover.handoverType 
+              ? handover.handoverType.replace('_', ' ').toUpperCase() 
+              : "OTHER";
+            formattedLoto[`History ${handoverNum} - Initiated By`] = handover.createdByName || "Unknown";
+            formattedLoto[`History ${handoverNum} - Transfer Notes`] = handover.handoverNotes || "—";
+            formattedLoto[`History ${handoverNum} - Recipient Decision`] = 
+              recipientStatus === "accepted" ? "✅ ACCEPTED" :
+              recipientStatus === "rejected" ? "❌ REJECTED" :
+              "⏳ PENDING";
+            formattedLoto[`History ${handoverNum} - Recipient Decision Date`] = 
+              handover.recipientDecisionDate 
+                ? new Date(handover.recipientDecisionDate).toLocaleString()
+                : "—";
+            formattedLoto[`History ${handoverNum} - Recipient Notes`] = 
+              handover.recipientDecisionNotes || "—";
+            formattedLoto[`History ${handoverNum} - Supervisor Verification`] = 
+              verificationStatus === "approved" ? "✅ APPROVED" :
+              verificationStatus === "rejected" ? "❌ REJECTED" :
+              recipientStatus === "accepted" ? "⏳ PENDING" :
+              "⏸️ ON HOLD";
+            formattedLoto[`History ${handoverNum} - Verified By`] = handover.verifiedByName || "—";
+            formattedLoto[`History ${handoverNum} - Verification Date`] = 
+              handover.verificationDate 
+                ? new Date(handover.verificationDate).toLocaleString()
+                : "—";
+            formattedLoto[`History ${handoverNum} - Supervisor Notes`] = handover.verificationNotes || "—";
+            formattedLoto[`History ${handoverNum} - Rejection Reason`] = handover.rejectionReason || "—";
+            formattedLoto[`History ${handoverNum} - Assigned Verifier`] = handover.assignedVerifierName || "—";
+          } else {
+            // Empty columns for handovers that don't exist
+            formattedLoto[`History ${handoverNum} - Overall Status`] = "—";
+            formattedLoto[`History ${handoverNum} - From`] = "—";
+            formattedLoto[`History ${handoverNum} - To`] = "—";
+            formattedLoto[`History ${handoverNum} - Transfer Date`] = "—";
+            formattedLoto[`History ${handoverNum} - Type`] = "—";
+            formattedLoto[`History ${handoverNum} - Initiated By`] = "—";
+            formattedLoto[`History ${handoverNum} - Transfer Notes`] = "—";
+            formattedLoto[`History ${handoverNum} - Recipient Decision`] = "—";
+            formattedLoto[`History ${handoverNum} - Recipient Decision Date`] = "—";
+            formattedLoto[`History ${handoverNum} - Recipient Notes`] = "—";
+            formattedLoto[`History ${handoverNum} - Supervisor Verification`] = "—";
+            formattedLoto[`History ${handoverNum} - Verified By`] = "—";
+            formattedLoto[`History ${handoverNum} - Verification Date`] = "—";
+            formattedLoto[`History ${handoverNum} - Supervisor Notes`] = "—";
+            formattedLoto[`History ${handoverNum} - Rejection Reason`] = "—";
+            formattedLoto[`History ${handoverNum} - Assigned Verifier`] = "—";
+          }
+        }
+        
+        // Add info note
+        formattedLoto["Handover History Note"] = loto.handoverHistory.length > 0 
+          ? `All ${loto.handoverHistory.length} handover(s) shown in History columns. Max in dataset: ${dynamicMaxHandovers}` 
+          : "—";
+      } else {
+        // No handovers - add empty columns for consistency
+        for (let i = 1; i <= dynamicMaxHandovers; i++) {
+          formattedLoto[`History ${i} - Overall Status`] = "—";
+          formattedLoto[`History ${i} - From`] = "—";
+          formattedLoto[`History ${i} - To`] = "—";
+          formattedLoto[`History ${i} - Transfer Date`] = "—";
+          formattedLoto[`History ${i} - Type`] = "—";
+          formattedLoto[`History ${i} - Initiated By`] = "—";
+          formattedLoto[`History ${i} - Transfer Notes`] = "—";
+          formattedLoto[`History ${i} - Recipient Decision`] = "—";
+          formattedLoto[`History ${i} - Recipient Decision Date`] = "—";
+          formattedLoto[`History ${i} - Recipient Notes`] = "—";
+          formattedLoto[`History ${i} - Supervisor Verification`] = "—";
+          formattedLoto[`History ${i} - Verified By`] = "—";
+          formattedLoto[`History ${i} - Verification Date`] = "—";
+          formattedLoto[`History ${i} - Supervisor Notes`] = "—";
+          formattedLoto[`History ${i} - Rejection Reason`] = "—";
+          formattedLoto[`History ${i} - Assigned Verifier`] = "—";
+        }
+        formattedLoto["Handover History Note"] = "No handovers - Original isolator still responsible";
       }
 
       return formattedLoto;
@@ -354,102 +425,26 @@ const DataExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     
-    // Set column widths to match new multi-column structure
-    const columns = [
-      // Basic Information
-      { wch: 20 }, // Serial Number
-      { wch: 12 }, // Date Created
-      { wch: 12 }, // Time Created
-      { wch: 8 },  // Shift
-      { wch: 15 }, // Status
-      { wch: 20 }, // Isolator Name
-      
-      // Location Details
-      { wch: 20 }, // Location
-      { wch: 15 }, // Line
-      { wch: 20 }, // Machine
-      { wch: 25 }, // Isolated Part
-      
-      // Work Details
-      { wch: 25 }, // Reason
-      { wch: 15 }, // PTW Number
-      { wch: 12 }, // Expected Duration
-      { wch: 20 }, // Authorized Supervisor
-      
-      // Verification
-      { wch: 20 }, // Initial Verified By
-      { wch: 20 }, // Initial Verified At
-      
-      // Current Responsibility
-      { wch: 25 }, // Current Responsible Person
-      
-      // Handover Summary
-      { wch: 10 }, // Total Handovers
-      { wch: 60 }, // Responsibility Chain
-      
-      // Handover 1 (16 columns per handover - now includes Status as first column)
-      { wch: 25 }, // Status (Overall)
-      { wch: 20 }, // From
-      { wch: 20 }, // To
-      { wch: 22 }, // Transfer Date
-      { wch: 20 }, // Type
-      { wch: 20 }, // Initiated By
-      { wch: 35 }, // Transfer Notes
-      { wch: 18 }, // Recipient Decision
-      { wch: 22 }, // Recipient Decision Date
-      { wch: 35 }, // Recipient Notes
-      { wch: 25 }, // Supervisor Verification
-      { wch: 20 }, // Verified By
-      { wch: 22 }, // Verification Date
-      { wch: 35 }, // Supervisor Notes
-      { wch: 35 }, // Rejection Reason
-      { wch: 20 }, // Assigned Verifier
-      
-      // Handover 2 (16 columns)
-      { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, 
-      { wch: 20 }, { wch: 35 }, { wch: 18 }, { wch: 22 }, { wch: 35 }, 
-      { wch: 25 }, { wch: 20 }, { wch: 22 }, { wch: 35 }, { wch: 35 }, { wch: 20 },
-      
-      // Handover 3 (16 columns)
-      { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, 
-      { wch: 20 }, { wch: 35 }, { wch: 18 }, { wch: 22 }, { wch: 35 }, 
-      { wch: 25 }, { wch: 20 }, { wch: 22 }, { wch: 35 }, { wch: 35 }, { wch: 20 },
-      
-      // Handover 4 (16 columns)
-      { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, 
-      { wch: 20 }, { wch: 35 }, { wch: 18 }, { wch: 22 }, { wch: 35 }, 
-      { wch: 25 }, { wch: 20 }, { wch: 22 }, { wch: 35 }, { wch: 35 }, { wch: 20 },
-      
-      // Handover 5 (16 columns)
-      { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, 
-      { wch: 20 }, { wch: 35 }, { wch: 18 }, { wch: 22 }, { wch: 35 }, 
-      { wch: 25 }, { wch: 20 }, { wch: 22 }, { wch: 35 }, { wch: 35 }, { wch: 20 },
-      
-      // Additional Handovers Note
-      { wch: 50 }, // Additional Handovers Note
-      
-      // Energy Types
-      { wch: 10 }, // Energy Types Count
-      { wch: 50 }, // Energy Types Detail
-      
-      // Notes
-      { wch: 30 }, // Handover Notes
-      { wch: 30 }, // Completion Notes
-      
-      // Completion Information
-      { wch: 25 }, // Completed By
-      { wch: 20 }, // Completed At
-      { wch: 15 }, // Actual Finish Date
-      { wch: 15 }, // Actual Finish Time
-      
-      // Rejection Information (if applicable)
-      { wch: 20 }, // Rejected By
-      { wch: 20 }, // Rejected At
-      { wch: 30 }, // Rejection Notes
-      { wch: 25 }, // Rejected Fields
-    ];
+    // Auto-size columns - Excel will determine optimal widths
+    // Note: Column widths are set to auto to accommodate the reorganized structure
+    const maxColWidth = 100;
+    const minColWidth = 10;
     
-    worksheet["!cols"] = columns;
+    // Calculate column widths based on content
+    const colWidths = [];
+    if (data && data.length > 0) {
+      const headers = Object.keys(data[0]);
+      headers.forEach((header, colIndex) => {
+        let maxWidth = header.length;
+        data.forEach(row => {
+          const cellValue = String(row[header] || '');
+          maxWidth = Math.max(maxWidth, cellValue.length);
+        });
+        colWidths.push({ wch: Math.min(Math.max(maxWidth, minColWidth), maxColWidth) });
+      });
+    }
+    
+    worksheet["!cols"] = colWidths;
     
     XLSX.utils.book_append_sheet(workbook, worksheet, "LOTO Data");
     
@@ -774,6 +769,12 @@ const DataExport = () => {
         sum + (loto.handoverHistory?.length || 0), 0
       );
       
+      // Calculate dynamic handover columns
+      const maxHandoversInExport = filteredLOTOs.reduce((max, loto) => 
+        Math.max(max, loto.handoverHistory?.length || 0), 0
+      );
+      const dynamicHandoverSets = Math.max(maxHandoversInExport, 3);
+      
       const adminActionsCount = formattedAdminActions.length;
       
       let successMessage = "";
@@ -781,13 +782,16 @@ const DataExport = () => {
         successMessage = `✅ Successfully exported to Excel with multiple sheets:\n`;
         successMessage += `  📄 LOTO Summary: ${filteredLOTOs.length} records\n`;
         successMessage += `  📄 Handover Details: ${totalHandovers} handover records\n`;
+        successMessage += `  📊 Dynamic Columns: ${dynamicHandoverSets} handover history sets (16 fields each)\n`;
         if (adminActionsCount > 0) {
           successMessage += `  📄 Admin Actions: ${adminActionsCount} actions`;
         }
       } else {
-        successMessage = adminActionsCount > 0 
-          ? `Successfully exported ${filteredLOTOs.length} LOTO records and ${adminActionsCount} admin actions to CSV format.`
-          : `Successfully exported ${filteredLOTOs.length} LOTO records to CSV format.`;
+        successMessage = `✅ Successfully exported ${filteredLOTOs.length} LOTO records to CSV format.\n`;
+        successMessage += `📊 Created ${dynamicHandoverSets} dynamic handover history column sets based on your data.`;
+        if (adminActionsCount > 0) {
+          successMessage += `\n📄 Includes ${adminActionsCount} admin actions.`;
+        }
       }
       
       setSuccess(successMessage);
@@ -1048,11 +1052,11 @@ const DataExport = () => {
                 <input
                   type="radio"
                   name="status"
-                  value="pending"
-                  checked={exportOptions.status === "pending"}
+                  value="pending_verification_new"
+                  checked={exportOptions.status === "pending_verification_new"}
                   onChange={(e) => handleOptionChange("status", e.target.value)}
                 />
-                <span>Pending</span>
+                <span>Pending Verification</span>
               </label>
               <label className="status-option">
                 <input
@@ -1068,11 +1072,41 @@ const DataExport = () => {
                 <input
                   type="radio"
                   name="status"
+                  value="pending_handover_verification"
+                  checked={exportOptions.status === "pending_handover_verification"}
+                  onChange={(e) => handleOptionChange("status", e.target.value)}
+                />
+                <span>Pending Handover</span>
+              </label>
+              <label className="status-option">
+                <input
+                  type="radio"
+                  name="status"
+                  value="handed_over"
+                  checked={exportOptions.status === "handed_over"}
+                  onChange={(e) => handleOptionChange("status", e.target.value)}
+                />
+                <span>Handed Over</span>
+              </label>
+              <label className="status-option">
+                <input
+                  type="radio"
+                  name="status"
                   value="completed"
                   checked={exportOptions.status === "completed"}
                   onChange={(e) => handleOptionChange("status", e.target.value)}
                 />
                 <span>Completed</span>
+              </label>
+              <label className="status-option">
+                <input
+                  type="radio"
+                  name="status"
+                  value="rejected"
+                  checked={exportOptions.status === "rejected"}
+                  onChange={(e) => handleOptionChange("status", e.target.value)}
+                />
+                <span>Rejected</span>
               </label>
             </div>
           </div>

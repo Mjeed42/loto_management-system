@@ -27,6 +27,7 @@ import CompleteLOTO from "./pages/CompleteLOTO";
 import Notifications from "./pages/Notifications";
 import AdminHome from "./pages/AdminHome";
 import DataExport from "./pages/DataExport";
+import DatabaseExport from "./pages/DatabaseExport";
 import TranslationTest from "./components/TranslationTest";
 import MonitoringDashboard from "./pages/MonitoringDashboard";
 import LocationManagement from "./pages/LocationManagement";
@@ -104,6 +105,16 @@ const AppContent = ({ currentUser, fetchCurrentUser, isLoading }) => {
             <Route path="/loto/:id/complete" element={<CompleteLOTO />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/data-export" element={<DataExport />} />
+            <Route path="/database-export" element={
+              currentUser?.role === "admin" ? 
+                <DatabaseExport /> : 
+                <div className="access-denied-container">
+                  <div className="access-denied">
+                    <h2>Access Denied</h2>
+                    <p>You need administrator privileges to access the database export feature.</p>
+                  </div>
+                </div>
+            } />
             <Route path="/monitoring" element={<MonitoringDashboard />} />
             <Route path="/location-management" element={<LocationManagement />} />
             <Route path="/energy-types-management" element={<EnergyTypesManagement />} />

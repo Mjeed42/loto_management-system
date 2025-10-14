@@ -3416,12 +3416,17 @@ const GlobalStyles = () => (
   color: #333;
   z-index: 10;
   transition: all 0.3s ease;
+  /* Keep logo and title in same position regardless of RTL/LTR */
+  direction: ltr;
 }
 
 /* Logo */
 .login-card .logo {
   width: 120px;
   margin-bottom: 1rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Subtitle */
@@ -3430,6 +3435,8 @@ const GlobalStyles = () => (
   font-weight: 600;
   color: #0033a0; /* Pepsi blue */
   margin-bottom: 1.5rem;
+  text-align: center;
+  direction: ltr; /* Keep title LTR even in RTL mode */
 }
 
 /* Form styling */
@@ -3494,6 +3501,64 @@ const GlobalStyles = () => (
   padding: 0.75rem;
   margin-bottom: 1rem;
   font-size: 0.9rem;
+}
+
+/* Language Toggle */
+.language-toggle-container {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.language-toggle-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.language-toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+
+.language-toggle-button:hover {
+  background: rgba(243, 244, 246, 1);
+  border-color: #0033a0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 51, 160, 0.1);
+}
+
+.language-option {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.language-option.active {
+  background: linear-gradient(135deg, #0033a0 0%, #002070 100%);
+  color: white;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  box-shadow: 0 2px 6px rgba(0, 51, 160, 0.3);
+}
+
+.language-divider {
+  color: #d1d5db;
+  font-weight: 300;
 }
 
 /* Mobile responsiveness */
@@ -5838,6 +5903,517 @@ const GlobalStyles = () => (
       color: #1f2937;
     }
     
+    /* New Employee Performance Monitoring Styles */
+    .chart-card.full-width {
+      grid-column: 1 / -1;
+    }
+    
+    .performance-card.full-width {
+      grid-column: 1 / -1;
+    }
+    
+    .employee-performance-section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .section-header {
+      margin-bottom: 1.5rem;
+    }
+    
+    .section-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 0.5rem 0;
+    }
+    
+    .section-header p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    
+    .performance-table-container {
+      overflow-x: auto;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(229, 231, 235, 0.5);
+    }
+    
+    .performance-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    
+    .performance-table thead {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+    }
+    
+    .performance-table thead th {
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    
+    .performance-table tbody tr {
+      border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+      transition: background-color 0.2s ease;
+    }
+    
+    .performance-table tbody tr:hover {
+      background-color: rgba(99, 102, 241, 0.05);
+    }
+    
+    .performance-table tbody tr.top-performer {
+      background-color: rgba(255, 215, 0, 0.08);
+    }
+    
+    .performance-table tbody tr.top-performer:hover {
+      background-color: rgba(255, 215, 0, 0.15);
+    }
+    
+    .performance-table td {
+      padding: 1rem;
+      color: #374151;
+    }
+    
+    .rank-cell {
+      font-size: 1.2rem;
+      font-weight: 700;
+      text-align: center;
+      width: 60px;
+    }
+    
+    .name-cell {
+      font-weight: 600;
+      color: #1f2937;
+      min-width: 150px;
+    }
+    
+    .email-cell {
+      color: #6b7280;
+      font-size: 0.8rem;
+      min-width: 180px;
+    }
+    
+    .role-cell {
+      min-width: 100px;
+    }
+    
+    .role-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    
+    .role-badge.admin {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+    }
+    
+    .role-badge.technician {
+      background-color: rgba(99, 102, 241, 0.1);
+      color: #6366f1;
+    }
+    
+    .role-badge.engineer {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #059669;
+    }
+    
+    .number-cell {
+      text-align: center;
+      font-weight: 600;
+      min-width: 70px;
+    }
+    
+    .number-cell.success {
+      color: #059669;
+    }
+    
+    .number-cell.warning {
+      color: #f59e0b;
+    }
+    
+    .number-cell.pending {
+      color: #ef4444;
+    }
+    
+    .number-cell.verified {
+      color: #6366f1;
+    }
+    
+    .percentage-cell {
+      min-width: 150px;
+      padding: 0.5rem 1rem;
+    }
+    
+    .percentage-bar-container {
+      position: relative;
+      height: 32px;
+      background-color: rgba(229, 231, 235, 0.5);
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    
+    .percentage-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+      transition: width 0.3s ease;
+      border-radius: 0.5rem;
+    }
+    
+    .percentage-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: #1f2937;
+    }
+    
+    .no-data-cell {
+      text-align: center;
+      padding: 3rem;
+      color: #9ca3af;
+      font-style: italic;
+    }
+    
+    .performance-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .performance-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .performance-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    
+    .performance-description {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-top: 0.25rem;
+    }
+    
+    .metric-card.compliance-card::before {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+    
+    .metric-card.efficiency-card::before {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+    
+    .metric-card.performance-card::before {
+      background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+    }
+    
+    /* Database Export Styles */
+    .collections-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    
+    .collection-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(229, 231, 235, 0.8);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .collection-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+      border-color: rgba(99, 102, 241, 0.5);
+    }
+    
+    .collection-card.selected {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+      border-color: #6366f1;
+      box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);
+    }
+    
+    .collection-checkbox {
+      flex-shrink: 0;
+      margin-top: 0.25rem;
+    }
+    
+    .collection-checkbox input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #6366f1;
+    }
+    
+    .collection-icon {
+      font-size: 2.5rem;
+      flex-shrink: 0;
+    }
+    
+    .collection-info {
+      flex: 1;
+    }
+    
+    .collection-info h4 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 0.5rem 0;
+    }
+    
+    .collection-info p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0;
+      line-height: 1.5;
+    }
+    
+    .collection-card.user-specific {
+      opacity: 0.85;
+      border-style: dashed;
+    }
+    
+    .user-specific-badge {
+      display: inline-block;
+      margin-left: 0.5rem;
+      padding: 0.125rem 0.5rem;
+      background: rgba(245, 158, 11, 0.1);
+      color: #f59e0b;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .quick-actions {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .quick-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      border: none;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .quick-action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+    }
+    
+    .quick-action-btn.secondary {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    }
+    
+    .quick-action-btn.secondary:hover {
+      box-shadow: 0 8px 16px rgba(107, 114, 128, 0.3);
+    }
+    
+    .quick-action-btn .btn-icon {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .info-section {
+      margin-top: 2rem;
+    }
+    
+    .info-card {
+      background: rgba(59, 130, 246, 0.05);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .info-icon {
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+    
+    .info-content h4 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 1rem 0;
+    }
+    
+    .info-content ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .info-content ul li {
+      padding: 0.5rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      color: #4b5563;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+    
+    .info-content ul li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #10b981;
+      font-weight: 700;
+    }
+    
+    /* Stats Cards Grid */
+    .stats-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-detail-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card-header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid rgba(229, 231, 235, 0.5);
+    }
+    
+    .stat-card-header h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 0.5rem 0;
+    }
+    
+    .stat-card-header p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    
+    .stat-items {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .stat-item-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(249, 250, 251, 0.8);
+      border-radius: 0.75rem;
+      border: 1px solid rgba(229, 231, 235, 0.5);
+      transition: all 0.3s ease;
+    }
+    
+    .stat-item-row:hover {
+      background: rgba(243, 244, 246, 1);
+      transform: translateX(4px);
+    }
+    
+    .stat-item-icon {
+      font-size: 2rem;
+      flex-shrink: 0;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.75rem;
+    }
+    
+    .stat-item-icon.rejection {
+      background: rgba(239, 68, 68, 0.1);
+    }
+    
+    .stat-item-icon.warning {
+      background: rgba(245, 158, 11, 0.1);
+    }
+    
+    .stat-item-icon.info {
+      background: rgba(99, 102, 241, 0.1);
+    }
+    
+    .stat-item-icon.handover {
+      background: rgba(139, 92, 246, 0.1);
+    }
+    
+    .stat-item-icon.pending {
+      background: rgba(245, 158, 11, 0.1);
+    }
+    
+    .stat-item-icon.success {
+      background: rgba(16, 185, 129, 0.1);
+    }
+    
+    .stat-item-content {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .stat-item-label {
+      font-weight: 500;
+      color: #374151;
+      font-size: 0.95rem;
+    }
+    
+    .stat-item-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    
 }
       
       
@@ -5852,8 +6428,9 @@ const GlobalStyles = () => (
       .chart-card,
       .alerts-card,
       .health-card,
-      .performance-card {
-        padding: 1.5rem;
+      .performance-card,
+      .employee-performance-section {
+        padding: 1rem;
       }
       
       .metrics-grid {
@@ -5871,8 +6448,9 @@ const GlobalStyles = () => (
         gap: 1rem;
       }
       
-      .performance-metrics {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      .performance-metrics,
+      .performance-metrics-grid {
+        grid-template-columns: 1fr;
       }
       
       .metric-number {
@@ -5881,6 +6459,48 @@ const GlobalStyles = () => (
       
       .chart-container {
         height: 250px;
+      }
+      
+      .performance-table-container {
+        font-size: 0.75rem;
+      }
+      
+      .performance-table thead th,
+      .performance-table td {
+        padding: 0.5rem;
+        font-size: 0.7rem;
+      }
+      
+      .rank-cell {
+        font-size: 1rem;
+        width: 40px;
+      }
+      
+      .percentage-bar-container {
+        height: 24px;
+      }
+      
+      .percentage-text {
+        font-size: 0.65rem;
+      }
+      
+      .stats-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      
+      .stat-detail-card {
+        padding: 1rem;
+      }
+      
+      .stat-item-icon {
+        font-size: 1.5rem;
+        width: 40px;
+        height: 40px;
+      }
+      
+      .stat-item-value {
+        font-size: 1.25rem;
       }
     }
     

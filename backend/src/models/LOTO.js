@@ -19,16 +19,8 @@ const lotoSchema = new mongoose.Schema(
     location: {
       type: String,
       required: true,
-      enum: [
-        "Processing",
-        "PKG",
-        "Process",
-        "Utility",
-        "WH-FG",
-        "WH-RM",
-        "Project",
-        "Other",
-      ],
+      trim: true,
+      // No enum validation - locations are now dynamic from Location collection
     },
     line: String,
     machine: String,

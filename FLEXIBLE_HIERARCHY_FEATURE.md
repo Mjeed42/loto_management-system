@@ -370,3 +370,5 @@ Result:
 **The flexible hierarchy and sections feature is now fully working!** 🎉✨
 
 You can now organize locations into sections and customize how hierarchy levels are displayed!
+
+

@@ -210,3 +210,5 @@ const fetchMachinesForLine = async (lineId) => {
 
 **The hide/show visibility feature is now 100% complete and working perfectly!** 🎉✨
 
+
+

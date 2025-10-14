@@ -306,3 +306,53 @@ exports.getNotificationCount = async (req, res) => {
     });
   }
 };
+
+// @desc    Get ALL handover notifications (Admin Only - for database export)
+// @route   GET /api/notifications/handover/all
+// @access  Private (Admin Only)
+exports.getAllHandoverNotifications = async (req, res) => {
+  try {
+    console.log("🔍 Admin fetching ALL handover notifications");
+
+    // Check if user is admin
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin privileges required.",
+      });
+    }
+
+    const notifications = await HandoverNotification.find({})
+      .populate({
+        path: "fromUser",
+        select: "firstName lastName email username",
+        options: { strictPopulate: false }
+      })
+      .populate({
+        path: "toUser", 
+        select: "firstName lastName email username",
+        options: { strictPopulate: false }
+      })
+      .populate({
+        path: "lotoId",
+        select: "isolatedPart reason shift line date serialNumber location",
+        options: { strictPopulate: false }
+      })
+      .sort({ createdAt: -1 });
+
+    console.log("📊 Total notifications found:", notifications.length);
+
+    res.status(200).json({
+      success: true,
+      count: notifications.length,
+      data: notifications,
+    });
+  } catch (error) {
+    console.error("❌ Get all notifications error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};

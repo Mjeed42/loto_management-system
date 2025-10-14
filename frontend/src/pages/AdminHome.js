@@ -530,34 +530,6 @@ const AdminHome = () => {
                 Refresh
               </ActionButton>
               <ActionButton
-                variant="secondary"
-                onClick={() => navigate("/monitoring")}
-                icon="chart"
-              >
-                Monitoring
-              </ActionButton>
-              <ActionButton
-                variant="secondary"
-                onClick={() => navigate("/data-export")}
-                icon="download"
-              >
-                Export
-              </ActionButton>
-              <ActionButton
-                variant="secondary"
-                onClick={() => navigate("/location-management")}
-                icon="map-pin"
-              >
-                Locations
-              </ActionButton>
-              <ActionButton
-                variant="secondary"
-                onClick={() => navigate("/energy-types-management")}
-                icon="zap"
-              >
-                Energy Types
-              </ActionButton>
-              <ActionButton
                 variant="primary"
                 onClick={() => navigate("/Home")}
                 icon="home"

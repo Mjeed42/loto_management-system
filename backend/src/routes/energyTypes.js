@@ -47,3 +47,5 @@ router.delete("/:id", deleteEnergyType);
 router.put("/:id/toggle-visibility", toggleEnergyTypeVisibility);
 
 module.exports = router;
+
+

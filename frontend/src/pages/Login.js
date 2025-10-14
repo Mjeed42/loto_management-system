@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "../config/api";
 
 const Login = ({ onLogin }) => {
+  const { t, i18n } = useTranslation();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -36,6 +38,14 @@ const Login = ({ onLogin }) => {
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'en' ? 'ar' : 'en';
+    i18n.changeLanguage(newLang);
+    // Update document direction for RTL/LTR
+    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = newLang;
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -67,30 +77,50 @@ const Login = ({ onLogin }) => {
   {error && <div className="error-box">{error}</div>}
 
   <form onSubmit={onSubmit} className="form">
-    <label>Username or Email</label>
+    <label>{i18n.language === 'ar' ? 'اسم المستخدم أو البريد الإلكتروني' : 'Username or Email'}</label>
     <input
       type="text"
       name="username"
       value={username}
       onChange={onChange}
       required
-      placeholder="Enter username or email"
+      placeholder={i18n.language === 'ar' ? 'أدخل اسم المستخدم أو البريد الإلكتروني' : 'Enter username or email'}
     />
 
-    <label>Password</label>
+    <label>{i18n.language === 'ar' ? 'كلمة المرور' : 'Password'}</label>
     <input
       type="password"
       name="password"
       value={password}
       onChange={onChange}
       required
-      placeholder="Enter password"
+      placeholder={i18n.language === 'ar' ? 'أدخل كلمة المرور' : 'Enter password'}
     />
 
     <button type="submit" disabled={loading}>
-      {loading ? "Logging in..." : "Login"}
+      {loading ? (i18n.language === 'ar' ? 'جاري تسجيل الدخول...' : 'Logging in...') : t('common.login')}
     </button>
   </form>
+
+  {/* Language Toggle */}
+  <div className="language-toggle-container">
+    <div className="language-toggle-label">
+      {t('language.selectLanguage')}
+    </div>
+    <button 
+      type="button" 
+      className="language-toggle-button"
+      onClick={toggleLanguage}
+    >
+      <span className={`language-option ${i18n.language === 'en' ? 'active' : ''}`}>
+        🇬🇧 English
+      </span>
+      <span className="language-divider">|</span>
+      <span className={`language-option ${i18n.language === 'ar' ? 'active' : ''}`}>
+        🇸🇦 العربية
+      </span>
+    </button>
+  </div>
 </div>
 
 

@@ -7,6 +7,7 @@ const {
   markAllNotificationsAsRead,
   deleteAllNotifications,
   getNotificationCount,
+  getAllHandoverNotifications,
 } = require("../controllers/notificationController");
 const { protect } = require("../middleware/auth");
 
@@ -14,6 +15,7 @@ const router = express.Router();
 
 router.route("/handover").get(protect, getHandoverNotifications);
 router.route("/handover/count").get(protect, getNotificationCount);
+router.route("/handover/all").get(protect, getAllHandoverNotifications); // Admin only - get ALL notifications
 
 router.route("/handover/:id/accept").put(protect, acceptHandover);
 router.route("/handover/:id/reject").put(protect, rejectHandover);

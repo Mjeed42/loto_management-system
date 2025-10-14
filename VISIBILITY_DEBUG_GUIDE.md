@@ -174,3 +174,5 @@ The backend was already correct and working properly.
 ---
 
 **The visibility feature should now work perfectly with items staying visible when hidden!** 🎉
+
+
