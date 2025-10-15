@@ -4,6 +4,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
 
 dotenv.config();
 
@@ -11,10 +12,41 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+
+// CORS configuration to support credentials (cookies)
+const allowedOrigins = [
+  "https://loto-frontend-643788243736.europe-west1.run.app", // Production frontend
+  "http://localhost:3000", // Local development
+  "http://localhost:3001", // Alternative local port
+  "http://127.0.0.1:3000", // Alternative localhost
+];
+
+// Add custom origin from environment variable if provided
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log(`CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // Allow cookies to be sent
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
 app.use(morgan("combined"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(cookieParser()); // Parse cookies
 
 // Routes
 app.use("/api/loto", require("./src/routes/loto"));

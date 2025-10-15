@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../contexts/AuthContext";
 import Button from "./Button";
 import Icon from "./Icon";
 import NotificationBadge from "./NotificationBadge";
@@ -41,20 +42,12 @@ const Header = ({ currentUser, onToggleSidebar }) => {
     return titleMap[path] || t('header.lotoManagementTitle');
   };
 
-  const handleLogout = () => {
-    // Clear tokens and storage
-    localStorage.removeItem("token");
-    sessionStorage.clear();
+  const { logout } = useAuth();
 
-    // Clear all cookies
-    document.cookie.split(";").forEach((cookie) => {
-      const eqPos = cookie.indexOf("=");
-      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-    });
-
-    // Hard refresh to reset app state
-    window.location.href = "/";
+  const handleLogout = async () => {
+    await logout();
+    // Navigate to login page
+    navigate("/");
   };
 
   // Close dropdowns when clicking outside

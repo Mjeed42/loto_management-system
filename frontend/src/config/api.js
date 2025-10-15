@@ -4,6 +4,9 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://loto-backend-6437
 export const API_ENDPOINTS = {
   // Auth endpoints
   LOGIN: `${API_BASE_URL}/api/auth/login`,
+  REFRESH: `${API_BASE_URL}/api/auth/refresh`,
+  LOGOUT: `${API_BASE_URL}/api/auth/logout`,
+  LOGOUT_ALL: `${API_BASE_URL}/api/auth/logout-all`,
   ME: `${API_BASE_URL}/api/auth/me`,
   
   // User endpoints

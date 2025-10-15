@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const RefreshToken = require("../models/RefreshToken");
 
 exports.protect = async (req, res, next) => {
   let token;
@@ -15,6 +16,7 @@ exports.protect = async (req, res, next) => {
     return res.status(401).json({
       success: false,
       message: "Not authorized to access this route",
+      code: "NO_TOKEN",
     });
   }
 
@@ -28,11 +30,46 @@ exports.protect = async (req, res, next) => {
     // Add user to request object
     req.user = await User.findById(decoded.id);
 
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+        code: "USER_NOT_FOUND",
+      });
+    }
+
+    // Check if user is still active
+    if (!req.user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: "User account is deactivated",
+        code: "USER_INACTIVE",
+      });
+    }
+
+    // Update activity timestamp for the refresh token if exists
+    const { refreshToken } = req.cookies;
+    if (refreshToken) {
+      const storedToken = await RefreshToken.findOne({ token: refreshToken });
+      if (storedToken && !storedToken.isExpired()) {
+        await storedToken.updateActivity();
+      }
+    }
+
     next();
   } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Access token expired",
+        code: "TOKEN_EXPIRED",
+      });
+    }
+
     return res.status(401).json({
       success: false,
       message: "Not authorized to access this route",
+      code: "INVALID_TOKEN",
     });
   }
 };

@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./styles/cloudflare-Home.css";
 import { LoadingProvider } from "./contexts/LoadingContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 // Initialize i18n
 import './i18n-simple';
+
+// Initialize axios interceptor
+import './utils/axiosInterceptor';
 
 // Components
 import GlobalStyles from "./components/GlobalStyles";
@@ -34,9 +37,10 @@ import LocationManagement from "./pages/LocationManagement";
 import EnergyTypesManagement from "./pages/EnergyTypesManagement";
 
 
-// AppContent component that has access to useLocation
-const AppContent = ({ currentUser, fetchCurrentUser, isLoading }) => {
+// AppContent component that has access to useLocation and useAuth
+const AppContent = () => {
   const location = useLocation();
+  const { user: currentUser, isLoading } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed (hidden) by default
   const [isMobileOpen, setIsMobileOpen] = useState(false); // Mobile sidebar state
   
@@ -89,7 +93,7 @@ const AppContent = ({ currentUser, fetchCurrentUser, isLoading }) => {
         
         <main className={`content-area ${isLoginPage ? 'login-content' : ''}`}>
           <Routes>
-            <Route path="/" element={<Login onLogin={fetchCurrentUser} />} />
+            <Route path="/" element={<Login />} />
             <Route path="/Home" element={
               currentUser?.role === "technician" ? 
                 <div>Access Denied - Technicians should use /technician-home</div> : 
@@ -130,47 +134,15 @@ const AppContent = ({ currentUser, fetchCurrentUser, isLoading }) => {
 };
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetchCurrentUser();
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const fetchCurrentUser = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
-        config
-      );
-      setCurrentUser(res.data.user);
-    } catch (err) {
-      console.log("Error fetching current user");
-      localStorage.removeItem("token");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <Router>
-      <LoadingProvider>
-        <GlobalStyles />
-        <AppContent currentUser={currentUser} fetchCurrentUser={fetchCurrentUser} isLoading={isLoading} />
-        <ToastContainer />
-      </LoadingProvider>
+      <AuthProvider>
+        <LoadingProvider>
+          <GlobalStyles />
+          <AppContent />
+          <ToastContainer />
+        </LoadingProvider>
+      </AuthProvider>
     </Router>
   );
 }

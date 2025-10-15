@@ -16,3 +16,4 @@ echo "You can now access the Energy Types Management page from the Admin panel."
 
 
 
+

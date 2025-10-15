@@ -169,7 +169,11 @@ const resources = {
         "pleaseAddEnergyType": "Please add at least one energy type",
         "pleaseCompleteEnergyType": "Please complete this energy type configuration",
         "pleaseSelectAtLeastOneEnergyType": "Please select at least one energy type to isolate",
-        "pleaseProvideIsolationPoint": "Please provide isolation point reference for all selected energy types"
+        "pleaseProvideIsolationPoint": "Please provide isolation point reference for all selected energy types",
+        "setActualCreationTime": "Set actual LOTO creation time (Maximum 48 hours ago)",
+        "actualCreationDateTime": "Actual Creation Date & Time",
+        "actualCreationTimeDesc": "Select when you physically applied the LOTO (up to 48 hours ago). If left unchecked, the current time will be used.",
+        "noTimeLimitAdmin": "(No time limit - Admin)"
       },
       "updateLoto": {
         "title": "Update LOTO",
@@ -747,7 +751,11 @@ const resources = {
         "pleaseAddEnergyType": "يرجى إضافة نوع طاقة واحد على الأقل",
         "pleaseCompleteEnergyType": "يرجى إكمال تكوين نوع الطاقة هذا",
         "pleaseSelectAtLeastOneEnergyType": "يرجى اختيار نوع طاقة واحد على الأقل للعزل",
-        "pleaseProvideIsolationPoint": "يرجى تقديم مرجع نقطة العزل لجميع أنواع الطاقة المحددة"
+        "pleaseProvideIsolationPoint": "يرجى تقديم مرجع نقطة العزل لجميع أنواع الطاقة المحددة",
+        "setActualCreationTime": "تعيين وقت الإنشاء الفعلي لـ LOTO (بحد أقصى 48 ساعة مضت)",
+        "actualCreationDateTime": "تاريخ ووقت الإنشاء الفعلي",
+        "actualCreationTimeDesc": "حدد متى قمت فعلياً بتطبيق LOTO (حتى 48 ساعة مضت). إذا تركته غير محدد، سيتم استخدام الوقت الحالي.",
+        "noTimeLimitAdmin": "(لا يوجد حد زمني - مسؤول)"
       },
       "updateLoto": {
         "title": "تحديث LOTO",

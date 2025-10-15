@@ -3407,7 +3407,7 @@ const GlobalStyles = () => (
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 380px;
+  width: 500px;
   padding: 2.5rem 2.5rem;
   background: #ffffff;
   border-radius: 18px;
@@ -3564,9 +3564,9 @@ const GlobalStyles = () => (
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .login-card {
-    width: 90%;
-    padding: 2rem;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    width: 85%;
+    padding: 1rem;
+    box-shadow: 0 4px 16px rgb(0, 0, 0);
   }
 
   .login-card .logo {

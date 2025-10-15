@@ -1118,16 +1118,17 @@ const CreateLOTO = () => {
           background: #f8fafc;
           border: 1px solid #e2e8f0;
           border-radius: 12px;
-          padding: 1.5rem;
-          margin-top: 1rem;
+          padding: 1rem;
+          margin-top: 0.5rem;
+          max-width: 100%;
         }
         
         .energy-type-card {
           background: white;
           border: 2px solid #e2e8f0;
           border-radius: 12px;
-          padding: 1.5rem;
-          margin-bottom: 1rem;
+          padding: 1rem;
+          margin-bottom: 0.75rem;
           transition: border-color 0.2s ease, box-shadow 0.2s ease;
           position: relative;
         }
@@ -1145,8 +1146,8 @@ const CreateLOTO = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 1rem;
-          padding-bottom: 0.75rem;
+          margin-bottom: 0.75rem;
+          padding-bottom: 0.5rem;
           border-bottom: 1px solid #e2e8f0;
         }
         
@@ -1188,7 +1189,7 @@ const CreateLOTO = () => {
         
         .energy-card-content {
           display: grid;
-          gap: 1rem;
+          gap: 0.5rem;
         }
         
         .energy-card-content .form-field {
@@ -1198,15 +1199,16 @@ const CreateLOTO = () => {
         .energy-card-content .field-label {
           font-weight: 500;
           color: #374151;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.25rem;
           display: flex;
           align-items: center;
           gap: 0.25rem;
+          font-size: 0.875rem;
         }
         
         .energy-card-content .field-input {
           width: 100%;
-          padding: 0.75rem;
+          padding: 0.5rem;
           border: 2px solid #e2e8f0;
           border-radius: 8px;
           font-size: 0.875rem;
@@ -1225,7 +1227,7 @@ const CreateLOTO = () => {
           color: white;
           border: none;
           border-radius: 12px;
-          padding: 1rem 1.5rem;
+          padding: 0.65rem 1.25rem;
           font-size: 0.875rem;
           font-weight: 600;
           cursor: pointer;
@@ -1234,7 +1236,7 @@ const CreateLOTO = () => {
           align-items: center;
           justify-content: center;
           gap: 0.5rem;
-          margin-top: 1rem;
+          margin-top: 0.75rem;
           box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
         }
         
@@ -1602,11 +1604,13 @@ const CreateLOTO = () => {
                     />
                     <span className="checkbox-text">
                       <Icon name="clock" size="sm" />
-                      Set actual LOTO creation time
                       {currentUser?.role === "admin" ? (
-                        <span className="time-limit-hint"> (No time limit - Admin)</span>
+                        <>
+                          {t('createLoto.setActualCreationTime').replace(' (Maximum 48 hours ago)', '').replace(' (بحد أقصى 48 ساعة مضت)', '')}
+                          <span className="time-limit-hint"> {t('createLoto.noTimeLimitAdmin')}</span>
+                        </>
                       ) : (
-                        <span className="time-limit-hint"> (Maximum 48 hours ago)</span>
+                        t('createLoto.setActualCreationTime')
                       )}
                     </span>
                   </label>
@@ -1616,7 +1620,7 @@ const CreateLOTO = () => {
                   <div className="custom-time-input-wrapper">
                     <label className="field-label">
                       <Icon name="calendar" size="sm" />
-                      <span>Actual Creation Date & Time</span>
+                      <span>{t('createLoto.actualCreationDateTime')}</span>
                     </label>
                     <input
                       type="datetime-local"
@@ -1632,12 +1636,12 @@ const CreateLOTO = () => {
                       {currentUser?.role === "admin" ? (
                         <>
                           <Icon name="info" size="sm" />
-                          As an admin, you can set any past time. If left unchecked, the current time will be used.
+                          {t('createLoto.actualCreationTimeDesc').replace('up to 48 hours ago', 'any past time (no limit for admins)')}
                         </>
                       ) : (
                         <>
                           <Icon name="info" size="sm" />
-                          Select when you physically applied the LOTO (up to 48 hours ago). If left unchecked, the current time will be used.
+                          {t('createLoto.actualCreationTimeDesc')}
                         </>
                       )}
                     </p>

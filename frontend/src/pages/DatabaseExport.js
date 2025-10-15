@@ -574,7 +574,6 @@ const DatabaseExport = () => {
             </div>
             <div className="brand-text">
               <h1>Database Export</h1>
-              <p>Export complete MongoDB collections to Excel format</p>
             </div>
           </div>
           <div className="header-actions">
