@@ -982,8 +982,8 @@ const LOTOdetail = () => {
               </div>
             </div>
 
-            {/* Actual Finish Time */}
-            {loto.actualFinishTime && (
+            {/* Completion Information */}
+            {loto.completedAt && (
               <div className="info-section finish-section">
                 <div className="section-icon">
                   <svg className="section-svg" viewBox="0 0 24 24" fill="none">
@@ -992,13 +992,21 @@ const LOTOdetail = () => {
                   </svg>
                 </div>
                 <div className="section-content">
-                  <h5>{t('lotoDetails.actualFinishTime')}</h5>
+                  <h5>Completion Information</h5>
                   <div className="finish-details">
-                    <span className="finish-time">{new Date(loto.actualFinishTime).toLocaleTimeString()}</span>
-                    <span className="finish-date">{new Date(loto.actualFinishDate).toLocaleDateString()}</span>
+                    <div className="finish-info-row">
+                      <strong>Work Actually Finished At (User Entry):</strong>
+                      <span className="finish-time">{new Date(loto.completedAt).toLocaleString()}</span>
+                    </div>
+                    {loto.actualFinishTime && (
+                      <div className="finish-info-row" style={{ marginTop: '8px', fontSize: '0.9em', opacity: '0.8' }}>
+                        <strong>Complete Button Clicked At (System):</strong>
+                        <span>{new Date(loto.actualFinishTime).toLocaleString()}</span>
+                      </div>
+                    )}
                   </div>
                   {loto.completedByName && (
-                    <div className="completed-by-details">
+                    <div className="completed-by-details" style={{ marginTop: '12px' }}>
                       <strong>{t('lotoDetails.completedBy')}:</strong> {loto.completedByName}
                     </div>
                   )}

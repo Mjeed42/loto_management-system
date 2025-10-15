@@ -54,9 +54,26 @@ const CompleteLOTO = () => {
         },
       };
 
+      // SWAPPED LOGIC:
+      // Backend expects: actualFinishTime = user-entered datetime (when work finished)
+      // Backend will set: actualFinishTime = system timestamp (button click) automatically
+      
+      // Combine user-entered date and time into a proper DateTime
+      let userEnteredDateTime;
+      if (formData.actualFinishDate && formData.actualFinishTime) {
+        // Combine the date and time that user entered
+        userEnteredDateTime = new Date(`${formData.actualFinishDate}T${formData.actualFinishTime}`);
+      } else if (formData.actualFinishTime) {
+        // If only time is provided, use today's date
+        userEnteredDateTime = new Date(`${today}T${formData.actualFinishTime}`);
+      } else {
+        // If no time provided, use current time
+        userEnteredDateTime = new Date();
+      }
+
       const completeData = {
         actualFinishDate: formData.actualFinishDate || today,
-        actualFinishTime: formData.actualFinishTime || new Date().toISOString(),
+        actualFinishTime: userEnteredDateTime.toISOString(), // This will be saved to completedAt by backend
         completionNotes: formData.completionNotes,
       };
 

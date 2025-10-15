@@ -606,25 +606,31 @@ exports.completeLOTO = async (req, res) => {
     // Set who completed the LOTO
     loto.completedBy = req.user.id;
     loto.completedByName = `${req.user.firstName} ${req.user.lastName}`;
-    loto.completedAt = new Date();
-
-    // Handle date/time properly
+    
+    // SWAPPED LOGIC:
+    // completedAt = User-entered date/time (when work actually finished)
+    // actualFinishTime = System timestamp (when button was clicked)
+    
+    // Set actualFinishTime to NOW (when button was clicked)
+    loto.actualFinishTime = new Date();
+    
+    // Set completedAt to user-entered date/time (when work actually finished)
     if (actualFinishTime) {
-      loto.actualFinishTime = new Date(actualFinishTime);
+      loto.completedAt = new Date(actualFinishTime);
+    } else {
+      // If no user entry, use current time
+      loto.completedAt = new Date();
     }
+    
+    // Keep actualFinishDate for legacy/reference
     if (actualFinishDate) {
       loto.actualFinishDate = new Date(actualFinishDate);
+    } else {
+      loto.actualFinishDate = new Date();
     }
+    
     if (completionNotes) {
       loto.completionNotes = completionNotes;
-    }
-
-    // If no dates provided, use current date
-    if (!loto.actualFinishTime) {
-      loto.actualFinishTime = new Date();
-    }
-    if (!loto.actualFinishDate) {
-      loto.actualFinishDate = new Date();
     }
 
     await loto.save();

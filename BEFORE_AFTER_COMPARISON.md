@@ -181,3 +181,4 @@ isCurrentResponsible = (currentUser.id === loto.currentResponsible._id)
 
 
 
+

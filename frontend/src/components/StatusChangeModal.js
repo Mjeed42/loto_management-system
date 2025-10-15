@@ -40,6 +40,7 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, lotoData, currentStatus
         }
       );
       const data = await res.json();
+      console.log("Fetched users data:", data);
       
       // Filter for technicians and supervisors only
       let users = [];
@@ -57,6 +58,7 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, lotoData, currentStatus
         );
       }
       
+      console.log("Filtered users for handover:", users);
       setSupervisors(users);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -83,8 +85,13 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, lotoData, currentStatus
         ];
       case 'pending_handover_verification':
         return [
-          { name: 'handoverTo', label: 'Handover To', type: 'select', required: false, options: supervisors },
-          { name: 'handoverReason', label: 'Handover Reason', type: 'textarea', required: false }
+          { name: 'handoverTo', label: 'Handover To', type: 'select', required: true, options: supervisors },
+          { name: 'handoverReason', label: 'Handover Reason', type: 'textarea', required: true }
+        ];
+      case 'handed_over':
+        return [
+          { name: 'handoverTo', label: 'Handover To', type: 'select', required: true, options: supervisors },
+          { name: 'handoverReason', label: 'Handover Reason', type: 'textarea', required: true }
         ];
       case 'rejected':
         return [
@@ -185,13 +192,20 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, lotoData, currentStatus
             onChange={(e) => handleFieldChange(field.name, e.target.value)}
             className="form-control"
             required={field.required}
+            disabled={fetchingSupervisors}
           >
-            <option value="">Select {field.label}</option>
-            {field.options?.map((option) => (
-              <option key={option._id} value={option._id}>
-                {option.firstName} {option.lastName}
-              </option>
-            ))}
+            <option value="">
+              {fetchingSupervisors ? 'Loading users...' : `Select ${field.label}`}
+            </option>
+            {!fetchingSupervisors && field.options && field.options.length > 0 ? (
+              field.options.map((option) => (
+                <option key={option._id} value={option._id}>
+                  {option.firstName} {option.lastName} ({option.role})
+                </option>
+              ))
+            ) : !fetchingSupervisors ? (
+              <option value="" disabled>No users available</option>
+            ) : null}
           </select>
         );
       case 'checkbox-group':

@@ -239,16 +239,30 @@ const DataExport = () => {
       // === COMPLETION INFORMATION ===
       if (loto.status === "completed") {
         formattedLoto["Completed By"] = loto.completedByName || loto.completedBy || "Unknown";
-        formattedLoto["Completed At"] = loto.completedAt ? new Date(loto.completedAt).toLocaleString() : "N/A";
-        formattedLoto["Completion Time"] = loto.completionTime ? new Date(loto.completionTime).toLocaleString() : "N/A";
-        formattedLoto["Actual Finish Date"] = loto.actualFinishDate ? new Date(loto.actualFinishDate).toLocaleDateString() : "N/A";
-        formattedLoto["Actual Finish Time"] = loto.actualFinishTime ? new Date(loto.actualFinishTime).toLocaleTimeString() : "N/A";
+        
+        // completedAt = User-entered date/time (when work actually finished)
+        formattedLoto["Work Actually Finished At (User Entry)"] = loto.completedAt ? new Date(loto.completedAt).toLocaleString() : "N/A";
+        formattedLoto["Work Finish Date (User Entry)"] = loto.completedAt ? new Date(loto.completedAt).toLocaleDateString() : "N/A";
+        formattedLoto["Work Finish Time (User Entry)"] = loto.completedAt ? new Date(loto.completedAt).toLocaleTimeString() : "N/A";
+        
+        // actualFinishTime = System timestamp (when button was clicked)
+        formattedLoto["Complete Button Clicked At (System)"] = loto.actualFinishTime ? new Date(loto.actualFinishTime).toLocaleString() : "N/A";
+        formattedLoto["Button Click Date"] = loto.actualFinishTime ? new Date(loto.actualFinishTime).toLocaleDateString() : "N/A";
+        formattedLoto["Button Click Time"] = loto.actualFinishTime ? new Date(loto.actualFinishTime).toLocaleTimeString() : "N/A";
+        
+        // Legacy fields (for backwards compatibility)
+        formattedLoto["Actual Finish Date (Legacy)"] = loto.actualFinishDate ? new Date(loto.actualFinishDate).toLocaleDateString() : "N/A";
+        formattedLoto["Completion Time (Legacy)"] = loto.completionTime ? new Date(loto.completionTime).toLocaleString() : "N/A";
       } else {
         formattedLoto["Completed By"] = "Not completed";
-        formattedLoto["Completed At"] = "N/A";
-        formattedLoto["Completion Time"] = "N/A";
-        formattedLoto["Actual Finish Date"] = "N/A";
-        formattedLoto["Actual Finish Time"] = "N/A";
+        formattedLoto["Work Actually Finished At (User Entry)"] = "N/A";
+        formattedLoto["Work Finish Date (User Entry)"] = "N/A";
+        formattedLoto["Work Finish Time (User Entry)"] = "N/A";
+        formattedLoto["Complete Button Clicked At (System)"] = "N/A";
+        formattedLoto["Button Click Date"] = "N/A";
+        formattedLoto["Button Click Time"] = "N/A";
+        formattedLoto["Actual Finish Date (Legacy)"] = "N/A";
+        formattedLoto["Completion Time (Legacy)"] = "N/A";
       }
 
       // === CURRENT REJECTION INFORMATION ===
