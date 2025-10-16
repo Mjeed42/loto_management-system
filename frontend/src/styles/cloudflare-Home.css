@@ -1761,6 +1761,7 @@ html[dir="rtl"] .cf-table-container,
 body[dir="rtl"] .cf-table-container,
 body.rtl .cf-table-container {
   direction: rtl !important;
+  text-align: center !important;
 }
 
 /* Table */
@@ -1769,6 +1770,7 @@ html[dir="rtl"] .cf-table,
 body[dir="rtl"] .cf-table,
 body.rtl .cf-table {
   direction: rtl !important;
+  text-align: center !important;
 }
 
 /* Table Headers */
@@ -1776,8 +1778,9 @@ html[dir="rtl"] .cf-table th,
 [dir="rtl"] .cf-table th,
 body[dir="rtl"] .cf-table th,
 body.rtl .cf-table th {
-  text-align: right !important;
+  
   direction: rtl !important;
+  text-align: center !important;
 }
 
 /* Table Cells */
@@ -1785,8 +1788,9 @@ html[dir="rtl"] .cf-table td,
 [dir="rtl"] .cf-table td,
 body[dir="rtl"] .cf-table td,
 body.rtl .cf-table td {
-  text-align: right !important;
+  
   direction: rtl !important;
+  text-align: center !important;
 }
 
 /* Keep numbers and actions LTR */

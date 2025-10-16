@@ -5121,13 +5121,13 @@ const GlobalStyles = () => (
     .access-denied h2 {
       font-size: 2rem;
       font-weight: 700;
-      color: #1f2937;
+      color: black;
       margin: 0 0 1rem 0;
     }
     
     .access-denied p {
       font-size: 1.125rem;
-      color: #6b7280;
+      color: black;
       margin: 0 0 2rem 0;
       line-height: 1.6;
     }
@@ -5472,11 +5472,11 @@ const GlobalStyles = () => (
     
       
       .access-denied h2 {
-        color: #f9fafb;
+        color: black;
       }
       
       .access-denied p {
-        color: #9ca3af;
+        color: black;
       }
       
      

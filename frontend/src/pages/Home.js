@@ -117,36 +117,36 @@ const Home = () => {
     if (currentUser.role === "admin") {
       baseActions.push(
         {
-          title: "Admin Panel",
-          description: "System administration and user management",
+          title: t('home.adminPanel'),
+          description: t('home.adminPanelDesc'),
           icon: "⚙️",
           variant: "warning",
           action: () => navigate("/admin"),
           gradient: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
           color: "#f59e0b",
-          badge: "Admin Only",
+          badge: t('home.adminOnly'),
           roles: ["admin"]
         },
         {
-          title: "Data Export",
-          description: "Export LOTO data for reporting and analysis",
+          title: t('home.dataExport'),
+          description: t('home.dataExportDesc'),
           icon: "📊",
           variant: "secondary",
           action: () => navigate("/data-export"),
           gradient: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
           color: "#6b7280",
-          badge: "Reports",
+          badge: t('home.reports'),
           roles: ["admin"]
         },
         {
-          title: "Monitoring Dashboard",
-          description: "System monitoring and performance metrics",
+          title: t('home.monitoringDashboard'),
+          description: t('home.monitoringDashboardDesc'),
           icon: "📈",
           variant: "info",
           action: () => navigate("/monitoring"),
           gradient: "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)",
           color: "#3b82f6",
-          badge: "Analytics",
+          badge: t('home.analytics'),
           roles: ["admin"]
         }
       );
@@ -161,9 +161,9 @@ const Home = () => {
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return t('home.goodMorning');
+    if (hour < 17) return t('home.goodAfternoon');
+    return t('home.goodEvening');
   };
 
   const getTimeOfDayIcon = () => {
@@ -235,7 +235,7 @@ const Home = () => {
                     variant={action.variant}
                     className="action-button"
                   >
-                    Get Started →
+                    {t('home.getStarted')} →
                   </Button>
                 </div>
               </div>

@@ -82,21 +82,21 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
         },
         { 
           path: "/database-export", 
-          label: "Database Export", 
+          label: t('sidebar.databaseExport'), 
           icon: "database",
-          description: "Export all MongoDB collections"
+          description: t('sidebar.databaseExportDesc')
         },
         { 
           path: "/location-management", 
-          label: "Location Management", 
+          label: t('sidebar.locationManagement'), 
           icon: "map-pin",
-          description: "Manage locations, lines, and machines"
+          description: t('sidebar.locationManagementDesc')
         },
         { 
           path: "/energy-types-management", 
-          label: "Energy Types", 
+          label: t('sidebar.energyTypes'), 
           icon: "zap",
-          description: "Manage energy isolation types"
+          description: t('sidebar.energyTypesDesc')
         }
       );
     }

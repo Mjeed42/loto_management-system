@@ -2421,11 +2421,7 @@ const CreateLOTO = () => {
                                   <span className="status-indicator success">✓ Isolation point specified</span>
                                 </div>
                               )}
-                              {!energy.isolationPoint && (
-                                <div className="isolation-point-status">
-                                  <span className="status-indicator warning">⚠ No isolation point specified</span>
-                                </div>
-                              )}
+                              
                             </div>
                           </div>
                         </div>

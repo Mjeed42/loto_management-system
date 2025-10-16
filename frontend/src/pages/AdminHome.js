@@ -1,19 +1,16 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Button from "../components/Button";
-import Icon from "../components/Icon";
-import RejectLOTOModal from "../components/RejectLOTOModal";
+import { useTranslation } from "react-i18next";
 import ActionButton from "../components/ActionButton";
 import StandardButton from "../components/StandardButton";
 
 const AdminHome = () => {
+  const { t, i18n } = useTranslation();
   const [users, setUsers] = useState([]);
-  const [lotos, setLotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showCreateLotoForm, setShowCreateLotoForm] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -24,18 +21,9 @@ const AdminHome = () => {
     role: "technician",
     lastLogin: null,
   });
-  const [lotoFormData, setLotoFormData] = useState({
-    shift: "A",
-    location: "Processing",
-    isolatedPart: "",
-    reason: "",
-    ptwNumber: "N/A",
-    expectedDuration: "",
-    supervisor: "",
-  });
   const [userSearchTerm, setUserSearchTerm] = useState(""); // New search state
-  const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const [selectedLotoForRejection, setSelectedLotoForRejection] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(10);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,6 +44,20 @@ const AdminHome = () => {
         (user.employeeId && user.employeeId.toLowerCase().includes(term))
     );
   }, [users, userSearchTerm]);
+
+  // Pagination logic
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [userSearchTerm]);
 
   const fetchHomeData = async () => {
     try {
@@ -86,33 +88,11 @@ const AdminHome = () => {
       usersData = Array.isArray(usersData) ? usersData : [];
 
       setUsers(usersData);
-
-      // Fetch LOTOs
-      const lotosRes = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/loto",
-        config
-      );
-
-      // Handle different possible response formats
-      let lotosData = [];
-      if (lotosRes.data.lotos) {
-        lotosData = lotosRes.data.lotos;
-      } else if (lotosRes.data.data && lotosRes.data.data.lotos) {
-        lotosData = lotosRes.data.data.lotos;
-      } else if (Array.isArray(lotosRes.data.data)) {
-        lotosData = lotosRes.data.data;
-      }
-
-      // Ensure it's always an array
-      lotosData = Array.isArray(lotosData) ? lotosData : [];
-
-      setLotos(lotosData);
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching Home data:", err);
-      setError(err.response?.data?.message || "Error fetching Home data");
+      console.error("Error fetching admin data:", err);
+      setError(err.response?.data?.message || "Error fetching admin data");
       setUsers([]);
-      setLotos([]);
       setLoading(false);
     }
   };
@@ -157,41 +137,6 @@ const AdminHome = () => {
     }
   };
 
-  const handleCreateLoto = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const res = await axios.post(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/loto",
-        lotoFormData,
-        config
-      );
-
-      alert(
-        `LOTO created successfully!\nSerial Number: ${res.data.data.serialNumber}`
-      );
-      setShowCreateLotoForm(false);
-      setLotoFormData({
-        shift: "A",
-        location: "Processing",
-        isolatedPart: "",
-        reason: "",
-        ptwNumber: "N/A",
-        expectedDuration: "",
-        supervisor: "",
-      });
-      fetchHomeData();
-    } catch (err) {
-      alert(err.response?.data?.message || "Error creating LOTO");
-    }
-  };
 
   const handleResetPassword = async (userId, username) => {
     const newPassword = prompt(`Enter new password for user ${username}:`);
@@ -278,158 +223,9 @@ const AdminHome = () => {
     }
   };
 
-  const handleDeleteLoto = async (lotoId, serialNumber) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete LOTO ${serialNumber}? This action cannot be undone.`
-      )
-    )
-      return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      await axios.delete(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}`,
-        config
-      );
-
-      alert("LOTO deleted successfully!");
-      fetchHomeData();
-    } catch (err) {
-      alert(err.response?.data?.message || "Error deleting LOTO");
-    }
-  };
-
-  const handleVerifyLoto = async (lotoId, serialNumber) => {
-    if (
-      !window.confirm(`Are you sure you want to verify LOTO ${serialNumber}?`)
-    )
-      return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/verify`,
-        {},
-        config
-      );
-
-      alert("LOTO verified successfully!");
-      fetchHomeData();
-    } catch (err) {
-      alert(err.response?.data?.message || "Error verifying LOTO");
-    }
-  };
-
-  const handleRejectLoto = (loto) => {
-    setSelectedLotoForRejection(loto);
-    setRejectModalOpen(true);
-  };
-
-  const handleRejectConfirm = async (rejectionData) => {
-    try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${selectedLotoForRejection._id}/reject`,
-        rejectionData,
-        config
-      );
-
-      alert("LOTO rejected successfully!");
-      fetchHomeData();
-      setRejectModalOpen(false);
-      setSelectedLotoForRejection(null);
-    } catch (err) {
-      alert(err.response?.data?.message || "Error rejecting LOTO");
-    }
-  };
-
-  const handleRejectModalClose = () => {
-    setRejectModalOpen(false);
-    setSelectedLotoForRejection(null);
-  };
-
-  const handleCompleteLoto = async (lotoId, serialNumber) => {
-    if (
-      !window.confirm(`Are you sure you want to complete LOTO ${serialNumber}?`)
-    )
-      return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/complete`,
-        { actualFinishTime: new Date(), actualFinishDate: new Date() },
-        config
-      );
-
-      alert("LOTO completed successfully!");
-      fetchHomeData();
-    } catch (err) {
-      alert(err.response?.data?.message || "Error completing LOTO");
-    }
-  };
-
-  const handleHandoverLoto = async (lotoId, serialNumber) => {
-    const handoverTo = prompt(
-      `Enter technician ID to handover LOTO ${serialNumber} to:`
-    );
-    if (!handoverTo) return;
-
-    const handoverNotes = prompt("Enter handover notes (optional):");
-
-    try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/handover`,
-        { handoverTo, handoverNotes },
-        config
-      );
-
-      alert("LOTO handed over successfully!");
-      fetchHomeData();
-    } catch (err) {
-      alert(err.response?.data?.message || "Error handing over LOTO");
-    }
-  };
 
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const onLotoChange = (e) => {
-    setLotoFormData({ ...lotoFormData, [e.target.name]: e.target.value });
   };
 
   const onUserSearchChange = (e) => {
@@ -440,15 +236,14 @@ const AdminHome = () => {
     setUserSearchTerm("");
   };
 
-  // Ensure users and lotos are always arrays before mapping
+  // Ensure users are always arrays before mapping
   const safeUsers = Array.isArray(users) ? users : [];
-  const safeLotos = Array.isArray(lotos) ? lotos : [];
 
   const getRoleBadge = (role) => {
     const roleConfig = {
-      admin: { text: "Admin", variant: "danger" },
-      supervisor: { text: "Supervisor", variant: "primary" },
-      technician: { text: "Technician", variant: "success" },
+      admin: { text: t('admin.admin'), variant: "danger" },
+      supervisor: { text: t('admin.supervisor'), variant: "primary" },
+      technician: { text: t('admin.technician'), variant: "success" },
     };
 
     const config = roleConfig[role] || { text: role, variant: "secondary" };
@@ -465,29 +260,7 @@ const AdminHome = () => {
       <span
         className={`badge bg-${isActive ? "success" : "danger"} badge-pill`}
       >
-        {isActive ? "Active" : "Inactive"}
-      </span>
-    );
-  };
-
-  const getLotoStatusBadge = (status) => {
-    const statusConfig = {
-      pending: { text: "Pending", variant: "warning" },
-      active: { text: "Active", variant: "success" },
-      completed: { text: "Completed", variant: "secondary" },
-      pending_handover: { text: "Pending Handover", variant: "info" },
-      handover: { text: "Handover", variant: "info" },
-      rejected: { text: "Rejected", variant: "danger" },
-    };
-
-    const config = statusConfig[status] || {
-      text: status,
-      variant: "secondary",
-    };
-
-    return (
-      <span className={`badge bg-${config.variant} badge-pill`}>
-        {config.text}
+        {isActive ? t('admin.active') : t('admin.inactive')}
       </span>
     );
   };
@@ -510,9 +283,9 @@ const AdminHome = () => {
           <div className="cf-header-inner">
             <div>
               <h1 className="cf-header-title">
-                ⚙️ Admin Page
+                ⚙️ {t('admin.pageTitle')}
               </h1>
-              <p className="cf-header-subtitle">Manage users and LOTO operations</p>
+              <p className="cf-header-subtitle">{t('admin.pageSubtitle')}</p>
             </div>
             <div className="cf-header-actions">
               <ActionButton
@@ -520,21 +293,21 @@ const AdminHome = () => {
                 onClick={() => setShowCreateForm(!showCreateForm)}
                 icon={showCreateForm ? "cancel" : "add"}
               >
-                {showCreateForm ? "Cancel" : "Create User"}
+                {showCreateForm ? t('admin.cancel') : t('admin.createUser')}
               </ActionButton>
               <ActionButton
                 variant="secondary"
                 onClick={fetchHomeData}
                 icon="refresh"
               >
-                Refresh
+                {t('admin.refresh')}
               </ActionButton>
               <ActionButton
                 variant="primary"
                 onClick={() => navigate("/Home")}
                 icon="home"
               >
-                Home
+                {t('admin.home')}
               </ActionButton>
             </div>
           </div>
@@ -555,33 +328,33 @@ const AdminHome = () => {
         <div className="cf-card cf-mb-4">
           <div className="cf-card-header">
             <h5 className="cf-card-title">
-              ➕ Create New User
+              ➕ {t('admin.createNewUser')}
             </h5>
           </div>
           <div className="cf-card-body">
             <form onSubmit={handleCreateUser}>
               <div className="cf-grid cf-grid-cols-1 md:cf-grid-cols-2 cf-gap-4 cf-mb-4">
                 <div>
-                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Username</label>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">{t('admin.username')}</label>
                   <input
                     type="text"
                     name="username"
                     value={formData.username}
                     onChange={onChange}
                     className="cf-form-select"
-                    placeholder="Enter username"
+                    placeholder={t('admin.enterUsername')}
                     required
                   />
                 </div>
                 <div>
-                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Email</label>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">{t('admin.email')}</label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={onChange}
                     className="cf-form-select"
-                    placeholder="Enter email"
+                    placeholder={t('admin.enterEmail')}
                     required
                   />
                 </div>
@@ -589,75 +362,75 @@ const AdminHome = () => {
 
               <div className="cf-grid cf-grid-cols-1 md:cf-grid-cols-2 cf-gap-4 cf-mb-4">
                 <div>
-                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Password</label>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">{t('admin.password')}</label>
                   <input
                     type="password"
                     name="password"
                     value={formData.password}
                     onChange={onChange}
                     className="cf-form-select"
-                    placeholder="Enter password"
+                    placeholder={t('admin.enterPassword')}
                     required
                     minLength="6"
                   />
                 </div>
                 <div>
-                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Role</label>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">{t('admin.role')}</label>
                   <select
                     name="role"
                     value={formData.role}
                     onChange={onChange}
                     className="cf-form-select"
                   >
-                    <option value="technician">Technician</option>
-                    <option value="supervisor">Supervisor</option>
-                    <option value="admin">Admin</option>
+                    <option value="technician">{t('admin.technician')}</option>
+                    <option value="supervisor">{t('admin.supervisor')}</option>
+                    <option value="admin">{t('admin.admin')}</option>
                   </select>
                 </div>
               </div>
 
               <div className="cf-grid cf-grid-cols-1 md:cf-grid-cols-2 cf-gap-4 cf-mb-4">
                 <div>
-                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">First Name</label>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">{t('admin.firstName')}</label>
                   <input
                     type="text"
                     name="firstName"
                     value={formData.firstName}
                     onChange={onChange}
                     className="cf-form-select"
-                    placeholder="Enter first name"
+                    placeholder={t('admin.enterFirstName')}
                     required
                   />
                 </div>
                 <div>
-                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Last Name</label>
+                  <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">{t('admin.lastName')}</label>
                   <input
                     type="text"
                     name="lastName"
                     value={formData.lastName}
                     onChange={onChange}
                     className="cf-form-select"
-                    placeholder="Enter last name"
+                    placeholder={t('admin.enterLastName')}
                     required
                   />
                 </div>
               </div>
 
               <div className="cf-mb-4">
-                <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">Employee ID</label>
+                <label className="cf-text-sm cf-font-semibold cf-text-primary cf-mb-2">{t('admin.employeeId')}</label>
                 <input
                   type="text"
                   name="employeeId"
                   value={formData.employeeId}
                   onChange={onChange}
                   className="cf-form-select"
-                  placeholder="Enter employee ID"
+                  placeholder={t('admin.enterEmployeeId')}
                 />
               </div>
 
               <div className="cf-d-flex cf-gap-2">
                 <StandardButton type="submit" variant="primary" icon="save">
-                  Create User
+                  {t('admin.createUser')}
                 </StandardButton>
                 <StandardButton
                   type="button"
@@ -665,7 +438,7 @@ const AdminHome = () => {
                   icon="cancel"
                   onClick={() => setShowCreateForm(false)}
                 >
-                  Cancel
+                  {t('admin.cancel')}
                 </StandardButton>
               </div>
             </form>
@@ -676,7 +449,7 @@ const AdminHome = () => {
       <div className="cf-card cf-mb-4">
         <div className="cf-card-header">
           <h5 className="cf-card-title">
-            👥 User Management
+            👥 {t('admin.userManagement')}
           </h5>
         </div>
         <div className="cf-card-body">
@@ -685,7 +458,7 @@ const AdminHome = () => {
               <input
                 type="text"
                 className="cf-form-select"
-                placeholder="Search users..."
+                placeholder={t('admin.searchUsers')}
                 value={userSearchTerm}
                 onChange={onUserSearchChange}
               />
@@ -696,7 +469,7 @@ const AdminHome = () => {
                   onClick={clearSearch}
                   className="cf-mt-2"
                 >
-                  Clear
+                  {t('admin.clear')}
                 </StandardButton>
               )}
             </div>
@@ -705,7 +478,7 @@ const AdminHome = () => {
               icon="refresh"
               onClick={fetchHomeData}
             >
-              Refresh Users
+              {t('admin.refreshUsers')}
             </ActionButton>
           </div>
 
@@ -713,19 +486,19 @@ const AdminHome = () => {
             <table className="cf-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Username</th>
-                  <th className="cf-d-none cf-d-md-table-cell">Email</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Employee ID</th>
-                  <th>Last Login</th>
-                  <th className="cf-text-center">Actions</th>
+                  <th>{t('admin.name')}</th>
+                  <th>{t('admin.username')}</th>
+                  <th className="cf-d-none cf-d-md-table-cell">{t('admin.email')}</th>
+                  <th>{t('admin.role')}</th>
+                  <th>{t('admin.status')}</th>
+                  <th>{t('admin.employeeId')}</th>
+                  <th>{t('admin.lastLogin')}</th>
+                  <th className="cf-text-center">{t('admin.actions')}</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
+                {currentUsers.length > 0 ? (
+                  currentUsers.map((user) => (
                     <tr key={user._id}>
                       <td>
                         {user.firstName} {user.lastName}
@@ -743,9 +516,9 @@ const AdminHome = () => {
                             onClick={() =>
                               handleResetPassword(user._id, user.username)
                             }
-                            title="Reset Password"
+                            title={t('admin.resetPassword')}
                           >
-                            🔑 Reset
+                            🔑 {t('admin.resetPassword')}
                           </button>
                           <button
                             className={`cf-btn cf-btn-sm ${user.isActive ? "cf-btn-outline-secondary" : "cf-btn-outline-secondary"}`}
@@ -757,7 +530,7 @@ const AdminHome = () => {
                               )
                             }
                             title={
-                              user.isActive ? "Disable User" : "Enable User"
+                              user.isActive ? t('admin.disableUser') : t('admin.enableUser')
                             }
                           >
                             {user.isActive ? "🚫" : "✅"}
@@ -768,7 +541,7 @@ const AdminHome = () => {
                               onClick={() =>
                                 handleDeleteUser(user._id, user.username)
                               }
-                              title="Delete User"
+                              title={t('admin.deleteUser')}
                             >
                               🗑️
                             </button>
@@ -782,11 +555,11 @@ const AdminHome = () => {
                     <td colSpan="8" className="cf-text-center cf-py-4">
                       {userSearchTerm ? (
                         <>
-                          🔍 No users match your search
+                          🔍 {t('admin.noUsersMatch')}
                         </>
                       ) : (
                         <>
-                          ℹ️ No users found
+                          ℹ️ {t('admin.noUsersFound')}
                         </>
                       )}
                     </td>
@@ -795,147 +568,54 @@ const AdminHome = () => {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-      {/* LOTO Management */}
-      <div className="cf-card">
-        <div className="cf-card-header">
-          <h5 className="cf-card-title">
-            📋 LOTO Management
-          </h5>
-        </div>
-        <div className="cf-card-body">
-          <div className="cf-d-flex cf-justify-content-between cf-align-items-center cf-mb-4">
-            <ActionButton 
-              variant="secondary"
-              icon="refresh"
-              onClick={fetchHomeData}
-            >
-              Refresh LOTOs
-            </ActionButton>
-          </div>
-          <div className="cf-table-container" style={{ overflowX: 'auto', width: '100%' }}>
-            <table className="cf-table">
-              <thead>
-                <tr>
-                  <th>SN</th>
-                  <th>Date</th>
-                  <th>Shift</th>
-                  <th className="cf-d-none cf-d-md-table-cell">Isolator</th>
-                  <th>Part</th>
-                  <th className="cf-d-none cf-d-lg-table-cell">Reason</th>
-                  <th>Status</th>
-                  <th>Duration</th>
-                  <th className="cf-text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {safeLotos.length > 0 ? (
-                  safeLotos.map((loto) => (
-                    <tr key={loto._id}>
-                      <td>
-                        <strong>{loto.serialNumber}</strong>
-                      </td>
-                      <td>{formatDate(loto.date)}</td>
-                      <td>{loto.shift}</td>
-                      <td className="cf-d-none cf-d-md-table-cell">
-                        {loto.isolator?.firstName} {loto.isolator?.lastName}
-                      </td>
-                      <td>{loto.isolatedPart}</td>
-                      <td className="cf-d-none cf-d-lg-table-cell">{loto.reason}</td>
-                      <td>{getLotoStatusBadge(loto.status)}</td>
-                      <td>{loto.expectedDuration} hrs</td>
-                      <td className="cf-text-center">
-                        <div className="cf-d-flex cf-gap-2 cf-justify-content-center">
-                          {loto.status === "pending" && (
-                            <>
-                              <button
-                                className="cf-btn cf-btn-sm"
-                                style={{ backgroundColor: '#10b981', color: 'white' }}
-                                onClick={() =>
-                                  handleVerifyLoto(loto._id, loto.serialNumber)
-                                }
-                                title="Verify LOTO"
-                              >
-                                ✅
-                              </button>
-                              <button
-                                className="cf-btn cf-btn-sm"
-                                style={{ backgroundColor: '#ef4444', color: 'white' }}
-                                onClick={() =>
-                                  handleRejectLoto(loto)
-                                }
-                                title="Reject LOTO"
-                              >
-                                ❌
-                              </button>
-                            </>
-                          )}
-                          {(loto.status === "active" ||
-                            loto.status === "handover") && (
-                            <>
-                              <button
-                                className="cf-btn cf-btn-sm"
-                                style={{ backgroundColor: '#3b82f6', color: 'white' }}
-                                onClick={() =>
-                                  handleHandoverLoto(
-                                    loto._id,
-                                    loto.serialNumber
-                                  )
-                                }
-                                title="Handover LOTO"
-                              >
-                                🤝
-                              </button>
-                              <button
-                                className="cf-btn cf-btn-sm"
-                                style={{ backgroundColor: '#10b981', color: 'white' }}
-                                onClick={() =>
-                                  handleCompleteLoto(
-                                    loto._id,
-                                    loto.serialNumber
-                                  )
-                                }
-                                title="Complete LOTO"
-                              >
-                                ✅
-                              </button>
-                            </>
-                          )}
-                          <button
-                            className="cf-btn cf-btn-sm"
-                            style={{ backgroundColor: '#ef4444', color: 'white' }}
-                            onClick={() =>
-                              handleDeleteLoto(loto._id, loto.serialNumber)
-                            }
-                            title="Delete LOTO"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="9" className="cf-text-center cf-py-4">
-                      ℹ️ No LOTOs found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
 
-      {/* Rejection Modal */}
-      <RejectLOTOModal
-        isOpen={rejectModalOpen}
-        onClose={handleRejectModalClose}
-        onConfirm={handleRejectConfirm}
-        lotoData={selectedLotoForRejection}
-      />
+          {/* Pagination Controls */}
+          {filteredUsers.length > usersPerPage && (
+            <div className="cf-d-flex cf-justify-content-center cf-align-items-center cf-mt-4 cf-gap-2">
+              <button
+                className="cf-btn cf-btn-sm cf-btn-outline-secondary"
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
+              >
+                {i18n.language === 'ar' ? '→' : '←'} {t('admin.previous')}
+              </button>
+              
+              <div className="cf-d-flex cf-gap-1">
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => paginate(index + 1)}
+                    className={`cf-btn cf-btn-sm ${
+                      currentPage === index + 1
+                        ? 'cf-btn-primary'
+                        : 'cf-btn-outline-secondary'
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                className="cf-btn cf-btn-sm cf-btn-outline-secondary"
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}
+              >
+                {t('admin.next')} {i18n.language === 'ar' ? '←' : '→'}
+              </button>
+            </div>
+          )}
+
+          {/* Show current page info */}
+          {filteredUsers.length > 0 && (
+            <div className="cf-text-center cf-mt-3" style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+              {t('admin.showing')} {indexOfFirstUser + 1} {t('admin.to')} {Math.min(indexOfLastUser, filteredUsers.length)} {t('admin.of')} {filteredUsers.length} {t('admin.users')}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
