@@ -55,6 +55,7 @@ const TechnicianHome = ({ currentUser }) => {
           </div>
         </div>
       </div>
+      
     </div>
   );
 };

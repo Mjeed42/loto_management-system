@@ -700,22 +700,6 @@ const DatabaseExport = () => {
         </div>
       </div>
 
-      {/* Info Section */}
-      <div className="info-section">
-        <div className="info-card">
-          <div className="info-icon">ℹ️</div>
-          <div className="info-content">
-            <h4>About Database Export</h4>
-            <ul>
-              <li>Each collection will be exported as a separate sheet in the Excel file</li>
-              <li>All records from selected collections will be included</li>
-              <li>Data is formatted for easy reading and analysis</li>
-              <li>Column widths are automatically adjusted</li>
-              <li>Export preserves all field data and timestamps</li>
-            </ul>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

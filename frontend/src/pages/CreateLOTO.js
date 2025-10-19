@@ -2636,6 +2636,7 @@ const CreateLOTO = () => {
           </div>
         </div>
       </form>
+      
     </div>
   );
 };

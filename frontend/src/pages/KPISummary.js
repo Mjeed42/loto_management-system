@@ -647,11 +647,8 @@ const KPISummary = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="cf-text-center cf-text-muted cf-small cf-py-3">
-        &copy; {new Date().getFullYear()} LOTO Management System. All rights
-        reserved.
       </div>
+      
     </div>
   );
 };

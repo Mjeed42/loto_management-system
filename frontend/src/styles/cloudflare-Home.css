@@ -2784,6 +2784,11 @@ body.rtl .page-info-container {
   color: var(--cf-text-secondary);
   background-color: #f9fafb;
   border-bottom: 1px solid var(--cf-border);
+  border-right: 1px solid var(--cf-border);
+}
+
+.cf-table th:last-child {
+  border-right: none;
 }
 
 .cf-table td {
@@ -2791,6 +2796,11 @@ body.rtl .page-info-container {
   font-size: var(--cf-font-size-sm);
   color: var(--cf-text-primary);
   border-bottom: 1px solid var(--cf-border);
+  border-right: 1px solid var(--cf-border);
+}
+
+.cf-table td:last-child {
+  border-right: none;
 }
 
 .cf-table tr:hover {

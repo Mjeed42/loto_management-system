@@ -132,7 +132,7 @@ const Home = () => {
           description: t('home.dataExportDesc'),
           icon: "📊",
           variant: "secondary",
-          action: () => navigate("/data-export"),
+          action: () => navigate("/database-export"),
           gradient: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
           color: "#6b7280",
           badge: t('home.reports'),

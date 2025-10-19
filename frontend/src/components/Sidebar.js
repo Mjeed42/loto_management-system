@@ -75,16 +75,10 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
           description: t('sidebar.analytics')
         },
         { 
-          path: "/data-export", 
+          path: "/database-export", 
           label: t('sidebar.reports'), 
           icon: "download",
           description: t('sidebar.export')
-        },
-        { 
-          path: "/database-export", 
-          label: t('sidebar.databaseExport'), 
-          icon: "database",
-          description: t('sidebar.databaseExportDesc')
         },
         { 
           path: "/location-management", 

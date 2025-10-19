@@ -543,6 +543,7 @@ const EnergyTypesManagement = () => {
           </div>
         </div>
       )}
+      
     </div>
   );
 };

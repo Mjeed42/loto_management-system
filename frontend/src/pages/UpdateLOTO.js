@@ -1276,6 +1276,7 @@ const UpdateLOTO = () => {
           </div>
         </div>
       </form>
+      
     </div>
   );
 };

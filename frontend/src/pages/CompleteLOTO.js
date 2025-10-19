@@ -204,6 +204,7 @@ const CompleteLOTO = () => {
           {submitting ? "Completing..." : "Complete LOTO"}
         </button>
       </form>
+      
     </div>
   );
 };

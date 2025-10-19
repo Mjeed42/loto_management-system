@@ -1082,7 +1082,6 @@ const LOTOList = () => {
                       <th>{t('lotoList.isolator')}</th>
                       <th>{t('lotoList.energyTypes')}</th>
                       <th>{t('loto.status')}</th>
-                      <th className="cf-text-center">{t('lotoList.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1139,124 +1138,6 @@ const LOTOList = () => {
                             : "N/A"}
                         </td>
                         <td>{getStatusBadge(loto.status)}</td>
-                        <td className="cf-text-center">
-                          <div className="cf-d-flex cf-gap-2 cf-justify-content-between">
-                            {/* Admin Full Control */}
-                            {isAdmin && (
-                              <>
-                                {loto.status === "pending_verification_new" && (
-                                  <>
-                                    <button
-                                      className="cf-btn cf-btn-sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleVerify(loto._id);
-                                      }}
-                                      style={{ backgroundColor: "#10b981", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-                                    >
-                                      ✅ {t('lotoList.verify')}
-                                    </button>
-                                    <button
-                                      className="cf-btn cf-btn-sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleReject(loto);
-                                      }}
-                                      style={{ backgroundColor: "#ef4444", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-                                    >
-                                      ❌ {t('lotoList.reject')}
-                                    </button>
-                                  </>
-                                )}
-                                {loto.status === "rejected" && (
-                                  <button
-                                    className="cf-btn cf-btn-sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleUpdate(loto._id);
-                                    }}
-                                    style={{ backgroundColor: "#f59e0b", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-                                  >
-                                    ✏️ {t('lotoList.edit')}
-                                  </button>
-                                )}
-                                {loto.status === "active" && (
-                                  <>
-                                    <button
-                                      className="cf-btn cf-btn-sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleHandover(loto);
-                                      }}
-                                      style={{ backgroundColor: "#06b6d4", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-                                    >
-                                      🤝 {t('lotoList.handover')}
-                                    </button>
-                                    <button
-                                      className="cf-btn cf-btn-sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleComplete(loto._id);
-                                      }}
-                                      style={{ backgroundColor: "#10b981", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-                                    >
-                                      ✅ Complete
-                                    </button>
-                                  </>
-                                )}
-                                {loto.status === "pending_handover_verification" && (
-                                  <>
-                                    <button
-                                      className="cf-btn cf-btn-sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleApproveHandover(loto._id);
-                                      }}
-                                      style={{ backgroundColor: "#10b981", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-                                    >
-                                      ✅ {t('lotoList.approve')}
-                                    </button>
-                                    <button
-                                      className="cf-btn cf-btn-sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleRejectHandover(loto._id);
-                                      }}
-                                      style={{ backgroundColor: "#ef4444", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-                                    >
-                                      ❌ {t('lotoList.reject')}
-                                    </button>
-                                  </>
-                                )}
-                                
-                                {/* Status Change Button - Always Available for Admins */}
-                                <button
-                                  className="cf-btn cf-btn-sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleStatusChange(loto);
-                                  }}
-                                  style={{ backgroundColor: "#3b82f6", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-                                >
-                                  ⭐ {t('lotoList.status')}
-                                </button>
-                              </>
-                            )}
-                            {/* Simplified action buttons for other roles */}
-                            {!isAdmin && (
-                              <button
-                                className="cf-btn cf-btn-sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/loto/${loto._id}`);
-                                }}
-                                style={{ backgroundColor: "#6b7280", color: "white", border: "none", padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-                              >
-                                {t('lotoList.view')}
-                              </button>
-                            )}
-                          </div>
-                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1485,6 +1366,7 @@ const LOTOList = () => {
         lotoData={selectedLotoForHandover}
         currentUser={currentUser}
       />
+      
     </div>
   );
 };
