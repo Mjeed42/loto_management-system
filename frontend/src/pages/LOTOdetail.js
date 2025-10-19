@@ -97,6 +97,515 @@ const LOTOdetail = () => {
     }
   };
 
+  const handlePrint = () => {
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    
+    // Format date for display
+    const formatDate = (dateString) => {
+      if (!dateString) return 'N/A';
+      return new Date(dateString).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    };
+
+    // Get status display name
+    const getStatusDisplay = (status) => {
+      const statusMap = {
+        'pending_verification_new': 'Pending Verification (New)',
+        'active': 'Active',
+        'pending_handover_verification': 'Pending Handover Verification',
+        'handed_over': 'Handed Over',
+        'completed': 'Completed',
+        'rejected': 'Rejected',
+        'rejected_handover_snapshot': 'Rejected Handover Snapshot',
+        'handed_over_snapshot': 'Handed Over Snapshot'
+      };
+      return statusMap[status] || status;
+    };
+
+    // Create clean A4 print document with ONLY LOTO data
+    const printHTML = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>LOTO Details - ${loto?.serialNumber || 'N/A'}</title>
+          <style>
+            @page {
+              size: A4;
+              margin: 15mm;
+            }
+            @media print {
+              @page {
+                margin: 0;
+              }
+              body {
+                margin: 0;
+                -webkit-print-color-adjust: exact;
+              }
+              .document {
+                margin: 0;
+                padding: 15mm;
+              }
+            }
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            body {
+              font-family: 'Arial', sans-serif;
+              font-size: 10px;
+              line-height: 1.2;
+              color: #000;
+              background: white;
+            }
+            .document {
+              max-width: 100%;
+              margin: 0 auto;
+            }
+            .header {
+              margin-bottom: 15px;
+              padding: 10px;
+              border: 2px solid #000;
+              background: #f9f9f9;
+            }
+            .header h1 {
+              font-size: 16px;
+              font-weight: bold;
+              margin-bottom: 8px;
+              text-align: center;
+            }
+            .header-info {
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              gap: 15px;
+              font-size: 9px;
+            }
+            .header-item {
+              text-align: center;
+            }
+            .header-label {
+              font-weight: bold;
+              display: block;
+              margin-bottom: 2px;
+            }
+            .header-value {
+              font-size: 10px;
+              font-weight: bold;
+            }
+            .header-status {
+              font-size: 8px;
+              padding: 2px 4px;
+              border-radius: 2px;
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+            .content-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 15px;
+              margin-bottom: 10px;
+            }
+            .section {
+              margin-bottom: 12px;
+            }
+            .section-title {
+              font-size: 11px;
+              font-weight: bold;
+              background: #f0f0f0;
+              padding: 4px 6px;
+              border: 1px solid #000;
+              margin-bottom: 6px;
+              text-transform: uppercase;
+            }
+            .info-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 8px;
+            }
+            .info-table td {
+              padding: 3px 4px;
+              border: 1px solid #ccc;
+              vertical-align: top;
+              font-size: 9px;
+            }
+            .info-table .label {
+              font-weight: bold;
+              width: 40%;
+              background: #f9f9f9;
+            }
+            .info-table .value {
+              width: 60%;
+            }
+            .status-badge {
+              display: inline-block;
+              padding: 1px 3px;
+              border-radius: 2px;
+              font-size: 8px;
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+            .status-pending_verification_new { background: #fff3cd; color: #856404; }
+            .status-active { background: #d4edda; color: #155724; }
+            .status-pending_handover_verification { background: #cce5ff; color: #004085; }
+            .status-handed_over { background: #e2e3f0; color: #383d41; }
+            .status-completed { background: #d4edda; color: #155724; }
+            .status-rejected { background: #f8d7da; color: #721c24; }
+            .status-rejected_handover_snapshot { background: #f5c6cb; color: #721c24; }
+            .status-handed_over_snapshot { background: #e2e3f0; color: #383d41; }
+            .time-badge {
+              display: inline-block;
+              padding: 1px 2px;
+              border-radius: 1px;
+              font-size: 7px;
+              font-weight: bold;
+              margin-left: 3px;
+            }
+            .backdated-badge { background: #ffc107; color: #000; }
+            .actual-badge { background: #28a745; color: #fff; }
+            .footer {
+              margin-top: 15px;
+              padding-top: 8px;
+              border-top: 1px solid #000;
+              text-align: center;
+              font-size: 8px;
+              color: #666;
+            }
+            @media print {
+              body { -webkit-print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="document">
+            <!-- Header -->
+            <div class="header">
+              <h1>LOTO DETAILS</h1>
+              <div class="header-info">
+                <div class="header-item">
+                  <span class="header-label">Serial Number</span>
+                  <span class="header-value">${loto?.serialNumber || 'N/A'}</span>
+                </div>
+                <div class="header-item">
+                  <span class="header-label">Status</span>
+                  <span class="header-value">
+                    <span class="header-status status-${loto?.status || ''}">${getStatusDisplay(loto?.status)}</span>
+                  </span>
+                </div>
+                <div class="header-item">
+                  <span class="header-label">Shift</span>
+                  <span class="header-value">${loto?.shift || 'N/A'}</span>
+                </div>
+              </div>
+              <div class="header-info" style="margin-top: 8px;">
+                <div class="header-item">
+                  <span class="header-label">Location</span>
+                  <span class="header-value">${loto?.location || 'N/A'}</span>
+                </div>
+                <div class="header-item">
+                  <span class="header-label">Isolator</span>
+                  <span class="header-value">${loto?.isolatorName || 'N/A'}</span>
+                </div>
+                <div class="header-item">
+                  <span class="header-label">Current Responsible</span>
+                  <span class="header-value">${loto?.currentResponsibleName || (loto?.isolator ? `${loto.isolator.firstName} ${loto.isolator.lastName}` : 'N/A')}</span>
+                </div>
+              </div>
+              <div style="text-align: center; margin-top: 8px; font-size: 8px; color: #666;">
+                Printed on: ${new Date().toLocaleString()}
+              </div>
+            </div>
+
+            <!-- Two Column Layout -->
+            <div class="content-grid">
+              <!-- Left Column -->
+              <div>
+                <!-- Basic Information -->
+                <div class="section">
+                  <div class="section-title">Basic Information</div>
+                  <table class="info-table">
+                    <tr>
+                      <td class="label">Serial Number</td>
+                      <td class="value">${loto?.serialNumber || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">Status</td>
+                      <td class="value">
+                        <span class="status-badge status-${loto?.status || ''}">${getStatusDisplay(loto?.status)}</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="label">Shift</td>
+                      <td class="value">${loto?.shift || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">Isolator</td>
+                      <td class="value">${loto?.isolatorName || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">Current Responsible</td>
+                      <td class="value">${loto?.currentResponsibleName || (loto?.isolator ? `${loto.isolator.firstName} ${loto.isolator.lastName}` : 'N/A')}</td>
+                    </tr>
+                    ${loto?.customCreatedAt ? `
+                    <tr>
+                      <td class="label">LOTO Date & Time</td>
+                      <td class="value">
+                        ${formatDate(loto?.date)}
+                        <span class="time-badge backdated-badge">BACKDATED</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="label">System Created At</td>
+                      <td class="value">
+                        ${formatDate(loto?.createdAt)}
+                        <span class="time-badge actual-badge">ACTUAL</span>
+                      </td>
+                    </tr>
+                    ` : `
+                    <tr>
+                      <td class="label">Created At</td>
+                      <td class="value">${formatDate(loto?.date)}</td>
+                    </tr>
+                    `}
+                  </table>
+                </div>
+
+                <!-- Location Information -->
+                <div class="section">
+                  <div class="section-title">Location Information</div>
+                  <table class="info-table">
+                    <tr>
+                      <td class="label">Location</td>
+                      <td class="value">${loto?.location || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">Line</td>
+                      <td class="value">${loto?.line || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">Machine</td>
+                      <td class="value">${loto?.machine || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">Isolated Part</td>
+                      <td class="value">${loto?.isolatedPart || 'N/A'}</td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Right Column -->
+              <div>
+                <!-- Work Details -->
+                <div class="section">
+                  <div class="section-title">Work Details</div>
+                  <table class="info-table">
+                    <tr>
+                      <td class="label">Reason</td>
+                      <td class="value">${loto?.reason || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">PTW Number</td>
+                      <td class="value">${loto?.ptwNumber || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">Expected Duration</td>
+                      <td class="value">${loto?.expectedDuration || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">Supervisor Assignment</td>
+                      <td class="value">${loto?.supervisorName || 'N/A'}</td>
+                    </tr>
+                  </table>
+                </div>
+
+                <!-- Energy Types -->
+                ${loto?.energyTypes && loto.energyTypes.length > 0 ? `
+                <div class="section">
+                  <div class="section-title">Energy Types & Isolation Points</div>
+                  <table class="info-table">
+                    ${loto.energyTypes.map((energy, index) => `
+                    <tr>
+                      <td class="label">Energy Type ${index + 1}</td>
+                      <td class="value">${energy.type || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">Isolation Point ${index + 1}</td>
+                      <td class="value">${energy.isolationPoint || 'N/A'}</td>
+                    </tr>
+                    `).join('')}
+                  </table>
+                </div>
+                ` : ''}
+
+                <!-- Verification Information -->
+                ${loto?.verifiedBy ? `
+                <div class="section">
+                  <div class="section-title">Verification Information</div>
+                  <table class="info-table">
+                    <tr>
+                      <td class="label">Verified By</td>
+                      <td class="value">${loto?.verifiedBy ? `${loto.verifiedBy.firstName} ${loto.verifiedBy.lastName}` : 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">Verified At</td>
+                      <td class="value">${formatDate(loto.verifiedAt)}</td>
+                    </tr>
+                  </table>
+                </div>
+                ` : ''}
+
+                <!-- Completion Information -->
+                ${loto?.completedAt ? `
+                <div class="section">
+                  <div class="section-title">Completion Information</div>
+                  <table class="info-table">
+                    <tr>
+                      <td class="label">Completed By</td>
+                      <td class="value">${loto?.completedByName || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td class="label">Work Finished At</td>
+                      <td class="value">
+                        ${formatDate(loto?.completedAt)}
+                        ${loto?.customCompletedAt ? '<span class="time-badge backdated-badge">BACKDATED</span>' : ''}
+                      </td>
+                    </tr>
+                    ${loto?.actualFinishTime ? `
+                    <tr>
+                      <td class="label">Actual Finish Time</td>
+                      <td class="value">
+                        ${formatDate(loto?.actualFinishTime)}
+                        <span class="time-badge actual-badge">ACTUAL</span>
+                      </td>
+                    </tr>
+                    ` : ''}
+                    ${loto?.completionNotes ? `
+                    <tr>
+                      <td class="label">Completion Notes</td>
+                      <td class="value">${loto.completionNotes}</td>
+                    </tr>
+                    ` : ''}
+                  </table>
+                </div>
+                ` : ''}
+
+              </div>
+            </div>
+
+            <!-- Handover History - Two Column Layout -->
+            ${handoverHistory && handoverHistory.length > 0 ? `
+            <div class="section" style="margin-top: 20px;">
+              <div class="section-title">Handover History</div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <!-- Left Column -->
+                <div>
+                  ${handoverHistory.slice(0, Math.ceil(handoverHistory.length / 2)).map((handover, index) => `
+                  <div style="margin-bottom: 15px; border: 1px solid #ccc; padding: 8px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">Transfer #${index + 1}</div>
+                    <table class="info-table">
+                      <tr>
+                        <td class="label">From</td>
+                        <td class="value">${handover.fromUserName || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <td class="label">To</td>
+                        <td class="value">${handover.toUserName || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <td class="label">Date & Time</td>
+                        <td class="value">${formatDate(handover.handoverDate)}</td>
+                      </tr>
+                      <tr>
+                        <td class="label">Type</td>
+                        <td class="value">${handover.handoverType ? handover.handoverType.replace('_', ' ').toUpperCase() : 'N/A'}</td>
+                      </tr>
+                      ${handover.handoverNotes ? `
+                      <tr>
+                        <td class="label">Notes</td>
+                        <td class="value">${handover.handoverNotes}</td>
+                      </tr>
+                      ` : ''}
+                      ${handover.createdByName ? `
+                      <tr>
+                        <td class="label">Created By</td>
+                        <td class="value">${handover.createdByName}</td>
+                      </tr>
+                      ` : ''}
+                    </table>
+                  </div>
+                  `).join('')}
+                </div>
+                
+                <!-- Right Column -->
+                <div>
+                  ${handoverHistory.slice(Math.ceil(handoverHistory.length / 2)).map((handover, index) => `
+                  <div style="margin-bottom: 15px; border: 1px solid #ccc; padding: 8px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">Transfer #${Math.ceil(handoverHistory.length / 2) + index + 1}</div>
+                    <table class="info-table">
+                      <tr>
+                        <td class="label">From</td>
+                        <td class="value">${handover.fromUserName || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <td class="label">To</td>
+                        <td class="value">${handover.toUserName || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <td class="label">Date & Time</td>
+                        <td class="value">${formatDate(handover.handoverDate)}</td>
+                      </tr>
+                      <tr>
+                        <td class="label">Type</td>
+                        <td class="value">${handover.handoverType ? handover.handoverType.replace('_', ' ').toUpperCase() : 'N/A'}</td>
+                      </tr>
+                      ${handover.handoverNotes ? `
+                      <tr>
+                        <td class="label">Notes</td>
+                        <td class="value">${handover.handoverNotes}</td>
+                      </tr>
+                      ` : ''}
+                      ${handover.createdByName ? `
+                      <tr>
+                        <td class="label">Created By</td>
+                        <td class="value">${handover.createdByName}</td>
+                      </tr>
+                      ` : ''}
+                    </table>
+                  </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+            ` : ''}
+
+            <!-- Footer -->
+            <div class="footer">
+              <p>This document was generated from the LOTO Management System</p>
+              <p>Document ID: ${loto?.serialNumber || 'N/A'} | Generated: ${new Date().toLocaleString()}</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    // Write content to the new window
+    printWindow.document.write(printHTML);
+    printWindow.document.close();
+    
+    // Wait for content to load, then print
+    printWindow.onload = () => {
+      printWindow.print();
+      printWindow.close();
+    };
+  };
+
   const handleDelete = async () => {
     if (
       !window.confirm(
@@ -552,6 +1061,15 @@ const LOTOdetail = () => {
           <div className="header-actions">
             <button
               className="action-btn secondary"
+              onClick={handlePrint}
+            >
+              <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8a2 2 0 01-2 2H8a2 2 0 01-2-2v-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>{t('lotoDetails.print')}</span>
+            </button>
+            <button
+              className="action-btn secondary"
               onClick={fetchLOTO}
             >
               <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
@@ -629,7 +1147,7 @@ const LOTOdetail = () => {
                 </div>
                 <div className={`info-item ${loto.customCreatedAt ? 'custom-time-highlight' : ''}`}>
                   <span className="info-label">
-                    {t('lotoDetails.createdAt')}
+                    {loto.customCreatedAt ? t('lotoDetails.lotoDateTime') : t('lotoDetails.createdAt')}
                     {loto.customCreatedAt && (
                       <span className="custom-time-badge" title="This LOTO was created with a custom timestamp">
                         🕒 Backdated
@@ -647,6 +1165,38 @@ const LOTOdetail = () => {
                     })}
                   </span>
                 </div>
+                {loto.customCreatedAt && loto.createdAt && (
+                  <div className="info-item">
+                    <span className="info-label">
+                      {t('lotoDetails.actualCreatedAt')}
+                      <span style={{ 
+                        backgroundColor: '#059669', 
+                        color: 'white',
+                        padding: '4px 8px',
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        marginLeft: '8px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }} title="Actual system creation time">
+                        ✓ Actual
+                      </span>
+                    </span>
+                    <span className="info-value">
+                      {new Date(loto.createdAt).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
+                    </span>
+                  </div>
+                )}
                 <div className="info-item">
                   <span className="info-label">{t('lotoDetails.shift')}</span>
                   <span className="info-value">{loto.shift}</span>
