@@ -398,10 +398,7 @@ const LOTOdetail = () => {
                     </tr>
                   </table>
                 </div>
-              </div>
 
-              <!-- Right Column -->
-              <div>
                 <!-- Work Details -->
                 <div class="section">
                   <div class="section-title">Work Details</div>
@@ -424,6 +421,10 @@ const LOTOdetail = () => {
                     </tr>
                   </table>
                 </div>
+              </div>
+
+              <!-- Right Column -->
+              <div>
 
                 <!-- Energy Types -->
                 ${loto?.energyTypes && loto.energyTypes.length > 0 ? `
@@ -538,6 +539,24 @@ const LOTOdetail = () => {
                         <td class="value">${handover.createdByName}</td>
                       </tr>
                       ` : ''}
+                      ${handover.recipientStatus === 'accepted' && handover.recipientDecisionDate ? `
+                      <tr>
+                        <td class="label">Accepted On</td>
+                        <td class="value">${formatDate(handover.recipientDecisionDate)}</td>
+                      </tr>
+                      ` : ''}
+                      ${handover.verificationStatus === 'approved' && handover.verifiedByName ? `
+                      <tr>
+                        <td class="label">Approved By</td>
+                        <td class="value">${handover.verifiedByName}</td>
+                      </tr>
+                      ` : ''}
+                      ${handover.verificationStatus === 'approved' && handover.verificationDate ? `
+                      <tr>
+                        <td class="label">Approved On</td>
+                        <td class="value">${formatDate(handover.verificationDate)}</td>
+                      </tr>
+                      ` : ''}
                     </table>
                   </div>
                   `).join('')}
@@ -575,6 +594,24 @@ const LOTOdetail = () => {
                       <tr>
                         <td class="label">Created By</td>
                         <td class="value">${handover.createdByName}</td>
+                      </tr>
+                      ` : ''}
+                      ${handover.recipientStatus === 'accepted' && handover.recipientDecisionDate ? `
+                      <tr>
+                        <td class="label">Accepted On</td>
+                        <td class="value">${formatDate(handover.recipientDecisionDate)}</td>
+                      </tr>
+                      ` : ''}
+                      ${handover.verificationStatus === 'approved' && handover.verifiedByName ? `
+                      <tr>
+                        <td class="label">Approved By</td>
+                        <td class="value">${handover.verifiedByName}</td>
+                      </tr>
+                      ` : ''}
+                      ${handover.verificationStatus === 'approved' && handover.verificationDate ? `
+                      <tr>
+                        <td class="label">Approved On</td>
+                        <td class="value">${formatDate(handover.verificationDate)}</td>
                       </tr>
                       ` : ''}
                     </table>
