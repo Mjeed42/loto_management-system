@@ -68,6 +68,26 @@ const lotoSchema = new mongoose.Schema(
     verifiedAt: {
       type: Date,
     },
+    // Machine scan tracking for verification
+    scannedMachines: [{
+      serialNumber: {
+        type: String,
+        required: true,
+      },
+      machineName: {
+        type: String,
+        required: true,
+      },
+      scannedAt: {
+        type: Date,
+        default: Date.now,
+      },
+      scannedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+    }],
     rejectedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

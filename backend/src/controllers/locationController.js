@@ -22,6 +22,7 @@ exports.getLocations = async (req, res) => {
       parent: loc.parent,
       isLeaf: loc.isLeaf,
       isActive: loc.isActive,
+      serialNumber: loc.serialNumber || null, // Include serial number for machines
     }));
 
     res.status(200).json({
@@ -99,6 +100,7 @@ exports.getChildLocations = async (req, res) => {
       section: loc.section || null,
       parent: loc.parent,
       isLeaf: loc.isLeaf,
+      serialNumber: loc.serialNumber || null, // Include serial number for machines
     }));
 
     res.status(200).json({
@@ -121,7 +123,7 @@ exports.getChildLocations = async (req, res) => {
 // @access  Private (admin only)
 exports.createLocation = async (req, res) => {
   try {
-    const { name, code, type, parent, typeLabel, section } = req.body;
+    const { name, code, type, parent, typeLabel, section, serialNumber } = req.body;
 
     // Validate user role
     if (req.user.role !== "admin") {
@@ -177,6 +179,7 @@ exports.createLocation = async (req, res) => {
       parent: parent ? parent : null,
       isLeaf: type === "machine",
       isActive: true,
+      serialNumber: serialNumber || null, // Serial number for machines
     });
 
     // Update parent's children array
@@ -205,7 +208,7 @@ exports.createLocation = async (req, res) => {
 exports.updateLocation = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, code, type, parent, isActive, typeLabel, section } = req.body;
+    const { name, code, type, parent, isActive, typeLabel, section, serialNumber } = req.body;
 
     // Validate user role
     if (req.user.role !== "admin") {
@@ -252,6 +255,7 @@ exports.updateLocation = async (req, res) => {
     if (typeLabel !== undefined) location.typeLabel = typeLabel;
     if (section !== undefined) location.section = section;
     if (isActive !== undefined) location.isActive = isActive;
+    if (serialNumber !== undefined) location.serialNumber = serialNumber;
 
     // Handle parent change
     if (parent !== undefined) {

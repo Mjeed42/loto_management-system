@@ -15,6 +15,8 @@ const {
   addHandover,
   getHandoverHistory,
   deleteLOTO,
+  scanMachine,
+  getMachineScanStatus,
 } = require("../controllers/lotoController");
 
 const { verifyHandover, recipientDecision } = require("../controllers/handoverVerificationController");
@@ -27,6 +29,10 @@ router.route("/").post(protect, createLOTO).get(protect, getLOTOs);
 router.route("/:id").get(protect, getLOTO).put(protect, updateLOTO);
 
 router.route("/:id/verify").put(protect, verifyLOTO);
+
+router.route("/:id/scan-machine").post(protect, scanMachine);
+
+router.route("/:id/scan-status").get(protect, getMachineScanStatus);
 
 router.route("/:id/reject").put(protect, rejectLOTO);
 

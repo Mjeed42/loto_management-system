@@ -1,6 +1,6 @@
 // API Configuration for LOTO Management System
 // Set REACT_APP_API_URL in your .env.local file
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://loto-backend-643788243736.europe-west1.run.app';
 
 export const API_ENDPOINTS = {
   // Auth endpoints
@@ -29,6 +29,8 @@ export const API_ENDPOINTS = {
   LOTO_ACCEPT_HANDOVER: (id) => `${API_BASE_URL}/api/loto/${id}/accept-handover`,
   LOTO_REJECT_HANDOVER: (id) => `${API_BASE_URL}/api/loto/${id}/reject-handover`,
   LOTO_DELETE: (id) => `${API_BASE_URL}/api/loto/${id}`,
+  LOTO_SCAN_MACHINE: (id) => `${API_BASE_URL}/api/loto/${id}/scan-machine`,
+  LOTO_SCAN_STATUS: (id) => `${API_BASE_URL}/api/loto/${id}/scan-status`,
   
   // Health check
   HEALTH: `${API_BASE_URL}/api/health`,

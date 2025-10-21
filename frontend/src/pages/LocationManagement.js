@@ -33,6 +33,7 @@ const LocationManagement = () => {
     locationName: "",
     lineName: "",
     machineName: "",
+    serialNumber: "",
   });
 
   // Track context for what we're adding
@@ -132,6 +133,7 @@ const LocationManagement = () => {
           typeLabel: formData.typeLabel,
           section: formData.section,
           parent: formData.parent,
+          serialNumber: formData.serialNumber,
         };
         
         await axios.put(
@@ -382,6 +384,7 @@ const LocationManagement = () => {
       section: location.section || "",
       parent: location.parent || null,
       description: location.description || "",
+      serialNumber: location.serialNumber || "",
     });
     setShowEditModal(true);
   };
@@ -400,6 +403,7 @@ const LocationManagement = () => {
       type: "location",
       typeLabel: "",
       parent: null,
+      serialNumber: "",
       description: "",
       locationName: "",
       lineName: "",
@@ -837,6 +841,23 @@ const LocationManagement = () => {
                       Change how this level appears (e.g., "Department" instead of "line"). Leave empty to use default "{selectedLocation?.type}".
                     </small>
                   </div>
+
+                  {/* Serial Number field - only for machines */}
+                  {selectedLocation?.type === 'machine' && (
+                    <div className="form-group">
+                      <label>Serial Number (Optional)</label>
+                      <input
+                        type="text"
+                        value={formData.serialNumber || ''}
+                        onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
+                        placeholder="Enter machine serial number"
+                        style={{ fontFamily: 'monospace' }}
+                      />
+                      <small className="help-text">
+                        Serial number for barcode scanning during supervisor verification.
+                      </small>
+                    </div>
+                  )}
 
                   {/* Section field - only for root locations */}
                   {selectedLocation?.type === 'location' && (

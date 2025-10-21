@@ -8,6 +8,8 @@ import BackButton from "../components/BackButton";
 import RejectLOTOModal from "../components/RejectLOTOModal";
 import StatusChangeModal from "../components/StatusChangeModal";
 import HandoverModal from "../components/HandoverModal";
+import BarcodeScannerModal from "../components/BarcodeScannerModal";
+import { API_ENDPOINTS } from "../config/api";
 
 const LOTOdetail = () => {
   const { t } = useTranslation();
@@ -25,6 +27,9 @@ const LOTOdetail = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [handoverHistory, setHandoverHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [scannerModalOpen, setScannerModalOpen] = useState(false);
+  const [scanStatus, setScanStatus] = useState(null);
+  const [scanLoading, setScanLoading] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -98,6 +103,64 @@ const LOTOdetail = () => {
       setHandoverHistory([]);
     } finally {
       setHistoryLoading(false);
+    }
+  };
+
+  const fetchScanStatus = async () => {
+    try {
+      setScanLoading(true);
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.get(
+        API_ENDPOINTS.LOTO_SCAN_STATUS(id),
+        config
+      );
+
+      setScanStatus(res.data.data);
+      return res.data.data;
+    } catch (err) {
+      console.error("Error fetching scan status:", err);
+      return null;
+    } finally {
+      setScanLoading(false);
+    }
+  };
+
+  const handleScan = async (serialNumber) => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios.post(
+        API_ENDPOINTS.LOTO_SCAN_MACHINE(id),
+        { serialNumber },
+        config
+      );
+
+      // Refresh scan status
+      await fetchScanStatus();
+
+      // Success - the modal UI will update automatically with the scan status
+      // If all machines are scanned, close the modal and show success message
+      if (res.data.data.allScanned) {
+        setScannerModalOpen(false); // Close scanner immediately
+        setTimeout(() => {
+          alert("✅ All machines scanned successfully! You can now verify the LOTO.");
+        }, 300);
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || "Failed to scan machine";
+      // Don't show alert here - let the modal display the error
+      throw new Error(errorMsg);
     }
   };
 
@@ -825,6 +888,19 @@ const LOTOdetail = () => {
   };
 
   const handleVerify = async () => {
+    // First check if machine scanning is required
+    const status = await fetchScanStatus();
+    
+    if (status && status.requiredMachines && status.requiredMachines.length > 0) {
+      // Machine has a serial number, check if scanning is required
+      if (!status.allScanned) {
+        // Show scanner modal
+        setScannerModalOpen(true);
+        return;
+      }
+    }
+
+    // If no scanning required or all machines scanned, proceed with verification
     if (!window.confirm("Are you sure you want to verify this LOTO?")) return;
 
     try {
@@ -845,6 +921,11 @@ const LOTOdetail = () => {
       alert("LOTO verified successfully!");
       fetchLOTO();
     } catch (err) {
+      if (err.response?.data?.requiresScan) {
+        // Backend says scanning is required
+        setScannerModalOpen(true);
+        return;
+      }
       alert(err.response?.data?.message || t("lotoDetails.errorVerifyingLoto"));
     }
   };
@@ -2856,6 +2937,14 @@ const LOTOdetail = () => {
         onConfirm={handleHandoverConfirm}
         lotoData={selectedLotoForHandover}
         currentUser={currentUser}
+      />
+
+      {/* Barcode Scanner Modal */}
+      <BarcodeScannerModal
+        isOpen={scannerModalOpen}
+        onClose={() => setScannerModalOpen(false)}
+        onScan={handleScan}
+        requiredMachines={scanStatus?.requiredMachines || []}
       />
     </div>
   );

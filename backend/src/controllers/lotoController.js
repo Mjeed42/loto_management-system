@@ -316,6 +316,31 @@ exports.verifyLOTO = async (req, res) => {
 
     // Check if this is initial verification or handover verification
     if (loto.status === "pending_verification_new") {
+      // Check if machine scanning is required
+      if (loto.machine) {
+        // Get the Location model to check if machine has a serial number
+        const Location = require("../models/Location");
+        const machine = await Location.findOne({ 
+          name: loto.machine,
+          type: "machine"
+        });
+        
+        // If machine has a serial number, verify it has been scanned
+        if (machine && machine.serialNumber) {
+          const isScanned = loto.scannedMachines.some(
+            sm => sm.serialNumber === machine.serialNumber
+          );
+          
+          if (!isScanned) {
+            return res.status(400).json({
+              success: false,
+              message: "All machines must be scanned before verification. Please scan the machine barcode first.",
+              requiresScan: true,
+            });
+          }
+        }
+      }
+      
       // Initial verification of new LOTO
       loto.status = "active";
       loto.verifiedBy = req.user.id;
@@ -1655,6 +1680,218 @@ exports.getHandoverHistory = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Get handover history error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Scan machine during verification
+// @route   POST /api/loto/:id/scan-machine
+// @access  Private (supervisors/admins)
+exports.scanMachine = async (req, res) => {
+  try {
+    const { serialNumber } = req.body;
+    const loto = await LOTO.findById(req.params.id);
+
+    if (!loto) {
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    // Verify user is authorized to scan (supervisor or admin)
+    if (req.user.role !== "supervisor" && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to scan machines",
+      });
+    }
+
+    // Check if this LOTO has a specific supervisor assigned
+    if (loto.supervisor) {
+      // Only the assigned supervisor or admin can scan
+      if (
+        loto.supervisor.toString() !== req.user.id &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to scan machines for this LOTO - assigned to different supervisor",
+        });
+      }
+    }
+
+    // Verify LOTO is in pending_verification_new status
+    if (loto.status !== "pending_verification_new") {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot scan machines for LOTO with status: ${loto.status}`,
+      });
+    }
+
+    if (!serialNumber) {
+      return res.status(400).json({
+        success: false,
+        message: "Serial number is required",
+      });
+    }
+
+    // Get the Location model to find machine by serial number
+    const Location = require("../models/Location");
+    const machine = await Location.findOne({ 
+      serialNumber: serialNumber,
+      type: "machine"
+    });
+
+    if (!machine) {
+      return res.status(404).json({
+        success: false,
+        message: "Machine with this serial number not found",
+      });
+    }
+
+    // Check if this machine is part of the LOTO
+    // Machine field in LOTO can be a string with the machine name
+    // Do case-insensitive comparison and trim whitespace
+    const lotoMachineName = (loto.machine || "").trim().toLowerCase();
+    const scannedMachineName = (machine.name || "").trim().toLowerCase();
+    
+    if (lotoMachineName && lotoMachineName !== scannedMachineName) {
+      return res.status(400).json({
+        success: false,
+        message: `This machine is not part of this LOTO. Expected: "${loto.machine}", Scanned: "${machine.name}"`,
+      });
+    }
+    
+    // If LOTO has no machine specified, allow any machine scan
+    if (!loto.machine) {
+      return res.status(400).json({
+        success: false,
+        message: "This LOTO does not have a machine specified",
+      });
+    }
+
+    // Check if already scanned
+    const alreadyScanned = loto.scannedMachines.find(
+      sm => sm.serialNumber === serialNumber
+    );
+
+    if (alreadyScanned) {
+      return res.status(200).json({
+        success: true,
+        message: "Machine already scanned",
+        alreadyScanned: true,
+        data: {
+          scannedMachine: alreadyScanned,
+          allScanned: loto.scannedMachines.length >= 1, // For now, we assume 1 machine per LOTO
+        }
+      });
+    }
+
+    // Add to scanned machines
+    loto.scannedMachines.push({
+      serialNumber: serialNumber,
+      machineName: machine.name,
+      scannedAt: Date.now(),
+      scannedBy: req.user.id,
+    });
+
+    await loto.save();
+
+    // Populate the scanned machine
+    const updatedLOTO = await LOTO.findById(loto._id)
+      .populate("scannedMachines.scannedBy", "firstName lastName username");
+
+    res.status(200).json({
+      success: true,
+      message: "Machine scanned successfully",
+      data: {
+        scannedMachines: updatedLOTO.scannedMachines,
+        allScanned: updatedLOTO.scannedMachines.length >= 1, // For single machine
+      }
+    });
+  } catch (error) {
+    console.error("❌ Scan machine error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get machine scan status for a LOTO
+// @route   GET /api/loto/:id/scan-status
+// @access  Private (supervisors/admins)
+exports.getMachineScanStatus = async (req, res) => {
+  try {
+    const loto = await LOTO.findById(req.params.id)
+      .populate("scannedMachines.scannedBy", "firstName lastName username");
+
+    if (!loto) {
+      return res.status(404).json({
+        success: false,
+        message: "LOTO not found",
+      });
+    }
+
+    // Verify user is authorized
+    if (req.user.role !== "supervisor" && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view scan status",
+      });
+    }
+
+    // Get machine details from Location collection
+    const Location = require("../models/Location");
+    const requiredMachines = [];
+    
+    // If LOTO has a machine, get its details
+    if (loto.machine) {
+      // Use case-insensitive regex search for machine name
+      const machine = await Location.findOne({ 
+        name: { $regex: new RegExp(`^${loto.machine.trim()}$`, 'i') },
+        type: "machine"
+      });
+      
+      if (machine) {
+        const isScanned = loto.scannedMachines.some(
+          sm => sm.serialNumber === machine.serialNumber
+        );
+        
+        requiredMachines.push({
+          name: machine.name,
+          serialNumber: machine.serialNumber,
+          isScanned: isScanned,
+          scannedAt: isScanned 
+            ? loto.scannedMachines.find(sm => sm.serialNumber === machine.serialNumber).scannedAt 
+            : null,
+        });
+      }
+    }
+
+    const allScanned = requiredMachines.length > 0 && 
+                       requiredMachines.every(m => m.isScanned);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        lotoId: loto._id,
+        lotoSerialNumber: loto.serialNumber,
+        status: loto.status,
+        requiredMachines: requiredMachines,
+        scannedMachines: loto.scannedMachines,
+        allScanned: allScanned,
+        canVerify: allScanned && loto.status === "pending_verification_new",
+      }
+    });
+  } catch (error) {
+    console.error("❌ Get machine scan status error:", error);
     res.status(500).json({
       success: false,
       message: "Server Error",

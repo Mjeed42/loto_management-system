@@ -48,6 +48,12 @@ const locationSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    serialNumber: {
+      type: String,
+      trim: true,
+      // Serial number for machines (used for barcode scanning during verification)
+      // Only required for type === "machine"
+    },
     isActive: {
       type: Boolean,
       default: true,

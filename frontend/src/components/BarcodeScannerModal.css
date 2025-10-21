@@ -1,0 +1,196 @@
+.barcode-scanner-modal {
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.scanner-container {
+  position: relative;
+  width: 100%;
+  min-height: 400px;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+#barcode-scanner {
+  width: 100%;
+  min-height: 400px;
+}
+
+#barcode-scanner video {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.scanner-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: white;
+}
+
+.scanner-loading .spinner {
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.scanner-instructions {
+  background: #f8f9fa;
+  padding: 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.scanner-instructions h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.scanner-instructions ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.scanner-instructions li {
+  margin-bottom: 0.5rem;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.machines-list {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.machines-list h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.machines-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+}
+
+.machines-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.machines-checklist li.scanned {
+  background: #d1fae5;
+  border: 1px solid #34d399;
+}
+
+.machines-checklist li span:first-of-type {
+  flex: 1;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.machines-checklist li .serial-number {
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: #6b7280;
+  background: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.machines-checklist li.scanned .serial-number {
+  background: #fff;
+  border-color: #34d399;
+}
+
+.machines-checklist li .scan-time {
+  font-size: 0.75rem;
+  color: #059669;
+  font-style: italic;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.alert-success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #34d399;
+}
+
+.alert-success:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .barcode-scanner-modal {
+    max-width: 95%;
+    margin: 1rem;
+  }
+
+  .scanner-container {
+    min-height: 300px;
+  }
+
+  #barcode-scanner {
+    min-height: 300px;
+  }
+
+  .machines-checklist li {
+    flex-wrap: wrap;
+  }
+
+  .machines-checklist li .serial-number,
+  .machines-checklist li .scan-time {
+    flex-basis: 100%;
+    margin-top: 0.25rem;
+  }
+}
+
