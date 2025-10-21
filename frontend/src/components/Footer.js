@@ -1,10 +1,31 @@
 import React from 'react';
 import Icon from './Icon';
 
-const Footer = () => {
+const Footer = ({ showTerms = false }) => {
   return (
     <footer className="footer-container">
       <div className="footer-content">
+        {/* Terms and Privacy - shown on login page */}
+        {showTerms && (
+          <div className="footer-terms">
+            <span>Before using this app, you can review our </span>
+            <a 
+              href="/privacy-policy"
+              className="footer-terms-link"
+            >
+              privacy policy
+            </a>
+            <span> and </span>
+            <a 
+              href="/terms-of-service"
+              className="footer-terms-link"
+            >
+              terms of service
+            </a>
+            <span>.</span>
+          </div>
+        )}
+
         {/* Copyright */}
         <div className="footer-copyright">
           © Pepsico 2025

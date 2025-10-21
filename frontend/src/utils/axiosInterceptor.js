@@ -93,8 +93,9 @@ axios.interceptors.response.use(
         processQueue(refreshError, null);
         clearAccessToken();
         
-        // Redirect to login page
-        if (window.location.pathname !== '/') {
+        // Redirect to login page (except for public pages)
+        const publicPages = ['/', '/privacy-policy', '/terms-of-service'];
+        if (!publicPages.includes(window.location.pathname)) {
           window.location.href = '/';
         }
         
@@ -108,8 +109,9 @@ axios.interceptors.response.use(
     if (error.response?.status === 401) {
       clearAccessToken();
       
-      // Redirect to login page if not already there
-      if (window.location.pathname !== '/') {
+      // Redirect to login page if not already there (except for public pages)
+      const publicPages = ['/', '/privacy-policy', '/terms-of-service'];
+      if (!publicPages.includes(window.location.pathname)) {
         window.location.href = '/';
       }
     }

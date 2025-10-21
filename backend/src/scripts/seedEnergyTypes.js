@@ -1,9 +1,15 @@
 const mongoose = require("mongoose");
 const EnergyType = require("../models/EnergyType");
+require("dotenv").config();
 
-// Direct connection string (for testing)
-const MONGO_URI =
-  "mongodb+srv://loto_app_user:6hsMKn4SwqFKpPtV@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
+// MongoDB connection string from environment variable
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("❌ ERROR: MONGODB_URI environment variable is not set!");
+  console.error("Please set MONGODB_URI in your .env file");
+  process.exit(1);
+}
 
 const seedEnergyTypes = async () => {
   try {
@@ -108,6 +114,10 @@ const seedEnergyTypes = async () => {
 
 // Run the seeder
 seedEnergyTypes();
+
+
+
+
 
 
 

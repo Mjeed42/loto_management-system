@@ -2,9 +2,14 @@ const mongoose = require("mongoose");
 const Location = require("../models/Location");
 require("dotenv").config();
 
-// MongoDB connection
-const MONGO_URI = process.env.MONGODB_URI ||  
-  "mongodb+srv://loto_app_user:6hsMKn4SwqFKpPtV@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
+// MongoDB connection string from environment variable
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("❌ ERROR: MONGODB_URI environment variable is not set!");
+  console.error("Please set MONGODB_URI in your .env file");
+  process.exit(1);
+}
 
 // Location hierarchy data based on current system
 const locationData = [

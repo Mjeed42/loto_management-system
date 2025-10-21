@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../contexts/AuthContext";
 import Icon from "./Icon";
 
 const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed like GitHub
   // Use the mobile state from parent component
   const mobileOpen = isMobileOpen !== undefined ? isMobileOpen : false;
@@ -210,20 +212,9 @@ const Sidebar = ({ currentUser, onCollapse, isMobileOpen, setIsMobileOpen }) => 
         <div className="sidebar-footer">
           <button 
             className="nav-item logout-item"
-            onClick={() => {
-              // Clear tokens and storage
-              localStorage.removeItem("token");
-              sessionStorage.clear();
-              
-              // Clear all cookies
-              document.cookie.split(";").forEach((cookie) => {
-                const eqPos = cookie.indexOf("=");
-                const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-                document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-              });
-              
-              // Hard refresh to reset app state
-              window.location.href = "/";
+            onClick={async () => {
+              await logout();
+              navigate("/");
             }}
             title={isCollapsed ? t('sidebar.logout') : t('sidebar.signOut')}
           >

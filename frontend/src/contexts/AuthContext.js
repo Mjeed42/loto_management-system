@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { migrateAuthSystem } from '../utils/authMigration';
@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const hasInitialized = useRef(false);
 
   // Idle timeout tracking (30 minutes)
   const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
@@ -83,6 +84,7 @@ export const AuthProvider = ({ children }) => {
   // Refresh access token
   const refreshToken = useCallback(async () => {
     try {
+      console.log('Attempting to refresh token...');
       const response = await axios.post(
         API_ENDPOINTS.REFRESH,
         {},
@@ -90,13 +92,15 @@ export const AuthProvider = ({ children }) => {
       );
 
       if (response.data.success) {
+        console.log('Token refresh successful');
         setAccessToken(response.data.accessToken);
         updateActivity();
         return response.data.accessToken;
       }
+      console.log('Token refresh failed: No success in response');
       return null;
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error('Token refresh failed:', error.response?.data || error.message);
       return null;
     }
   }, [updateActivity]);
@@ -226,6 +230,12 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize authentication on mount
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+    
+    console.log('Initializing authentication...');
+    console.log('Cookies:', document.cookie);
+    
     // Migrate from old auth system if needed
     const migrated = migrateAuthSystem();
     
@@ -233,20 +243,29 @@ export const AuthProvider = ({ children }) => {
     const initAuth = async () => {
       if (migrated) {
         // If migration occurred, don't try to refresh (old token was cleared)
+        console.log('Migration detected, skipping token refresh');
         setIsLoading(false);
         return;
       }
       
-      const newToken = await refreshToken();
-      if (newToken) {
-        await fetchCurrentUser();
-      } else {
+      try {
+        console.log('Attempting to refresh token on page load...');
+        const newToken = await refreshToken();
+        if (newToken) {
+          console.log('Token refresh successful, fetching user...');
+          await fetchCurrentUser();
+        } else {
+          console.log('No token received from refresh, user needs to log in');
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Initialization error:', error);
         setIsLoading(false);
       }
     };
 
     initAuth();
-  }, []);
+  }, [refreshToken, fetchCurrentUser]);
 
   const value = {
     user,

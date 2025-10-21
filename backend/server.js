@@ -32,15 +32,17 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log(`✅ CORS allowed origin: ${origin}`);
       callback(null, true);
     } else {
-      console.log(`CORS blocked origin: ${origin}`);
+      console.log(`❌ CORS blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true, // Allow cookies to be sent
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  exposedHeaders: ["Set-Cookie"],
 }));
 
 app.use(morgan("combined"));
@@ -67,11 +69,13 @@ console.log(
   process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 0
 );
 
-// Direct connection string (for testing)
-const MONGO_URI =
-  "mongodb+srv://loto_app_user:6hsMKn4SwqFKpPtV@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
-process.env.MONGODB_URI ||
-  "mongodb+srv://loto_app_user:6hsMKn4SwqFKpPtV@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
+// MongoDB connection string from environment variable
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("❌ ERROR: MONGODB_URI environment variable is not set!");
+  process.exit(1);
+}
 
 console.log("Using connection string:", MONGO_URI.replace(/:[^:@]+@/, ":***@")); // Hide password in logs
 

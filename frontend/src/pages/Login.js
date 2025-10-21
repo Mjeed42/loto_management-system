@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
+import Footer from "../components/Footer";
 
 const Login = () => {
   const { t, i18n } = useTranslation();
@@ -168,6 +169,7 @@ const Login = () => {
        
       </div>
       
+      <Footer showTerms={true} />
     </div>
   );
 };

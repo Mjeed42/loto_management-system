@@ -3,13 +3,19 @@ const bcrypt = require("bcryptjs");
 const csv = require("csv-parser");
 const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
 
 // Adjust this path to match your project structure
 const User = require("../src/models/User");
 
-const MONGO_URI =
-  process.env.MONGO_URI ||
-  "mongodb+srv://loto_app_user:6hsMKn4SwqFKpPtV@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
+// MongoDB connection string from environment variable
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("❌ ERROR: MONGODB_URI environment variable is not set!");
+  console.error("Please set MONGODB_URI in your .env file");
+  process.exit(1);
+}
 
 // Path to your uploaded CSV
 const CSV_PATH = path.join(__dirname, "employees.csv");

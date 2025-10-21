@@ -35,6 +35,8 @@ import TranslationTest from "./components/TranslationTest";
 import MonitoringDashboard from "./pages/MonitoringDashboard";
 import LocationManagement from "./pages/LocationManagement";
 import EnergyTypesManagement from "./pages/EnergyTypesManagement";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 
 // AppContent component that has access to useLocation and useAuth
@@ -44,8 +46,10 @@ const AppContent = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed (hidden) by default
   const [isMobileOpen, setIsMobileOpen] = useState(false); // Mobile sidebar state
   
-  // Check if we're on the login page
-  const isLoginPage = location.pathname === "/";
+  // Check if we're on the login page or legal pages
+  const isLoginPage = location.pathname === "/" || 
+                      location.pathname === "/privacy-policy" || 
+                      location.pathname === "/terms-of-service";
   
   // Check if user is logged in and not on login page - also check loading state
   const showSidebar = currentUser && !isLoginPage && !isLoading;
@@ -96,6 +100,8 @@ const AppContent = () => {
           <main className={`content-area ${isLoginPage ? 'login-content' : ''}`}>
             <Routes>
               <Route path="/" element={<Login />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/Home" element={
                 currentUser?.role === "technician" ? 
                   <div>Access Denied - Technicians should use /technician-home</div> : 

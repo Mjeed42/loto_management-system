@@ -99,6 +99,14 @@ const login = async (req, res) => {
     });
 
     console.log("Tokens generated successfully for user:", user.username);
+    console.log("Setting cookie with options:", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: rememberMe ? refreshTokenExpiry : undefined,
+      path: "/",
+      rememberMe: rememberMe
+    });
 
     // Set refresh token as httpOnly cookie
     res.cookie("refreshToken", refreshToken, {
@@ -108,6 +116,8 @@ const login = async (req, res) => {
       maxAge: rememberMe ? refreshTokenExpiry : undefined, // Session cookie if not remember me
       path: "/",
     });
+    
+    console.log("Cookie set successfully");
 
     // Send access token in response (to be stored in memory)
     res.status(200).json({
@@ -138,9 +148,14 @@ const login = async (req, res) => {
 // @access  Public (requires valid refresh token in cookie)
 const refreshAccessToken = async (req, res) => {
   try {
+    console.log("Refresh token request received");
+    console.log("Request origin:", req.headers.origin);
+    console.log("Cookies received:", Object.keys(req.cookies));
+    
     const { refreshToken } = req.cookies;
 
     if (!refreshToken) {
+      console.log("No refresh token found in cookies");
       return res.status(401).json({
         success: false,
         message: "No refresh token provided",

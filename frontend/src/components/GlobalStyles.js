@@ -1,6 +1,6 @@
 import React from "react";
 const GlobalStyles = () => (
-  <style jsx global>{`
+  <style>{`
     @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
     
     /* Force light theme only - no dark mode support */
@@ -3401,22 +3401,41 @@ const GlobalStyles = () => (
     
     /* ============ PepsiCo Logo Styles ============ */
     
-   .login-card {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+   .login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+}
+
+.login-card {
+  position: relative;
   width: 500px;
+  max-width: 90%;
   padding: 2.5rem 2.5rem;
   background: #ffffff;
   border-radius: 18px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
   text-align: center;
   color: #333;
-  z-index: 10;
   transition: all 0.3s ease;
   /* Keep logo and title in same position regardless of RTL/LTR */
   direction: ltr;
+}
+
+.login-page .footer-container {
+  width: 500px;
+  max-width: 90%;
+  background-color: #1f2937;
+  color: #f9fafb;
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
+  border-top: none;
+  margin-top: auto;
+  padding: 1.5rem;
 }
 
 /* Logo */
@@ -3562,10 +3581,16 @@ const GlobalStyles = () => (
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
+  .login-page {
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+
   .login-card {
     width: 85%;
-    padding: 1rem;
-    box-shadow: 0 4px 16px rgb(0, 0, 0);
+    max-width: 500px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   }
 
   .login-card .logo {
@@ -11434,6 +11459,26 @@ element {
       transform: rotate(360deg);
     }
 
+    /* Footer Terms and Privacy */
+    .footer-terms {
+      font-size: 13px;
+      color: #d1d5db;
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-terms-link {
+      color: #60a5fa;
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .footer-terms-link:hover {
+      color: #3b82f6;
+    }
+
     /* ===== RTL SUPPORT FOR FOOTER ===== */
     
     /* Footer Container RTL */
@@ -11498,6 +11543,230 @@ element {
     @media (max-width: 576px) {
       .footer-content {
         padding: 0.5rem 0.75rem;
+      }
+    }
+
+    /* ============ Legal Pages Styles (Privacy Policy & Terms of Service) ============ */
+    
+    .legal-page-container {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .legal-page-content {
+      max-width: 900px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 3rem;
+      margin: 2rem auto;
+      position: relative;
+    }
+
+    .legal-page-content .back-button {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      background: transparent;
+      border: 2px solid #0033a0;
+      color: #0033a0;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .legal-page-content .back-button:hover {
+      background: #0033a0;
+      color: #ffffff;
+      transform: translateX(-3px);
+    }
+
+    .legal-page-content h1 {
+      color: #0033a0;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-top: 3rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      border-bottom: 3px solid #0033a0;
+      padding-bottom: 1rem;
+    }
+
+    .legal-page-content .last-updated {
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.9rem;
+      font-style: italic;
+      margin-bottom: 2rem;
+    }
+
+    .legal-page-content section {
+      margin-bottom: 2.5rem;
+    }
+
+    .legal-page-content h2 {
+      color: #1f2937;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .legal-page-content h3 {
+      color: #374151;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .legal-page-content p {
+      color: #4b5563;
+      font-size: 1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+    }
+
+    .legal-page-content ul {
+      margin: 1rem 0;
+      padding-left: 2rem;
+    }
+
+    .legal-page-content li {
+      color: #4b5563;
+      font-size: 1rem;
+      line-height: 1.8;
+      margin-bottom: 0.5rem;
+    }
+
+    .legal-page-content a {
+      color: #0033a0;
+      text-decoration: underline;
+      transition: color 0.2s ease;
+    }
+
+    .legal-page-content a:hover {
+      color: #002070;
+    }
+
+    .legal-page-content strong {
+      color: #1f2937;
+      font-weight: 600;
+    }
+
+    .legal-page-content .contact-info {
+      background: #f9fafb;
+      border-left: 4px solid #0033a0;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+
+    .legal-page-content .contact-info p {
+      margin-bottom: 0.5rem;
+    }
+
+    .legal-page-content .policy-footer {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 2px solid #e5e7eb;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+
+    .legal-page-content .policy-footer p {
+      margin-bottom: 0.5rem;
+    }
+
+    .legal-page-content .acknowledgment-section {
+      background: #fef3c7;
+      border: 2px solid #f59e0b;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-top: 2rem;
+    }
+
+    .legal-page-content .acknowledgment-section h2 {
+      color: #92400e;
+      border-bottom: 2px solid #f59e0b;
+    }
+
+    .legal-page-content .important-notice {
+      color: #92400e;
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+
+    .legal-page-content .safety-reminder {
+      color: #dc2626;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    /* Responsive Design for Legal Pages */
+    @media (max-width: 768px) {
+      .legal-page-content {
+        padding: 2rem 1.5rem;
+        margin: 1rem;
+      }
+
+      .legal-page-content .back-button {
+        position: static;
+        margin-bottom: 1rem;
+        width: fit-content;
+      }
+
+      .legal-page-content h1 {
+        font-size: 2rem;
+        margin-top: 1rem;
+      }
+
+      .legal-page-content h2 {
+        font-size: 1.3rem;
+      }
+
+      .legal-page-content h3 {
+        font-size: 1.1rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .legal-page-container {
+        padding: 1rem 0.5rem;
+      }
+
+      .legal-page-content {
+        padding: 1.5rem 1rem;
+        border-radius: 12px;
+      }
+
+      .legal-page-content h1 {
+        font-size: 1.75rem;
+      }
+
+      .legal-page-content p,
+      .legal-page-content li {
+        font-size: 0.95rem;
+      }
+
+      .legal-page-content ul {
+        padding-left: 1.5rem;
       }
     }
     }

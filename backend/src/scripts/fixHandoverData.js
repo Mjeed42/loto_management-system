@@ -1,9 +1,16 @@
 const mongoose = require('mongoose');
 const LOTO = require('../models/LOTO');
 const User = require('../models/User');
+require('dotenv').config();
 
-// Connect to MongoDB
-const MONGO_URI = "mongodb+srv://loto_app_user:6hsMKn4SwqFKpPtV@loto-cluster.e2qnwyn.mongodb.net/loto-app?retryWrites=true&w=majority";
+// MongoDB connection string from environment variable
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("❌ ERROR: MONGODB_URI environment variable is not set!");
+  console.error("Please set MONGODB_URI in your .env file");
+  process.exit(1);
+}
 
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
