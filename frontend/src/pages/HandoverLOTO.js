@@ -46,7 +46,7 @@ const HandoverLOTO = () => {
       };
 
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/users/technicians",
+        "/api/users/technicians",
         config
       );
 
@@ -101,7 +101,7 @@ const HandoverLOTO = () => {
       };
 
       await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/handover`,
+        `/api/loto/${id}/handover`,
         handoverData,
         config
       );

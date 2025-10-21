@@ -35,7 +35,7 @@ const DatabaseExport = () => {
       };
 
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        "/api/auth/me",
         config
       );
       setCurrentUser(res.data.user);
@@ -80,19 +80,19 @@ const DatabaseExport = () => {
       let endpoint = "";
       switch (collectionName) {
         case "lotos":
-          endpoint = "https://loto-backend-643788243736.europe-west1.run.app/api/loto";
+          endpoint = "/api/loto";
           break;
         case "users":
-          endpoint = "https://loto-backend-643788243736.europe-west1.run.app/api/admin/users";
+          endpoint = "/api/admin/users";
           break;
         case "locations":
-          endpoint = "https://loto-backend-643788243736.europe-west1.run.app/api/locations";
+          endpoint = "/api/locations";
           break;
         case "energytypes":
-          endpoint = "https://loto-backend-643788243736.europe-west1.run.app/api/energy-types";
+          endpoint = "/api/energy-types";
           break;
         case "handovernotifications":
-          endpoint = "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover/all";
+          endpoint = "/api/notifications/handover/all";
           break;
         default:
           throw new Error(`Unknown collection: ${collectionName}`);

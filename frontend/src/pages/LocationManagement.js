@@ -85,7 +85,7 @@ const LocationManagement = () => {
       };
 
       // Always include inactive locations in management view
-      const url = "https://loto-backend-643788243736.europe-west1.run.app/api/locations?includeInactive=true";
+      const url = "/api/locations?includeInactive=true";
 
       const res = await axios.get(url, config);
 
@@ -135,7 +135,7 @@ const LocationManagement = () => {
         };
         
         await axios.put(
-          `https://loto-backend-643788243736.europe-west1.run.app/api/locations/${selectedLocation._id}`,
+          `/api/locations/${selectedLocation._id}`,
           submitData,
           config
         );
@@ -155,7 +155,7 @@ const LocationManagement = () => {
         if (!location) {
           // Create new location
           const locRes = await axios.post(
-            "https://loto-backend-643788243736.europe-west1.run.app/api/locations",
+            "/api/locations",
             {
               name: locationName.trim(),
               code: locationName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '-'),
@@ -171,7 +171,7 @@ const LocationManagement = () => {
         if (lineName && lineName.trim()) {
           // Refresh locations to get updated children
           const locationsRes = await axios.get(
-            "https://loto-backend-643788243736.europe-west1.run.app/api/locations",
+            "/api/locations",
             config
           );
           const allLocs = locationsRes.data.data || [];
@@ -184,7 +184,7 @@ const LocationManagement = () => {
           if (!line) {
             // Create new line
             const lineRes = await axios.post(
-              "https://loto-backend-643788243736.europe-west1.run.app/api/locations",
+              "/api/locations",
               {
                 name: lineName.trim(),
                 code: lineName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '-'),
@@ -208,7 +208,7 @@ const LocationManagement = () => {
             for (const mName of machineNames) {
               setCreationProgress(`Creating machine ${createdCount + 1}/${machineNames.length}: ${mName}`);
               await axios.post(
-                "https://loto-backend-643788243736.europe-west1.run.app/api/locations",
+                "/api/locations",
                 {
                   name: mName,
                   code: mName.toUpperCase().replace(/[^A-Z0-9]/g, '-'),
@@ -267,8 +267,8 @@ const LocationManagement = () => {
 
       // Add cascade parameter if location has children
       const url = hasChildren
-        ? `https://loto-backend-643788243736.europe-west1.run.app/api/locations/${selectedLocation._id}?cascade=true`
-        : `https://loto-backend-643788243736.europe-west1.run.app/api/locations/${selectedLocation._id}`;
+        ? `/api/locations/${selectedLocation._id}?cascade=true`
+        : `/api/locations/${selectedLocation._id}`;
 
       await axios.delete(url, config);
 
@@ -313,7 +313,7 @@ const LocationManagement = () => {
 
       // Make the API call
       await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/locations/${location._id}`,
+        `/api/locations/${location._id}`,
         {
           name: location.name,
           code: location.code,

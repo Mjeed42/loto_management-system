@@ -69,7 +69,7 @@ const LOTOList = () => {
         },
       };
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        "/api/auth/me",
         config
       );
       setCurrentUser(res.data.user);
@@ -95,7 +95,7 @@ const LOTOList = () => {
         },
       };
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/loto",
+        "/api/loto",
         config
       );
 
@@ -163,7 +163,7 @@ const LOTOList = () => {
 
       const API_BASE_URL =
         process.env.REACT_APP_API_URL ||
-        "https://loto-backend-643788243736.europe-west1.run.app/api";
+        "/api";
 
       const response = await axios.delete(
         `${API_BASE_URL}/loto/${lotoId}`,
@@ -229,7 +229,7 @@ const LOTOList = () => {
         },
       };
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/verify`,
+        `/api/loto/${lotoId}/verify`,
         {},
         config
       );
@@ -268,7 +268,7 @@ const LOTOList = () => {
       };
 
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${selectedLotoForRejection._id}/reject`,
+        `/api/loto/${selectedLotoForRejection._id}/reject`,
         rejectionData,
         config
       );
@@ -320,7 +320,7 @@ const LOTOList = () => {
       };
 
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${selectedLotoForStatusChange._id}/status`,
+        `/api/loto/${selectedLotoForStatusChange._id}/status`,
         statusData,
         config
       );
@@ -358,7 +358,7 @@ const LOTOList = () => {
       };
 
       const res = await axios.post(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${selectedLotoForHandover._id}/handover`,
+        `/api/loto/${selectedLotoForHandover._id}/handover`,
         handoverData,
         config
       );
@@ -400,7 +400,7 @@ const LOTOList = () => {
       const verificationNotes = prompt("Enter verification notes (optional):");
 
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/handover/${handoverIndex}/verify`,
+        `/api/loto/${lotoId}/handover/${handoverIndex}/verify`,
         {
           action: "approve",
           verificationNotes: verificationNotes || "",
@@ -453,7 +453,7 @@ const LOTOList = () => {
       const verificationNotes = prompt("Enter verification notes (optional):");
 
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/handover/${handoverIndex}/verify`,
+        `/api/loto/${lotoId}/handover/${handoverIndex}/verify`,
         {
           action: "reject",
           rejectionReason: rejectionReason,
@@ -495,7 +495,7 @@ const LOTOList = () => {
       };
 
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${lotoId}/handover/${handoverIndex}/recipient-decision`,
+        `/api/loto/${lotoId}/handover/${handoverIndex}/recipient-decision`,
         {
           action,
           decisionNotes,

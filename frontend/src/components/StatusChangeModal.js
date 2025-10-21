@@ -32,7 +32,7 @@ const StatusChangeModal = ({ isOpen, onClose, onConfirm, lotoData, currentStatus
       
       // Fetch all users (technicians and supervisors) for handover
       const res = await fetch(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/users",
+        "/api/users",
         {
           headers: {
             Authorization: `Bearer ${token}`,

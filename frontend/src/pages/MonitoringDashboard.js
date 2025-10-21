@@ -48,7 +48,7 @@ const MonitoringDashboard = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        "/api/auth/me",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setCurrentUser(res.data.user);
@@ -63,8 +63,8 @@ const MonitoringDashboard = () => {
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
       const [lotosRes, usersRes] = await Promise.all([
-        axios.get("https://loto-backend-643788243736.europe-west1.run.app/api/loto", config),
-        axios.get("https://loto-backend-643788243736.europe-west1.run.app/api/admin/users", config),
+        axios.get("/api/loto", config),
+        axios.get("/api/admin/users", config),
       ]);
 
       const lotosData = Array.isArray(lotosRes.data?.data) ? lotosRes.data.data : [];

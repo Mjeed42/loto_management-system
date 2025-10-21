@@ -70,7 +70,7 @@ const AdminHome = () => {
 
       // Fetch users
       const usersRes = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/admin/users",
+        "/api/admin/users",
         config
       );
 
@@ -114,7 +114,7 @@ const AdminHome = () => {
       };
 
       await axios.post(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/admin/users",
+        "/api/admin/users",
         formData,
         config
       );
@@ -157,7 +157,7 @@ const AdminHome = () => {
       };
 
       await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/admin/users/${userId}/reset-password`,
+        `/api/admin/users/${userId}/reset-password`,
         { newPassword },
         config
       );
@@ -183,7 +183,7 @@ const AdminHome = () => {
       };
 
       await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/admin/users/${userId}/toggle-status`,
+        `/api/admin/users/${userId}/toggle-status`,
         {},
         config
       );
@@ -212,7 +212,7 @@ const AdminHome = () => {
       };
 
       await axios.delete(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/admin/users/${userId}`,
+        `/api/admin/users/${userId}`,
         config
       );
 

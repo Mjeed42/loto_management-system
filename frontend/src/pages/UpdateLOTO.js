@@ -87,7 +87,7 @@ const UpdateLOTO = () => {
       };
 
       const res = await axios.get(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
+        `/api/loto/${id}`,
         config
       );
 
@@ -202,7 +202,7 @@ const UpdateLOTO = () => {
       };
 
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/users/supervisors",
+        "/api/users/supervisors",
         config
       );
 
@@ -237,7 +237,7 @@ const UpdateLOTO = () => {
       };
 
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        "/api/auth/me",
         config
       );
 
@@ -260,7 +260,7 @@ const UpdateLOTO = () => {
       };
 
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/locations",
+        "/api/locations",
         config
       );
       
@@ -288,7 +288,7 @@ const UpdateLOTO = () => {
       };
 
       const res = await axios.get(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/locations/${locationId}/children`,
+        `/api/locations/${locationId}/children`,
         config
       );
       
@@ -318,7 +318,7 @@ const UpdateLOTO = () => {
       };
 
       const res = await axios.get(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/locations/${lineId}/children`,
+        `/api/locations/${lineId}/children`,
         config
       );
       
@@ -349,7 +349,7 @@ const UpdateLOTO = () => {
       };
 
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/energy-types",
+        "/api/energy-types",
         config
       );
       
@@ -568,7 +568,7 @@ const UpdateLOTO = () => {
       console.log("Sending update data:", dataToSend);
 
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
+        `/api/loto/${id}`,
         dataToSend,
         config
       );

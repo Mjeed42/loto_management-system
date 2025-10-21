@@ -1,6 +1,10 @@
 import axios from 'axios';
 import { getAccessToken, setAccessToken, clearAccessToken } from '../contexts/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
+import API_BASE_URL from '../config/api';
+
+// Set axios base URL from configuration
+axios.defaults.baseURL = API_BASE_URL;
 
 let isRefreshing = false;
 let failedQueue = [];

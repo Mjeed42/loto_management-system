@@ -65,7 +65,7 @@ const EnergyTypesManagement = () => {
       };
 
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/energy-types?includeInactive=true",
+        "/api/energy-types?includeInactive=true",
         config
       );
 
@@ -149,7 +149,7 @@ const EnergyTypesManagement = () => {
       if (showAddModal) {
         setIsCreating(true);
         await axios.post(
-          "https://loto-backend-643788243736.europe-west1.run.app/api/energy-types",
+          "/api/energy-types",
           formData,
           config
         );
@@ -157,7 +157,7 @@ const EnergyTypesManagement = () => {
       } else if (showEditModal) {
         setIsUpdating(true);
         await axios.put(
-          `https://loto-backend-643788243736.europe-west1.run.app/api/energy-types/${selectedEnergyType._id}`,
+          `/api/energy-types/${selectedEnergyType._id}`,
           formData,
           config
         );
@@ -186,7 +186,7 @@ const EnergyTypesManagement = () => {
       };
 
       await axios.delete(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/energy-types/${selectedEnergyType._id}`,
+        `/api/energy-types/${selectedEnergyType._id}`,
         config
       );
 
@@ -211,7 +211,7 @@ const EnergyTypesManagement = () => {
       };
 
       await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/energy-types/${energyType._id}/toggle-visibility`,
+        `/api/energy-types/${energyType._id}/toggle-visibility`,
         {},
         config
       );

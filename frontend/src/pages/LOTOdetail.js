@@ -44,7 +44,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        "/api/auth/me",
         config
       );
       setCurrentUser(res.data.user);
@@ -63,7 +63,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.get(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
+        `/api/loto/${id}`,
         config
       );
 
@@ -88,7 +88,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.get(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/handover-history`,
+        `/api/loto/${id}/handover-history`,
         config
       );
 
@@ -808,7 +808,7 @@ const LOTOdetail = () => {
       };
 
       await axios.delete(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}`,
+        `/api/loto/${id}`,
         config
       );
 
@@ -836,7 +836,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/verify`,
+        `/api/loto/${id}/verify`,
         {},
         config
       );
@@ -867,7 +867,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${selectedLotoForRejection._id}/reject`,
+        `/api/loto/${selectedLotoForRejection._id}/reject`,
         rejectionData,
         config
       );
@@ -904,7 +904,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${selectedLotoForStatusChange._id}/status`,
+        `/api/loto/${selectedLotoForStatusChange._id}/status`,
         statusData,
         config
       );
@@ -944,7 +944,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.post(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/handover`,
+        `/api/loto/${id}/handover`,
         handoverData,
         config
       );
@@ -984,7 +984,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${loto._id}/handover/${handoverIndex}/recipient-decision`,
+        `/api/loto/${loto._id}/handover/${handoverIndex}/recipient-decision`,
         {
           action,
           decisionNotes,
@@ -1026,7 +1026,7 @@ const LOTOdetail = () => {
       };
 
       const res = await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${loto._id}/handover/${handoverIndex}/verify`,
+        `/api/loto/${loto._id}/handover/${handoverIndex}/verify`,
         {
           action,
           verificationNotes,

@@ -57,7 +57,7 @@ const HandoverModal = ({ isOpen, onClose, onConfirm, lotoData, currentUser }) =>
       };
 
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/users/technicians",
+        "/api/users/technicians",
         config
       );
 

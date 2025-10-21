@@ -24,7 +24,7 @@ const CompleteLOTO = () => {
         const token = localStorage.getItem("token");
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const res = await axios.get(
-          "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+          "/api/auth/me",
           config
         );
         setCurrentUser(res.data.user);
@@ -78,7 +78,7 @@ const CompleteLOTO = () => {
       };
 
       await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/loto/${id}/complete`,
+        `/api/loto/${id}/complete`,
         completeData,
         config
       );

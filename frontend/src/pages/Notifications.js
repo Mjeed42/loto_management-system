@@ -27,7 +27,7 @@ const Notifications = () => {
       };
 
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/auth/me",
+        "/api/auth/me",
         config
       );
       setCurrentUser(res.data.user);
@@ -55,7 +55,7 @@ const Notifications = () => {
 
       console.log("Fetching notifications...");
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover",
+        "/api/notifications/handover",
         config
       );
       console.log("Notifications response:", res.data);
@@ -106,7 +106,7 @@ const Notifications = () => {
       };
 
       await axios.put(
-        `https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover/${notificationId}/read`,
+        `/api/notifications/handover/${notificationId}/read`,
         {},
         config
       );
@@ -135,7 +135,7 @@ const Notifications = () => {
       };
 
       const res = await axios.put(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover/read-all",
+        "/api/notifications/handover/read-all",
         {},
         config
       );
@@ -169,7 +169,7 @@ const Notifications = () => {
       };
 
       const res = await axios.delete(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover/delete-all",
+        "/api/notifications/handover/delete-all",
         config
       );
 

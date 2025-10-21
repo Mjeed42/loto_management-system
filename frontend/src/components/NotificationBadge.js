@@ -36,7 +36,7 @@ const NotificationBadge = ({ onNotificationClick }) => {
 
       console.log("🔔 Fetching notification count...");
       const res = await axios.get(
-        "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover/count",
+        "/api/notifications/handover/count",
         config
       );
       console.log("📊 Notification count response:", res.data);
@@ -46,7 +46,7 @@ const NotificationBadge = ({ onNotificationClick }) => {
       // Fallback: try the main notifications endpoint
       try {
         const fallbackRes = await axios.get(
-          "https://loto-backend-643788243736.europe-west1.run.app/api/notifications/handover",
+          "/api/notifications/handover",
           config
         );
         console.log("📊 Fallback notification response:", fallbackRes.data);
