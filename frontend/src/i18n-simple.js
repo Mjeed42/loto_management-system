@@ -41,6 +41,17 @@ const resources = {
         "about": "About",
         "other": "Other"
       },
+      "scanner": {
+        "title": "Scan Machine Barcode",
+        "machinesToScan": "Machines to Scan",
+        "startingCamera": "Starting camera...",
+        "allMachinesScanned": "All machines scanned successfully!",
+        "scanInstructions": "Point your camera at the machine's barcode",
+        "scanSuccess": "Scan successful",
+        "scanError": "Scan failed",
+        "done": "Done",
+        "cancel": "Cancel"
+      },
       "navigation": {
         "home": "Home",
         "lotoList": "LOTO List",
@@ -745,6 +756,17 @@ const resources = {
         "help": "المساعدة",
         "about": "حول",
         "other": "أخرى"
+      },
+      "scanner": {
+        "title": "مسح باركود الآلة",
+        "machinesToScan": "الآلات المطلوب مسحها",
+        "startingCamera": "جاري تشغيل الكاميرا...",
+        "allMachinesScanned": "تم مسح جميع الآلات بنجاح!",
+        "scanInstructions": "وجه الكاميرا نحو باركود الآلة",
+        "scanSuccess": "تم المسح بنجاح",
+        "scanError": "فشل المسح",
+        "done": "تم",
+        "cancel": "إلغاء"
       },
       "navigation": {
         "home": "الرئيسية",

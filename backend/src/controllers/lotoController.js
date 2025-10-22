@@ -342,18 +342,20 @@ exports.verifyLOTO = async (req, res) => {
         }
       }
       
-      // Check each machine to see if it requires scanning
+      // OPTIMIZED: Check all machines in a single query
       const unscannedMachines = [];
-      for (const machineName of machineNames) {
-        if (!machineName || !machineName.trim()) continue;
+      if (machineNames.length > 0) {
+        const trimmedMachineNames = machineNames.map(name => name.trim()).filter(name => name);
         
-        const machine = await Location.findOne({ 
-          name: { $regex: new RegExp(`^${machineName.trim()}$`, 'i') },
-          type: "machine"
+        // Single query to get all machines with serial numbers
+        const machines = await Location.find({ 
+          name: { $in: trimmedMachineNames.map(name => new RegExp(`^${name}$`, 'i')) },
+          type: "machine",
+          serialNumber: { $exists: true, $ne: null }
         });
         
-        // If machine has a serial number, verify it has been scanned
-        if (machine && machine.serialNumber) {
+        // Check which machines haven't been scanned
+        for (const machine of machines) {
           const isScanned = loto.scannedMachines.some(
             sm => sm.serialNumber === machine.serialNumber
           );
@@ -1929,20 +1931,21 @@ exports.getMachineScanStatus = async (req, res) => {
     
     console.log("📋 Total machine names to check:", machineNames);
     
-    // For each machine in the LOTO, get its details and scan status
-    for (const machineName of machineNames) {
-      if (!machineName || !machineName.trim()) continue;
+    // OPTIMIZED: Get all machines in a single query instead of looping
+    if (machineNames.length > 0) {
+      const trimmedMachineNames = machineNames.map(name => name.trim()).filter(name => name);
       
-      // Use case-insensitive regex search for machine name
-      const machine = await Location.findOne({ 
-        name: { $regex: new RegExp(`^${machineName.trim()}$`, 'i') },
-        type: "machine"
+      // Single query to get all machines at once
+      const machines = await Location.find({ 
+        name: { $in: trimmedMachineNames.map(name => new RegExp(`^${name}$`, 'i')) },
+        type: "machine",
+        serialNumber: { $exists: true, $ne: null } // Only machines with serial numbers
       });
       
-      console.log(`🔍 Checking machine "${machineName}": Found=${!!machine}, Has Serial=${!!machine?.serialNumber}`);
+      console.log(`🔍 Found ${machines.length} machines with serial numbers out of ${trimmedMachineNames.length} requested`);
       
-      // Only include machines that have serial numbers (need to be scanned)
-      if (machine && machine.serialNumber) {
+      // Process results
+      for (const machine of machines) {
         const isScanned = loto.scannedMachines.some(
           sm => sm.serialNumber === machine.serialNumber
         );

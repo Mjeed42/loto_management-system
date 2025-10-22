@@ -92,6 +92,14 @@
     "loginError": "فشل تسجيل الدخول",
     "logoutSuccess": "تم تسجيل الخروج بنجاح"
   },
+  "technician": {
+    "createNewLoto": "إنشاء LOTO جديد",
+    "createNewLotoDesc": "بدء إجراء أمان جديد للقفل والعلامة",
+    "viewMyLotos": "عرض LOTO الخاصة بي",
+    "viewMyLotosDesc": "عرض جميع إجراءات القفل والعلامة الخاصة بك",
+    "mainAction": "الإجراء الرئيسي",
+    "viewList": "عرض القائمة"
+  },
   "user": {
     "role": "الدور",
     "admin": "مدير",
@@ -281,6 +289,17 @@
     "errorApprovingHandover": "خطأ في الموافقة على التسليم",
     "noHandoverFoundToReject": "لم يتم العثور على تسليم لرفضه",
     "errorRejectingHandover": "خطأ في رفض التسليم"
+  },
+  "scanner": {
+    "title": "مسح باركود الآلة",
+    "machinesToScan": "الآلات المطلوب مسحها",
+    "startingCamera": "جاري تشغيل الكاميرا...",
+    "allMachinesScanned": "تم مسح جميع الآلات بنجاح!",
+    "scanInstructions": "وجه الكاميرا نحو باركود الآلة",
+    "scanSuccess": "تم المسح بنجاح",
+    "scanError": "فشل المسح",
+    "done": "تم",
+    "cancel": "إلغاء"
   },
   "lotoList": {
     "rejectedHandoverSnapshot": "تسليم مرفوض (نسخة)",

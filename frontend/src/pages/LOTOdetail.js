@@ -27,6 +27,7 @@ const LOTOdetail = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [handoverHistory, setHandoverHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [scannerModalOpen, setScannerModalOpen] = useState(false);
   const [scanStatus, setScanStatus] = useState(null);
   const [scanLoading, setScanLoading] = useState(false);
@@ -124,7 +125,8 @@ const LOTOdetail = () => {
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
-        },
+        }
+        // Removed timeout to prevent scanner skip behavior
       };
 
       const res = await axios.get(
@@ -145,8 +147,8 @@ const LOTOdetail = () => {
   const handleScan = async (serialNumber) => {
     const now = Date.now();
     
-    // AGGRESSIVE DEBOUNCE: Reject scans within 600ms (iPhone protection)
-    if (now - lastScanTime.current < 600) {
+    // FAST DEBOUNCE: Reject scans within 100ms (very fast for responsive UX)
+    if (now - lastScanTime.current < 100) {
       console.log("Scan too fast (parent), ignoring duplicate");
       return { allScanned: false }; // Return safe default
     }
@@ -206,10 +208,10 @@ const LOTOdetail = () => {
       // Don't show alert here - let the modal display the error
       throw new Error(errorMsg);
     } finally {
-      // Unlock processing after a small delay to prevent rapid re-scanning
+      // FAST unlock processing for responsive UX
       setTimeout(() => {
         scanProcessing.current = false;
-      }, 600);
+      }, 100); // Very fast delay for responsive scanning
     }
   };
 
@@ -937,37 +939,44 @@ const LOTOdetail = () => {
   };
 
   const handleVerify = async () => {
-    // First check if machine scanning is required
-    const status = await fetchScanStatus();
+    if (isVerifying) return; // Prevent multiple clicks
+    setIsVerifying(true);
     
-    if (status && status.requiredMachines && status.requiredMachines.length > 0) {
-      // Machine has a serial number, check if scanning is required
-      if (!status.allScanned) {
-        // Clear any pending alert timeout
-        if (alertTimeoutRef.current) {
-          clearTimeout(alertTimeoutRef.current);
-          alertTimeoutRef.current = null;
+    try {
+      // First check if machine scanning is required
+      const status = await fetchScanStatus();
+    
+      if (status && status.requiredMachines && status.requiredMachines.length > 0) {
+        // Machine has a serial number, check if scanning is required
+        if (!status.allScanned) {
+          // Clear any pending alert timeout
+          if (alertTimeoutRef.current) {
+            clearTimeout(alertTimeoutRef.current);
+            alertTimeoutRef.current = null;
+          }
+          
+          // Reset ALL flags for this new scanning session
+          allScannedAlertShown.current = false;
+          scanProcessing.current = false;
+          lastScanTime.current = 0;
+          // Show scanner modal
+          setScannerModalOpen(true);
+          setIsVerifying(false);
+          return;
         }
-        
-        // Reset ALL flags for this new scanning session
-        allScannedAlertShown.current = false;
-        scanProcessing.current = false;
-        lastScanTime.current = 0;
-        // Show scanner modal
-        setScannerModalOpen(true);
+      }
+
+      // If no scanning required or all machines scanned, proceed with verification
+      if (!window.confirm("Are you sure you want to verify this LOTO?")) {
+        setIsVerifying(false);
         return;
       }
-    }
-
-    // If no scanning required or all machines scanned, proceed with verification
-    if (!window.confirm("Are you sure you want to verify this LOTO?")) return;
-
-    try {
       const token = localStorage.getItem("token");
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        timeout: 10000 // 10 second timeout for verification
       };
 
       const res = await axios.put(
@@ -993,8 +1002,11 @@ const LOTOdetail = () => {
         lastScanTime.current = 0;
         setScannerModalOpen(true);
         return;
+      } else {
+        alert(err.response?.data?.message || t("lotoDetails.errorVerifyingLoto"));
       }
-      alert(err.response?.data?.message || t("lotoDetails.errorVerifyingLoto"));
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -1410,6 +1422,7 @@ const LOTOdetail = () => {
   });
 
   return (
+    <>
     <div className="loto-details-container animate-fade-in">
       <BackButton to="/loto-list" label={t("lotoDetails.backToMyLotos")} />
 
@@ -2332,19 +2345,29 @@ const LOTOdetail = () => {
                 </div>
                 <div className="action-button-container">
                   <button
-                    className="action-button success "
+                    className={`action-button success ${isVerifying ? 'loading' : ''}`}
                     onClick={handleVerify}
+                    disabled={isVerifying}
                   >
-                    <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <span>{t("lotoDetails.verify")}</span>
+                    {isVerifying ? (
+                      <>
+                        <div className="loading-spinner"></div>
+                        Verifying...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="btn-icon" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span>{t("lotoDetails.verify")}</span>
+                      </>
+                    )}
                   </button>
                   <button
                     className="action-button danger"
@@ -3015,6 +3038,34 @@ const LOTOdetail = () => {
         requiredMachines={scanStatus?.requiredMachines || []}
       />
     </div>
+    
+    <style jsx>{`
+      .loading-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .action-button.loading {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+      
+      .action-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    `}</style>
+    </>
   );
 };
 

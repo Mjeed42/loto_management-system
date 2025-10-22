@@ -92,6 +92,14 @@
     "loginError": "Login failed",
     "logoutSuccess": "Logout successful"
   },
+  "technician": {
+    "createNewLoto": "Create New LOTO",
+    "createNewLotoDesc": "Start a new lockout/tagout safety procedure",
+    "viewMyLotos": "View My LOTOs",
+    "viewMyLotosDesc": "See all your lockout/tagout procedures",
+    "mainAction": "Main Action",
+    "viewList": "View List"
+  },
   "user": {
     "role": "Role",
     "admin": "Admin",
@@ -281,6 +289,17 @@
     "errorApprovingHandover": "Error approving handover",
     "noHandoverFoundToReject": "No handover found to reject",
     "errorRejectingHandover": "Error rejecting handover"
+  },
+  "scanner": {
+    "title": "Scan Machine Barcode",
+    "machinesToScan": "Machines to Scan",
+    "startingCamera": "Starting camera...",
+    "allMachinesScanned": "All machines scanned successfully!",
+    "scanInstructions": "Point your camera at the machine's barcode",
+    "scanSuccess": "Scan successful",
+    "scanError": "Scan failed",
+    "done": "Done",
+    "cancel": "Cancel"
   },
   "lotoList": {
     "rejectedHandoverSnapshot": "Rejected Handover (Snapshot)",
