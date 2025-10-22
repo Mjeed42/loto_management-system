@@ -10,9 +10,17 @@ const BarcodeScannerModal = ({ isOpen, onClose, onScan, requiredMachines = [] })
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState("");
   const [scannedCodes, setScannedCodes] = useState(new Set());
+  const scanningCompleted = useRef(false); // Track if all machines are scanned to stop processing
+  const isProcessing = useRef(false); // Prevent concurrent scan processing
+  const lastScanTime = useRef(0); // Track last scan timestamp for debouncing
 
   useEffect(() => {
     if (isOpen && !isScanning) {
+      scanningCompleted.current = false; // Reset the completion flag when modal opens
+      isProcessing.current = false; // Reset processing lock
+      lastScanTime.current = 0; // Reset last scan time
+      setScannedCodes(new Set()); // Clear scanned codes
+      setError(""); // Clear errors
       startScanner();
     }
 
@@ -65,10 +73,36 @@ const BarcodeScannerModal = ({ isOpen, onClose, onScan, requiredMachines = [] })
   };
 
   const handleScanSuccess = async (decodedText, decodedResult) => {
-    // Prevent duplicate scans
-    if (scannedCodes.has(decodedText)) {
+    // CRITICAL: All checks must be synchronous to block iPhone's rapid scanning
+    const now = Date.now();
+    
+    // DEBOUNCE: Reject scans within 500ms of last scan (iPhone cameras are TOO fast)
+    if (now - lastScanTime.current < 500) {
+      console.log("Scan too fast, ignoring (debounce)");
       return;
     }
+    
+    // Stop processing if scanning is already completed
+    if (scanningCompleted.current) {
+      console.log("Scanning already completed, ignoring");
+      return;
+    }
+
+    // Prevent concurrent processing - critical to avoid spam
+    if (isProcessing.current) {
+      console.log("Already processing, ignoring");
+      return;
+    }
+
+    // Prevent duplicate scans of same code
+    if (scannedCodes.has(decodedText)) {
+      console.log("Code already scanned, ignoring");
+      return;
+    }
+
+    // IMMEDIATELY update timestamp and lock processing (SYNCHRONOUS - before any async)
+    lastScanTime.current = now;
+    isProcessing.current = true;
 
     // Add to scanned codes to prevent immediate re-scan
     setScannedCodes(prev => new Set([...prev, decodedText]));
@@ -76,7 +110,16 @@ const BarcodeScannerModal = ({ isOpen, onClose, onScan, requiredMachines = [] })
     // Call the onScan callback
     try {
       setError(""); // Clear previous errors
-      await onScan(decodedText);
+      const result = await onScan(decodedText);
+      
+      // Check if all machines are now scanned based on the return value
+      if (result && result.allScanned) {
+        // Mark scanning as completed and stop the scanner immediately
+        scanningCompleted.current = true;
+        await stopScanner();
+        // Don't unlock processing - we're done
+        return;
+      }
       
       // On success, clear the scanned code after 2 seconds to allow re-scanning
       setTimeout(() => {
@@ -99,6 +142,13 @@ const BarcodeScannerModal = ({ isOpen, onClose, onScan, requiredMachines = [] })
         });
         setError(""); // Clear error after cooldown
       }, 5000);
+    } finally {
+      // Unlock processing after a delay (unless we're completely done)
+      if (!scanningCompleted.current) {
+        setTimeout(() => {
+          isProcessing.current = false;
+        }, 500); // 500ms cooldown before accepting next scan
+      }
     }
   };
 

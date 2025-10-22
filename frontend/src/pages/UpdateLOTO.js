@@ -540,22 +540,20 @@ const UpdateLOTO = () => {
           ? customReason
           : formData.reason;
 
-      // Join multiple machines with comma
+      // Send machines as array for multi-machine support
       const finalMachines = formData.machines.length > 0 
-        ? formData.machines.join(', ') 
-        : "N/A";
+        ? formData.machines 
+        : [];
 
       // Create base data with all form fields
       const allFormData = {
         ...formData,
         location: finalLocation,
-        machine: finalMachines,
+        machine: finalMachines.length > 0 ? finalMachines[0] : "N/A", // Legacy single machine field
+        machines: finalMachines, // NEW: Send machines array
         reason: finalReason,
         energyTypes: formData.energyTypes.filter(et => et.type),
       };
-
-      // Remove the machines array (we're sending machine string instead)
-      delete allFormData.machines;
 
       // Filter to only include allowed fields
       const dataToSend = {};

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -30,6 +30,10 @@ const LOTOdetail = () => {
   const [scannerModalOpen, setScannerModalOpen] = useState(false);
   const [scanStatus, setScanStatus] = useState(null);
   const [scanLoading, setScanLoading] = useState(false);
+  const allScannedAlertShown = useRef(false); // Track if success alert was already shown
+  const scanProcessing = useRef(false); // Prevent concurrent scan processing
+  const lastScanTime = useRef(0); // Track last scan timestamp for aggressive debouncing on iPhone
+  const alertTimeoutRef = useRef(null); // Track alert timeout to prevent duplicates
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -37,6 +41,13 @@ const LOTOdetail = () => {
     fetchLOTO();
     fetchCurrentUser();
     fetchHandoverHistory();
+    
+    // Cleanup: Clear any pending alert timeouts on unmount
+    return () => {
+      if (alertTimeoutRef.current) {
+        clearTimeout(alertTimeoutRef.current);
+      }
+    };
   }, [id]);
 
   const fetchCurrentUser = async () => {
@@ -132,6 +143,24 @@ const LOTOdetail = () => {
   };
 
   const handleScan = async (serialNumber) => {
+    const now = Date.now();
+    
+    // AGGRESSIVE DEBOUNCE: Reject scans within 600ms (iPhone protection)
+    if (now - lastScanTime.current < 600) {
+      console.log("Scan too fast (parent), ignoring duplicate");
+      return { allScanned: false }; // Return safe default
+    }
+    
+    // Prevent concurrent processing - critical to avoid duplicate API calls and alerts
+    if (scanProcessing.current) {
+      console.log("Scan already in progress, ignoring duplicate");
+      return { allScanned: false }; // Return safe default
+    }
+
+    // IMMEDIATELY set timestamp and lock (SYNCHRONOUS)
+    lastScanTime.current = now;
+    scanProcessing.current = true;
+
     try {
       const token = localStorage.getItem("token");
       const config = {
@@ -149,18 +178,38 @@ const LOTOdetail = () => {
       // Refresh scan status
       await fetchScanStatus();
 
-      // Success - the modal UI will update automatically with the scan status
-      // If all machines are scanned, close the modal and show success message
-      if (res.data.data.allScanned) {
-        setScannerModalOpen(false); // Close scanner immediately
-        setTimeout(() => {
+      // Return the scan result so modal knows if all machines are scanned
+      const allScanned = res.data.data.allScanned;
+      
+      // If all machines are scanned, close the modal and show success message (only once)
+      if (allScanned && !allScannedAlertShown.current) {
+        // IMMEDIATELY set flag to prevent race conditions (CRITICAL!)
+        allScannedAlertShown.current = true;
+        
+        // Clear any existing alert timeout
+        if (alertTimeoutRef.current) {
+          clearTimeout(alertTimeoutRef.current);
+          alertTimeoutRef.current = null;
+        }
+        
+        // Schedule alert and modal close (only one will execute)
+        alertTimeoutRef.current = setTimeout(() => {
+          setScannerModalOpen(false);
           alert("✅ All machines scanned successfully! You can now verify the LOTO.");
-        }, 300);
+          alertTimeoutRef.current = null;
+        }, 500);
       }
+      
+      return { allScanned }; // Return result to modal
     } catch (err) {
       const errorMsg = err.response?.data?.message || "Failed to scan machine";
       // Don't show alert here - let the modal display the error
       throw new Error(errorMsg);
+    } finally {
+      // Unlock processing after a small delay to prevent rapid re-scanning
+      setTimeout(() => {
+        scanProcessing.current = false;
+      }, 600);
     }
   };
 
@@ -894,6 +943,16 @@ const LOTOdetail = () => {
     if (status && status.requiredMachines && status.requiredMachines.length > 0) {
       // Machine has a serial number, check if scanning is required
       if (!status.allScanned) {
+        // Clear any pending alert timeout
+        if (alertTimeoutRef.current) {
+          clearTimeout(alertTimeoutRef.current);
+          alertTimeoutRef.current = null;
+        }
+        
+        // Reset ALL flags for this new scanning session
+        allScannedAlertShown.current = false;
+        scanProcessing.current = false;
+        lastScanTime.current = 0;
         // Show scanner modal
         setScannerModalOpen(true);
         return;
@@ -922,7 +981,16 @@ const LOTOdetail = () => {
       fetchLOTO();
     } catch (err) {
       if (err.response?.data?.requiresScan) {
-        // Backend says scanning is required
+        // Clear any pending alert timeout
+        if (alertTimeoutRef.current) {
+          clearTimeout(alertTimeoutRef.current);
+          alertTimeoutRef.current = null;
+        }
+        
+        // Backend says scanning is required - reset ALL flags
+        allScannedAlertShown.current = false;
+        scanProcessing.current = false;
+        lastScanTime.current = 0;
         setScannerModalOpen(true);
         return;
       }

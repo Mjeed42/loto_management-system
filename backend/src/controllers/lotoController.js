@@ -41,6 +41,7 @@ exports.createLOTO = async (req, res) => {
       location,
       line, // 👈 Save it
       machine,
+      machines, // 👈 NEW: array of machines
       isolatedPart,
       reason,
       ptwNumber,
@@ -98,12 +99,17 @@ exports.createLOTO = async (req, res) => {
       location: location || "Other", // Default to 'Other' if not provided
       isolatedPart,
       line: req.body.line, // 👈 Save it
-      machine: req.body.machine, // 👈 Save it
+      machine: req.body.machine, // 👈 Save it (legacy single machine)
       reason,
       ptwNumber: ptwNumber || "N/A",
       expectedDuration: parseFloat(expectedDuration),
       status: "pending_verification_new",
     };
+    
+    // Add machines array if provided (NEW multi-machine support)
+    if (machines && Array.isArray(machines) && machines.length > 0) {
+      lotoData.machines = machines.filter(m => m && m.trim()); // Filter out empty values
+    }
     
     // Set custom creation time if provided and validated
     if (validatedCreatedAt) {
@@ -122,7 +128,10 @@ exports.createLOTO = async (req, res) => {
     }
     // --- END ADD ENERGY TYPES ---
 
-    console.log("Creating LOTO with ", lotoData);
+    console.log("Creating LOTO with data:", lotoData);
+    console.log("Machines array received:", machines);
+    console.log("Machines in lotoData:", lotoData.machines);
+    console.log("Machine field (legacy):", lotoData.machine);
     
     // Add authorized handler if provided
     if (supervisor) {
@@ -316,12 +325,30 @@ exports.verifyLOTO = async (req, res) => {
 
     // Check if this is initial verification or handover verification
     if (loto.status === "pending_verification_new") {
-      // Check if machine scanning is required
-      if (loto.machine) {
-        // Get the Location model to check if machine has a serial number
-        const Location = require("../models/Location");
+      // Check if machine scanning is required for ALL machines in the LOTO
+      const Location = require("../models/Location");
+      
+      // Get all machine names (supports both legacy single machine and new machines array)
+      const machineNames = [];
+      if (loto.machines && loto.machines.length > 0) {
+        machineNames.push(...loto.machines);
+      } else if (loto.machine) {
+        // Handle comma-separated machines in legacy field
+        if (loto.machine.includes(',')) {
+          const splitMachines = loto.machine.split(',').map(m => m.trim()).filter(m => m);
+          machineNames.push(...splitMachines);
+        } else {
+          machineNames.push(loto.machine);
+        }
+      }
+      
+      // Check each machine to see if it requires scanning
+      const unscannedMachines = [];
+      for (const machineName of machineNames) {
+        if (!machineName || !machineName.trim()) continue;
+        
         const machine = await Location.findOne({ 
-          name: loto.machine,
+          name: { $regex: new RegExp(`^${machineName.trim()}$`, 'i') },
           type: "machine"
         });
         
@@ -332,13 +359,19 @@ exports.verifyLOTO = async (req, res) => {
           );
           
           if (!isScanned) {
-            return res.status(400).json({
-              success: false,
-              message: "All machines must be scanned before verification. Please scan the machine barcode first.",
-              requiresScan: true,
-            });
+            unscannedMachines.push(machine.name);
           }
         }
+      }
+      
+      // If there are any unscanned machines, reject verification
+      if (unscannedMachines.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `All machines must be scanned before verification. Unscanned machines: ${unscannedMachines.join(', ')}`,
+          requiresScan: true,
+          unscannedMachines: unscannedMachines,
+        });
       }
       
       // Initial verification of new LOTO
@@ -415,13 +448,13 @@ exports.updateLOTO = async (req, res) => {
     // ADMIN OVERRIDE: Admins can update ANY field in ANY condition
     if (req.user.role === "admin") {
       allowedFields = [
-        "shift", "location", "line", "machine", "isolatedPart", 
+        "shift", "location", "line", "machine", "machines", "isolatedPart", 
         "reason", "ptwNumber", "expectedDuration", "supervisor", "energyTypes"
       ];
     } else if (loto.status === "pending_verification_new") {
       // New LOTO pending verification: can update ALL fields
       allowedFields = [
-        "shift", "location", "line", "machine", "isolatedPart", 
+        "shift", "location", "line", "machine", "machines", "isolatedPart", 
         "reason", "ptwNumber", "expectedDuration", "supervisor", "energyTypes"
       ];
     } else if (loto.status === "pending_handover_verification") {
@@ -438,6 +471,7 @@ exports.updateLOTO = async (req, res) => {
       location,
       line,
       machine,
+      machines,
       isolatedPart,
       reason,
       ptwNumber,
@@ -469,6 +503,13 @@ exports.updateLOTO = async (req, res) => {
     }
     if (allowedFields.includes("machine") && machine !== undefined) {
       loto.machine = machine;
+    }
+    if (allowedFields.includes("machines") && machines !== undefined) {
+      if (machines && Array.isArray(machines)) {
+        loto.machines = machines.filter(m => m && m.trim()); // Filter out empty values
+      } else {
+        loto.machines = [];
+      }
     }
     if (allowedFields.includes("isolatedPart") && isolatedPart !== undefined) {
       loto.isolatedPart = isolatedPart;
@@ -1754,24 +1795,33 @@ exports.scanMachine = async (req, res) => {
       });
     }
 
-    // Check if this machine is part of the LOTO
-    // Machine field in LOTO can be a string with the machine name
-    // Do case-insensitive comparison and trim whitespace
-    const lotoMachineName = (loto.machine || "").trim().toLowerCase();
-    const scannedMachineName = (machine.name || "").trim().toLowerCase();
+    // Check if this machine is part of the LOTO (supports both machines array and legacy machine field)
+    const lotoMachines = [];
+    if (loto.machines && loto.machines.length > 0) {
+      lotoMachines.push(...loto.machines.map(m => m.trim().toLowerCase()));
+    } else if (loto.machine) {
+      // Handle comma-separated machines in legacy field
+      if (loto.machine.includes(',')) {
+        const splitMachines = loto.machine.split(',').map(m => m.trim().toLowerCase()).filter(m => m);
+        lotoMachines.push(...splitMachines);
+      } else {
+        lotoMachines.push(loto.machine.trim().toLowerCase());
+      }
+    }
     
-    if (lotoMachineName && lotoMachineName !== scannedMachineName) {
+    if (lotoMachines.length === 0) {
       return res.status(400).json({
         success: false,
-        message: `This machine is not part of this LOTO. Expected: "${loto.machine}", Scanned: "${machine.name}"`,
+        message: "This LOTO does not have any machines specified",
       });
     }
     
-    // If LOTO has no machine specified, allow any machine scan
-    if (!loto.machine) {
+    // Check if scanned machine is in the LOTO's machines list
+    const scannedMachineName = (machine.name || "").trim().toLowerCase();
+    if (!lotoMachines.includes(scannedMachineName)) {
       return res.status(400).json({
         success: false,
-        message: "This LOTO does not have a machine specified",
+        message: `This machine is not part of this LOTO. Expected one of: [${lotoMachines.join(', ')}], Scanned: "${machine.name}"`,
       });
     }
 
@@ -1780,6 +1830,13 @@ exports.scanMachine = async (req, res) => {
       sm => sm.serialNumber === serialNumber
     );
 
+    // Calculate total required machines (only those with serial numbers)
+    const requiredMachinesCount = await Location.countDocuments({
+      name: { $in: lotoMachines.map(m => new RegExp(`^${m}$`, 'i')) },
+      type: "machine",
+      serialNumber: { $exists: true, $ne: null, $ne: "" }
+    });
+
     if (alreadyScanned) {
       return res.status(200).json({
         success: true,
@@ -1787,7 +1844,7 @@ exports.scanMachine = async (req, res) => {
         alreadyScanned: true,
         data: {
           scannedMachine: alreadyScanned,
-          allScanned: loto.scannedMachines.length >= 1, // For now, we assume 1 machine per LOTO
+          allScanned: loto.scannedMachines.length >= requiredMachinesCount,
         }
       });
     }
@@ -1811,7 +1868,7 @@ exports.scanMachine = async (req, res) => {
       message: "Machine scanned successfully",
       data: {
         scannedMachines: updatedLOTO.scannedMachines,
-        allScanned: updatedLOTO.scannedMachines.length >= 1, // For single machine
+        allScanned: updatedLOTO.scannedMachines.length >= requiredMachinesCount,
       }
     });
   } catch (error) {
@@ -1851,18 +1908,46 @@ exports.getMachineScanStatus = async (req, res) => {
     const Location = require("../models/Location");
     const requiredMachines = [];
     
-    // If LOTO has a machine, get its details
-    if (loto.machine) {
+    // Get all machine names from both fields (for backward compatibility)
+    const machineNames = [];
+    if (loto.machines && loto.machines.length > 0) {
+      // New multi-machine field
+      console.log("📋 Using machines array:", loto.machines);
+      machineNames.push(...loto.machines);
+    } else if (loto.machine) {
+      // Legacy single machine field - check if it's comma-separated
+      console.log("📋 Using legacy machine field:", loto.machine);
+      if (loto.machine.includes(',')) {
+        // Split comma-separated machines
+        const splitMachines = loto.machine.split(',').map(m => m.trim()).filter(m => m);
+        console.log("📋 Split comma-separated machines:", splitMachines);
+        machineNames.push(...splitMachines);
+      } else {
+        machineNames.push(loto.machine);
+      }
+    }
+    
+    console.log("📋 Total machine names to check:", machineNames);
+    
+    // For each machine in the LOTO, get its details and scan status
+    for (const machineName of machineNames) {
+      if (!machineName || !machineName.trim()) continue;
+      
       // Use case-insensitive regex search for machine name
       const machine = await Location.findOne({ 
-        name: { $regex: new RegExp(`^${loto.machine.trim()}$`, 'i') },
+        name: { $regex: new RegExp(`^${machineName.trim()}$`, 'i') },
         type: "machine"
       });
       
-      if (machine) {
+      console.log(`🔍 Checking machine "${machineName}": Found=${!!machine}, Has Serial=${!!machine?.serialNumber}`);
+      
+      // Only include machines that have serial numbers (need to be scanned)
+      if (machine && machine.serialNumber) {
         const isScanned = loto.scannedMachines.some(
           sm => sm.serialNumber === machine.serialNumber
         );
+        
+        console.log(`   ✓ Machine "${machine.name}" requires scanning. Scanned: ${isScanned}`);
         
         requiredMachines.push({
           name: machine.name,
@@ -1875,8 +1960,13 @@ exports.getMachineScanStatus = async (req, res) => {
       }
     }
 
+    console.log("📊 Required machines for scanning:", requiredMachines.length);
+    console.log("📊 Required machines details:", requiredMachines);
+    
     const allScanned = requiredMachines.length > 0 && 
                        requiredMachines.every(m => m.isScanned);
+    
+    console.log("✅ All machines scanned?", allScanned);
 
     res.status(200).json({
       success: true,

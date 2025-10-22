@@ -28,7 +28,8 @@ const lotoSchema = new mongoose.Schema(
       // No enum validation - locations are now dynamic from Location collection
     },
     line: String,
-    machine: String,
+    machine: String, // Legacy field - single machine (kept for backward compatibility)
+    machines: [String], // New field - array of machine names for multi-machine LOTOs
     isolator: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

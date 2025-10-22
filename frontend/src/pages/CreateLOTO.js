@@ -702,16 +702,17 @@ const CreateLOTO = () => {
           ? customLocation
           : formData.location || "Other";
 
-      // Join multiple machines with comma
+      // Send machines as array for multi-machine support
       const finalMachines = formData.machines.length > 0 
-        ? formData.machines.join(', ') 
-        : "N/A";
+        ? formData.machines 
+        : [];
 
       const dataToSend = {
         shift: formData.shift,
         location: finalLocation,
         line: formData.line || "N/A",
-        machine: finalMachines, // Send comma-separated machines
+        machine: finalMachines.length > 0 ? finalMachines[0] : "N/A", // Legacy single machine field
+        machines: finalMachines, // NEW: Send machines array
         isolatedPart: formData.isolatedPart || "N/A",
         reason:
           formData.reason === "Other" && customReason
