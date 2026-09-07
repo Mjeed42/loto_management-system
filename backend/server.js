@@ -15,7 +15,7 @@ app.use(helmet());
 
 // CORS configuration to support credentials (cookies)
 const allowedOrigins = [
-  "https://loto-frontend-643788243736.europe-west1.run.app", // Production frontend
+  "", // Production frontend
   "http://localhost:3000", // Local development
   "http://localhost:3001", // Alternative local port
   "http://127.0.0.1:3000", // Alternative localhost
@@ -30,7 +30,7 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       console.log(`✅ CORS allowed origin: ${origin}`);
       callback(null, true);
@@ -230,6 +230,6 @@ app.listen(PORT, () => {
   console.log(`\n🚀 Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(
-    `📊 Health check: https://loto-backend-643788243736.europe-west1.run.app/api/health`
+    `📊 Health check: `
   );
 });

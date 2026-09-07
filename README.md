@@ -18,6 +18,7 @@ A comprehensive Lock Out Tag Out (LOTO) management system for tracking and manag
 ## 🔍 Overview
 
 This LOTO Management System provides a complete solution for managing lockout/tagout procedures with features including:
+
 - User authentication and role-based access control
 - LOTO procedure creation and management
 - Equipment and energy source tracking
@@ -29,6 +30,7 @@ This LOTO Management System provides a complete solution for managing lockout/ta
 ## 🛠 Tech Stack
 
 ### Backend
+
 - **Node.js** with Express.js
 - **MongoDB** with Mongoose ODM
 - **JWT** for authentication
@@ -36,6 +38,7 @@ This LOTO Management System provides a complete solution for managing lockout/ta
 - **Helmet** for security headers
 
 ### Frontend
+
 - **React** 18.2.0
 - **React Router** for navigation
 - **Axios** for API calls
@@ -46,6 +49,7 @@ This LOTO Management System provides a complete solution for managing lockout/ta
 - **xlsx** for Excel exports
 
 ### Deployment
+
 - **Docker** & **Docker Compose**
 - **Nginx** as reverse proxy
 
@@ -97,12 +101,14 @@ loto_management-system/
 ### Local Development Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd loto_management-system
    ```
 
 2. **Install Backend Dependencies**
+
    ```bash
    cd backend
    npm install
@@ -151,19 +157,22 @@ A template is provided as `frontend/env.local.example`.
 ### Development Mode
 
 1. **Start MongoDB**
+
    ```bash
    # If using local MongoDB
    mongod
-   
+
    # Or using Docker
    docker run -d -p 27017:27017 --name mongodb mongo:latest
    ```
 
 2. **Start Backend**
+
    ```bash
    cd backend
    npm run dev
    ```
+
    Backend will run on `http://localhost:5000`
 
 3. **Start Frontend**
@@ -191,6 +200,7 @@ docker-compose down
 ### Using Deployment Scripts
 
 1. **Backend Deployment**
+
    ```bash
    ./deploy-backend.sh
    ```
@@ -218,11 +228,13 @@ docker-compose ps
 Comprehensive documentation is available in the `/docs` directory:
 
 ### Setup & Configuration
+
 - `LOCAL_DEVELOPMENT_SETUP.md` - Local development guide
 - `DEPLOYMENT_GUIDE_AUTH_UPGRADE.md` - Deployment instructions
 - `LOCATION_MANAGEMENT_SETUP.md` - Location setup guide
 
 ### Features
+
 - `AUTHENTICATION_SECURITY_UPGRADE.md` - Authentication system
 - `SNAPSHOT_SYSTEM_OVERVIEW.md` - Snapshot feature overview
 - `HANDOVER_CHAIN_COMPLETE_SUMMARY.md` - Handover management
@@ -231,12 +243,14 @@ Comprehensive documentation is available in the `/docs` directory:
 - `FLEXIBLE_HIERARCHY_FEATURE.md` - Hierarchy management
 
 ### User Guides
+
 - `QUICK_REFERENCE.md` - Quick reference guide
 - `SNAPSHOT_QUICK_REFERENCE.md` - Snapshot feature guide
 - `DYNAMIC_LABELS_GUIDE.md` - Label management
 - `VISIBILITY_FEATURE_FINAL.md` - Visibility controls
 
 ### Technical Documentation
+
 - `NESTED_TABLE_VISUAL_GUIDE.md` - Table structure
 - `SIDEBAR_CONVERSION.md` - Navigation implementation
 - `TRANSLATIONS_ADDED.md` - i18n implementation
@@ -244,6 +258,7 @@ Comprehensive documentation is available in the `/docs` directory:
 ## ✨ Features
 
 ### Core Features
+
 - ✅ User authentication with JWT
 - ✅ Role-based access control (Admin, Supervisor, Worker)
 - ✅ LOTO procedure creation and management
@@ -253,6 +268,7 @@ Comprehensive documentation is available in the `/docs` directory:
 - ✅ Rich data export (Excel, PDF)
 
 ### UI/UX
+
 - ✅ Responsive design
 - ✅ Multi-language support (EN/AR)
 - ✅ RTL support for Arabic
@@ -261,6 +277,7 @@ Comprehensive documentation is available in the `/docs` directory:
 - ✅ Modern, clean interface
 
 ### Security
+
 - ✅ Password hashing with bcrypt
 - ✅ JWT-based authentication
 - ✅ HTTP security headers (Helmet)
@@ -279,6 +296,7 @@ After running the setup scripts, the following test users are available:
 ## 🛠 Maintenance
 
 ### Database Backup
+
 ```bash
 # Export database
 mongodump --uri="mongodb://localhost:27017/loto_management" --out=./backup
@@ -288,6 +306,7 @@ mongorestore --uri="mongodb://localhost:27017/loto_management" ./backup/loto_man
 ```
 
 ### View Logs
+
 ```bash
 # Backend logs
 docker-compose logs -f backend
@@ -314,19 +333,10 @@ For questions or support, please contact [add contact information].
 ---
 
 **Note**: Before deploying to production, ensure you:
+
 1. Change all default credentials
 2. Set secure JWT secrets
 3. Configure proper MongoDB connection strings
 4. Enable HTTPS
 5. Review and update CORS settings
 6. Set up proper backup procedures
-
-
-
-
-
-
-
-
-
-
